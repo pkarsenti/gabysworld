@@ -31,6 +31,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 -->
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Gaby's World</title>
 <style>
@@ -105,6 +106,18 @@
   .wopt canvas.face{height:60px;}
   .wopt.on{background:#ffe9a8;box-shadow:0 0 0 3px #c96a2e;}
   #ward .row{display:flex;gap:10px;justify-content:center;margin-top:10px;}
+  #libgrid{grid-template-columns:repeat(3,1fr);}
+  #libgrid .bk{padding:6px;font-size:13px;position:relative;}
+  #libgrid .bk canvas{width:100%;height:auto;display:block;}
+  #libgrid .bk i{position:absolute;top:2px;right:4px;font-style:normal;font-size:18px;}
+  #read>div{max-width:620px;}
+  #readpic{width:100%;max-width:500px;height:auto;aspect-ratio:8/5;display:block;margin:0 auto 6px;border:3px solid #2b2b2b;border-radius:16px;background:#fffdf4;}
+  #readtxt{font-size:21px;line-height:1.4;min-height:88px;margin:6px 8px 10px;}
+  #read .row{display:flex;gap:10px;justify-content:center;align-items:center;margin-top:6px;}
+  #read .pg{width:70px;height:56px;font-size:26px;}
+  #read .pg.off{opacity:.3;}
+  #readnum{font-weight:700;min-width:70px;}
+  #readnote{font-size:15px;color:#c9452f;font-weight:700;margin:8px 4px 0;}
   .close{margin-top:13px;font-size:16px;text-decoration:underline;font-weight:700;}
   /* phones: smaller controls (these come last so they win) */
   @media (max-width:520px){#top{gap:6px;right:10px;}#top .btn{width:48px;height:42px;font-size:20px;}
@@ -138,6 +151,7 @@
     <div data-x="6155" data-y="742">Bath &amp; games house</div>
     <div data-x="8115" data-y="790">The disco truck</div>
     <div data-x="11065" data-y="900">The shop &amp; the caf&eacute;</div>
+    <div data-x="10645" data-y="900">The library</div>
     <div data-x="12160" data-y="900">Gaby&#39;s Burgers &amp; play area</div>
     <div data-x="15120" data-y="900">School</div>
     <div data-x="10035" data-y="900">The playground</div>
@@ -177,6 +191,20 @@
   <canvas id="wardpic" width="260" height="300"></canvas>
   <div id="wardrows"></div>
   <div class="row"><div class="btn wide" id="wardrand">🎲 surprise me</div><div class="btn wide" data-close="1">✔ all done</div></div>
+</div></div>
+<div id="lib" class="sheet"><div>
+  <h2>Pick a book!</h2>
+  <div class="grid" id="libgrid"></div>
+  <div class="close" data-close="1">close</div>
+</div></div>
+<div id="read" class="sheet"><div>
+  <h2 id="readtitle"></h2>
+  <canvas id="readpic" width="960" height="600"></canvas>
+  <p id="readtxt"></p>
+  <div class="row"><div class="btn pg" id="readprev">◀</div><span id="readnum"></span><div class="btn pg" id="readnext">▶</div></div>
+  <div class="row" id="readbtns"></div>
+  <p id="readnote"></p>
+  <div class="close" data-close="1">close the book</div>
 </div></div>
 <div id="pal" class="sheet"><div>
   <canvas id="palpic" width="240" height="240"></canvas>
@@ -330,10 +358,12 @@ const PG={x0:6905,x1:7245,door:7075};                  // the pool gate on the s
 const POOL={x0:17520,x1:18120,surf:GY+34,bot:GY+196};
 const BOARD={x0:17262,tip:17560,y:640,lad:17290};
 const CHAIR={x:18440},UMB={x:18296,top:GY-330};
-const ZONES=[{id:'burger',x0:ZB.x0,x1:ZB.x1,ceil:ZB.ceil},{id:'school',x0:SZ.x0,x1:SZ.x1,ceil:SZ.ceil},{id:'pool',x0:ZP.x0,x1:ZP.x1,ceil:ZP.ceil}];
+const LIBF={x0:10505,x1:10785,door:10645};            // the library, seen from the street (next to the shop)
+const ZL={x0:19400,x1:20700,ceil:360},READX=20420;     // ...and inside it
+const ZONES=[{id:'library',x0:ZL.x0,x1:ZL.x1,ceil:ZL.ceil},{id:'burger',x0:ZB.x0,x1:ZB.x1,ceil:ZB.ceil},{id:'school',x0:SZ.x0,x1:SZ.x1,ceil:SZ.ceil},{id:'pool',x0:ZP.x0,x1:ZP.x1,ceil:ZP.ceil}];
 const zoneAt=px=>ZONES.find(z=>px>=z.x0-100&&px<=z.x1+100)||null;
 const curZone=()=>zoneAt(P.x),inZone=()=>!!curZone(),inBurger=()=>{const z=curZone();return !!z&&z.id==='burger';},
-  inPool=()=>{const z=curZone();return !!z&&z.id==='pool';};
+  inPool=()=>{const z=curZone();return !!z&&z.id==='pool';},inLib=()=>{const z=curZone();return !!z&&z.id==='library';};
 const LOFT={x0:12110,x1:12625,y:640};                      // upstairs seating
 const SPRING={x:13080},PIT={x0:13560,x1:13800};
 const DECK={x0:13170,x1:13470,y:700},DECK2={x0:13300,x1:13480,y:520};
@@ -353,7 +383,8 @@ const PLATS=[
   {x0:ZB.x0,x1:ZB.x1,y:GY,z:'burger'},{x0:LOFT.x0,x1:LOFT.x1,y:LOFT.y,z:'burger'},
   {x0:DECK.x0,x1:DECK.x1,y:DECK.y,z:'burger'},{x0:DECK2.x0,x1:DECK2.x1,y:DECK2.y,z:'burger'},
   {x0:SZ.x0,x1:SZ.x1,y:GY,z:'school'},
-  {x0:ZP.x0,x1:POOL.x0,y:GY,z:'pool'},{x0:POOL.x1,x1:ZP.x1,y:GY,z:'pool'},{x0:BOARD.x0,x1:BOARD.tip,y:BOARD.y,z:'pool'}
+  {x0:ZP.x0,x1:POOL.x0,y:GY,z:'pool'},{x0:POOL.x1,x1:ZP.x1,y:GY,z:'pool'},{x0:BOARD.x0,x1:BOARD.tip,y:BOARD.y,z:'pool'},
+  {x0:ZL.x0,x1:ZL.x1,y:GY,z:'library'}
 ];
 const LADS=[
   {x:430,y0:582,y1:742},{x:430,y0:742,y1:GY},
@@ -370,7 +401,7 @@ const LADS=[
 ];
 const SIGNS=[{x:1860,txt:'playhouse',a:1},{x:3565,txt:'plane',a:1},
   {x:5535,txt:'lab',a:0},{x:5725,txt:'bath house',a:1},
-  {x:10645,txt:'town',a:1},{x:9825,txt:'playground',a:1},{x:2510,txt:'racing street',a:1},{x:6800,txt:'pool',a:1},{x:7350,txt:'disco truck',a:1}];
+  {x:10452,txt:'town',a:1},{x:9825,txt:'playground',a:1},{x:2510,txt:'racing street',a:1},{x:6800,txt:'pool',a:1},{x:7350,txt:'disco truck',a:1}];
 
 const clouds=[],stars=[],blooms=[];
 for(let i=0;i<56;i++)clouds.push({x:rp(i*3)*10200-200,y:60+rp(i*3+1)*420,r:20+rp(i*3+2)*28,s:i*17});
@@ -432,9 +463,14 @@ const THINGS=[
   {id:'hopin',x:POOL.x1+34,y:GY,label:'hop in the pool'},
   {id:'umbrella',x:UMB.x-30,y:GY,label:'open the umbrella',key:1,by:-370,bx:30,lbl:()=>umbOpen?'close the umbrella':'open the umbrella'},
   {id:'lounge',x:CHAIR.x+10,y:GY,label:'lie on the lounge chair'},
-  {id:'icecream',x:18600,y:GY,label:'get an ice cream'}
+  {id:'icecream',x:18600,y:GY,label:'get an ice cream'},
+  {id:'enterLib',x:LIBF.door,y:GY,label:'go into the library',key:1,by:-215},
+  {id:'exitLib',x:ZL.x0+70,y:GY,label:'go back outside'},
+  {id:'shelf',x:19820,y:GY,label:'choose a book',key:1,by:-310},
+  {id:'libdesk',x:20105,y:GY,label:'talk to Mrs. Hush',lbl:()=>BAG.some(o=>o.kind==='book')?'give my books back':'ask Mrs. Hush for a story'},
+  {id:'readseat',x:READX,y:GY,label:'sit and read',key:1,by:-175}
 ];
-const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup'];
+const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks'];
 const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watered the plants',
   bridge:'crossed the bridge',wave:'waved hello',slide:'took the slide',night:'turned on the night',
   fly:'flew the plane',tea:'had a cup of tea',nap:'had a nap',lamp:'lit the dark room',
@@ -452,8 +488,10 @@ const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watere
   spring:'rode the bouncy duck',drinks:'filled a milkshake',wheel:'steered the ship',enterSchool:'went to school',
   swing:'went on the swings',sprout:'grew a sprout friend',wish:'made a wish come true',wish5:'made 5 wishes come true',peek:'looked out the bubble',tube:'went down the twisty slide',pit:'swam in the ball pit',
   enterPool:'went to the pool',dive:'jumped off the diving board',hopin:'hopped in the pool',umbrella:'opened the umbrella',
-  lounge:'lay on the lounge chair',icecream:'got a poolside ice cream',swim:'went swimming',sun:'tapped the sun',dressup:'changed my clothes',wardrobe:'opened my wardrobe',underwater:'swam under the water'};
-const FIND=THINGS.map(t=>t.id).filter(k=>k!=='exit'&&k!=='exitSchool'&&k!=='exitPool').concat(EXTRA);
+  lounge:'lay on the lounge chair',icecream:'got a poolside ice cream',swim:'went swimming',sun:'tapped the sun',dressup:'changed my clothes',wardrobe:'opened my wardrobe',underwater:'swam under the water',
+  enterLib:'went to the library',shelf:'looked at the books',libdesk:'talked to Mrs. Hush',readseat:'sat in the reading chair',
+  readbook:'read a whole book',checkout:'borrowed a book',returnbook:'gave my books back',allbooks:'read every library book'};
+const FIND=THINGS.map(t=>t.id).filter(k=>k!=='exit'&&k!=='exitSchool'&&k!=='exitPool'&&k!=='exitLib').concat(EXTRA);
 const found={};FIND.forEach(k=>found[k]=false);
 
 /* ================= carryable stuff ================= */
@@ -461,7 +499,7 @@ const DEF={flower:{},ball:{},cup:{},duck:{},pad:{},beaker:{},balloon:{},starit:{
   cat:{pet:1},bunny:{pet:1},teddy:{pet:1},robot:{pet:1},sprout:{pet:1},
   cake:{food:1},apple:{food:1},ice:{food:1},pizza:{food:1},
   cap:{hat:1},party:{hat:1},crown:{hat:1},
-  burger:{food:1},fries:{food:1},shake:{food:1},box:{}};
+  burger:{food:1},fries:{food:1},shake:{food:1},box:{},book:{}};
 const MADE=['cake','apple','ice','pizza','ball','flower','balloon','starit','party','crown','duck','beaker'];
 const ITEMS=[
   {kind:'flower',x:980,y:GY},{kind:'flower',x:1160,y:GY},{kind:'flower',x:3595,y:GY},
@@ -567,6 +605,11 @@ function itemArt(k,px,py,s,bob,it){
       rline(px-13,py-20-b,px+13,py-20-b,s+15,1.5);
       rline(px-21,py-39-b,px-34,py-26-b,s+17,2);rline(px+21,py-39-b,px+34,py-26-b,s+19,2);break;
     case 'cap':case 'party':case 'crown':drawLook(px,py-16,k,s,11);break;
+    case 'book':{const col=it&&it.bk!=null&&BOOKS[it.bk]?BOOKS[it.bk].col:'#93b6c9';
+      x.fillStyle=PAPER;x.fillRect(px-13,py-30,30,29);stroke(3);x.strokeRect(px-13,py-30,30,29);
+      x.fillStyle=col;x.fillRect(px-17,py-34,30,32);stroke(4.5);rrect(px-17,py-34,30,32,s,1.5);
+      x.fillStyle='rgba(43,43,43,.22)';x.fillRect(px-17,py-34,6,32);
+      x.fillStyle=PAPER;heart(px+1,py-22,5);break;}
     case 'burger':case 'fries':case 'shake':case 'box':icon.flavor=it&&it.flavor||0;icon(k,px,py,1,s);icon.flavor=0;break;}
   x.restore?0:0;}
 
@@ -620,7 +663,11 @@ NPC.push({id:'marina',name:'Marina',x:17820,y:POOL.surf,look:'bob',swimmer:1,hom
     story:'Marina swims one hundred lengths every morning, then one more just for fun. She says the water tickles.'},
   {id:'pebble',name:'Pebble',x:18010,y:POOL.surf+112,look:'spike',diver:1,shirt:'#e0b25e',
     says:['blub blub!','i can hold my breath!','it is quiet down here'],
-    story:'Pebble likes it best at the bottom of the pool. He says it is very quiet down there, apart from his own bubbles.'});
+    story:'Pebble likes it best at the bottom of the pool. He says it is very quiet down there, apart from his own bubbles.'},
+  {id:'hush',name:'Mrs. Hush',x:20235,y:GY-24,look:'bun',hair:'#d9d4cc',shirt:'#b49ac7',says:['shhh... hello!','books are a bit like magic','stamp, stamp!'],
+    story:'Mrs. Hush knows where every single book lives. She says "shhh" a lot, but she laughs the loudest at the funny ones.'},
+  {id:'otto',name:'Otto',x:20625,y:GY,look:'spike',seat:1,desk:20625,reader:1,shirt:'#93b6c9',says:['shh, i am reading','this bit is so funny','have you read about Pickles?'],
+    story:'Otto reads one book every day. His favourite is about a cat who naps everywhere. He has read it eleven times.'});
 NPC.forEach((n,i)=>{n.shirt=n.shirt||SHIRTS[i%SHIRTS.length];n.skin=n.skin||SKINS[(i*3+1)%4];n.hair=n.hair||HAIRS[i%HAIRS.length];});
 /* friends you can meet who are not walking about */
 const OTHERS=[
@@ -637,11 +684,13 @@ const SPROUT_BITS=['It hums when the sun comes out.','It is scared of snails but
   'It does a little dance whenever it hears music.','It has a secret: it can count to three.'];
 const SPROUT_COLS=['#8fb3a0','#b8cf8f','#e3a0a0','#e0b25e','#b49ac7','#93b6c9'];
 const WANTS={rafi:[{k:'ball',why:'a ball for the cat to chase'},{k:'apple',why:'a crunchy apple'}],pip:[{k:'flower',why:'a flower for my window'},{k:'cup',why:'a cup for my tea'}],lou:[{k:'cup',why:'a cup of tea for the flight'},{k:'pizza',why:'pizza for the passengers'}],wren:[{k:'balloon',why:'a balloon to float up to the clouds'},{k:'ice',why:'an ice cream for the view'}],dot:[{k:'party',why:'a party hat for the disco'},{k:'shake',why:'a milkshake, all that dancing!'}],moss:[{k:'duck',why:'a duck that squeaks on the beat'},{k:'fries',why:'some fries for the DJ'}],penny:[{k:'cake',why:'a cake to sell in my shop'},{k:'burger',why:'a burger for my lunch'}],olive:[{k:'flower',why:'a flower for the café table'},{k:'apple',why:'an apple for my apple cake'}],juniper:[{k:'apple',why:'an apple for Miss Bec'},{k:'balloon',why:'a balloon to wave at the plane'}],theo:[{k:'ice',why:'an ice cream for the long walk'},{k:'shake',why:'a milkshake'}],sunny:[{k:'flower',why:'a flower for the counter'},{k:'ball',why:'a ball for the play area'}],bea:[{k:'shake',why:'a milkshake to go with my fries'},{k:'burger',why:'a burger please!'}],kit:[{k:'ball',why:'a ball to play tag with'},{k:'balloon',why:'a balloon!'}],minnow:[{k:'duck',why:'a duck to swim with'},{k:'ball',why:'one more ball for the pit'}],bec:[{k:'apple',why:'an apple for my desk'},{k:'flower',why:'a flower for the classroom'}],ada:[{k:'crown',why:'a crown, for a dinosaur queen'},{k:'cake',why:'cake!'}],leo:[{k:'pad',why:'a game pad for playtime'},{k:'apple',why:'an apple for snack time'}],ivy:[{k:'balloon',why:'a balloon for my messy desk'},{k:'duck',why:'a duck for my desk'}]};
-Object.assign(WANTS,{marina:[{k:'duck',why:'a duck to swim with me'},{k:'ice',why:'an ice cream after my swim'}],
+Object.assign(WANTS,{hush:[{k:'flower',why:'a flower for my desk'},{k:'cup',why:'a quiet cup of tea'}],
+  otto:[{k:'apple',why:'a snack while I read'},{k:'cake',why:'cake (not on the books!)'}],
+  marina:[{k:'duck',why:'a duck to swim with me'},{k:'ice',why:'an ice cream after my swim'}],
   pebble:[{k:'ball',why:'a ball to bounce on the water'},{k:'starit',why:'a star to keep at the bottom of the pool'}]});
 const NAMES={flower:'flower',ball:'ball',cup:'cup',duck:'rubber duck',pad:'game pad',beaker:'bubbly beaker',balloon:'balloon',
   starit:'star',cake:'cake',apple:'apple',ice:'ice cream',pizza:'pizza',burger:'burger',fries:'fries',shake:'milkshake',
-  box:'kids meal',cap:'cap',party:'party hat',crown:'crown'};
+  box:'kids meal',cap:'cap',party:'party hat',crown:'crown',book:'book'};
 const GIFTS=['cake','balloon','starit','duck','ball','apple','crown','party','ice','flower'];
 NPC.forEach(n=>{n.wants=WANTS[n.id]||[];n.wantI=0;n.hearts=0;n.wish=null;});
 const BAG=[],BAGMAX=8;let wishesDone=0,wishTimer=60,giving=null;
@@ -716,10 +765,13 @@ function mark(id){if(!found[id]){found[id]=true;
 const KM={ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right',ArrowUp:'up',w:'up',W:'up',
   ArrowDown:'down',s:'down',S:'down',' ':'act',e:'act',E:'act',Enter:'act',f:'grab',F:'grab',q:'grab',Q:'grab',Shift:'grab'};
 addEventListener('keydown',e=>{
+  if(document.getElementById('read').style.display==='flex'){
+    if(['ArrowRight','d','D',' ','Enter'].indexOf(e.key)>=0){e.preventDefault();turnPage(1);return;}
+    if(['ArrowLeft','a','A'].indexOf(e.key)>=0){e.preventDefault();turnPage(-1);return;}}
   if(e.key==='m'||e.key==='M'){toggle('map');return;}
   if(e.key==='b'||e.key==='B'){toggle('book');return;}
   if((e.key==='n'||e.key==='N')&&started&&!R){toggleSky();return;}
-  if(e.key==='Escape'){shut('map');shut('book');shut('pal');shut('itm');shut('ward');return;}
+  if(e.key==='Escape'){shut('map');shut('book');shut('pal');shut('itm');shut('ward');shut('lib');shut('read');return;}
   const k=KM[e.key];if(!k)return;e.preventDefault();
   if(!key[k]){if(k==='act')actEdge=true;if(k==='up')upEdge=true;if(k==='down')downEdge=true;if(k==='grab')grabEdge=true;}
   key[k]=1;started=true;});
@@ -775,7 +827,7 @@ let bagSig='',itmOpen=null;
 function updateBag(){
   const el=document.getElementById('bag');
   el.style.display=(R||!started)?'none':'flex';
-  const sig=BAG.map(o=>o.kind+(o.flavor||'')).join(',')+'|'+wishKinds().join(',');if(sig===bagSig)return;bagSig=sig;
+  const sig=BAG.map(o=>o.kind+(o.flavor||'')+(o.bk!=null?'#'+o.bk:'')).join(',')+'|'+wishKinds().join(',');if(sig===bagSig)return;bagSig=sig;
   el.innerHTML='<div class="lbl">🎒 '+BAG.length+'/'+BAGMAX+'</div>';
   const want=wishKinds();
   BAG.forEach(it=>{const b=document.createElement('div');b.className='slot'+(want.indexOf(it.kind)>=0?' wanted':'');
@@ -783,13 +835,14 @@ function updateBag(){
     b.addEventListener('click',e=>{e.stopPropagation();openItem(it);});el.appendChild(b);});}
 function openItem(it){itmOpen=it;
   portrait(document.getElementById('itmpic'),{item:it});
-  document.getElementById('itmname').textContent=NAMES[it.kind]||it.kind;
+  document.getElementById('itmname').textContent=it.kind==='book'&&BOOKS[it.bk]?BOOKS[it.bk].title:NAMES[it.kind]||it.kind;
   const wanters=NPC.filter(n=>n.wish&&n.wish.k===it.kind).map(n=>n.name);
-  document.getElementById('itmnote').textContent=wanters.length?wanters.join(' and ')+' would love this!':'';
+  document.getElementById('itmnote').textContent=wanters.length?wanters.join(' and ')+' would love this!':it.kind==='book'?'a library book: give it back to Mrs. Hush when you are done':'';
   const row=document.getElementById('itmbtns');row.innerHTML='';
   const add=(label,fn)=>{const b=document.createElement('div');b.className='btn wide';b.textContent=label;
     b.addEventListener('click',e=>{e.stopPropagation();fn();shut('itm');});row.appendChild(b);};
   const d=DEF[it.kind]||{};
+  if(it.kind==='book')add('📖 read it',()=>openReader(it.bk));
   if(d.food)add(it.kind==='shake'?'🥤 drink it':'😋 eat it',()=>{bagTake(it);puff(P.x,P.y-70,8,'crumb');
     say(P.x,P.y-110,'yum!');mark('eat');tune([600,760],90,'sine');});
   if(d.hat)add('👑 wear it',()=>{bagTake(it);if(P.hat)bagGive({kind:P.hat},P.x,P.y);P.hat=it.kind;
@@ -1029,6 +1082,17 @@ function doThing(th){
     case 'umbrella':toggleUmb();return;
     case 'lounge':P.lounge=1;P.x=CHAIR.x;P.y=GY;P.face=1;
       say(P.x-40,P.y-150,umbOpen?'ahh, nice and shady':'what a sunny day!');tune([523,440,392],140,'sine');break;
+    case 'enterLib':mark('enterLib');goTo(ZL.x0+140,GY);P.face=1;say(P.x,P.y-120,'shhh... the library!');
+      tune([523,659,784,1046],120,'sine');return;
+    case 'exitLib':goTo(LIBF.door,GY);say(P.x,P.y-120,'bye bye books!');tune([1046,784,659],110,'sine');return;
+    case 'shelf':say(P.x,P.y-120,'so many books!');tone(700,.08,'triangle',.04);openShelf();break;
+    case 'readseat':P.x=READX;P.y=GY;P.face=1;P.sit=1e6;say(P.x,P.y-150,'what shall i read?');tune([392,494,587],110,'sine');openShelf();break;
+    case 'libdesk':{const h=NPC.find(n=>n.id==='hush'),bks=BAG.filter(o=>o.kind==='book');meet('hush');h.waveT=90;
+      if(bks.length){bks.forEach(bagTake);bagGive({kind:'starit'},P.x+40,P.y);mark('returnbook');
+        say(h.x,h.y-150,'thank you! here is a gold star');puff(h.x,h.y-120,8,'heart');tune([523,659,784,1046],90,'triangle');}
+      else{const all=BOOKS.map((b,i)=>i),un=all.filter(i=>!readDone[i]),pick=un.length?un:all,i=pick[(Math.random()*pick.length)|0];
+        say(h.x,h.y-150,'ooh, try this one!');tone(660,.1,'sine',.04);setTimeout(()=>openReader(i),800);}
+      break;}
     case 'icecream':spawn('ice',P.x-70,GY);say(P.x,P.y-120,'one ice cream!');tune([660,880,990],90);break;
     case 'wardrobe':openWardrobe();say(P.x,P.y-120,'what shall i wear?');tune([523,659,784],90,'triangle');break;
     case 'fire':fire=!fire;say(P.x,P.y-110,fire?'cosy':'psss');beep(fire?300:160,.2,'sawtooth');break;
@@ -1110,7 +1174,7 @@ function doThing(th){
   mark(th.id);}
 
 /* ================= update ================= */
-function activePlats(){const z=curZone();return PLATS.filter(p=>z?p.z===z.id:flying?p.z==='plane':p.z!=='burger'&&p.z!=='school'&&p.z!=='pool');}
+function activePlats(){const z=curZone();return PLATS.filter(p=>z?p.z===z.id:flying?p.z==='plane':!ZONES.some(q=>q.id===p.z));}
 function wishKinds(){return NPC.filter(n=>n.wish).map(n=>n.wish.k);}
 function assignWish(){
   const free=NPC.filter(n=>!n.wish&&n.wants.length&&!(n.coolT>0)&&Math.abs(n.x-P.x)>500);
@@ -1790,7 +1854,8 @@ function drawPlayer(){
     stroke(7,ACCENT);rline(px+16,py-20,px-26,py-18,1221,2);stroke(6);
     rline(px-26,py-18,px-34,py-4,1231,2);return;}
   if(P.sit>0){seated(px,py,gabyO({seed:1241,hand:P.x>SCH.x0&&P.x<SCH.x1?1:0}));
-    if(inBurger())icon('fries',px+56,py-66,.75,1251);else if(P.x<SCH.x0)fillCirc(px+22,py-58,8,1251);return;}
+    if(inBurger())icon('fries',px+56,py-66,.75,1251);else if(inLib())openBook(px+25,py-40,RD.bk!=null?BOOKS[RD.bk].col:ACCENT);
+    else if(P.x<SCH.x0)fillCirc(px+22,py-58,8,1251);return;}
   if(P.bath>0){stroke(6);
     rcircPath(px,py-104,HR,1211);x.fillStyle=SKIN;x.fill();x.stroke();
     fillCirc(px-5,py-107,2.8,1218);fillCirc(px+5,py-107,2.8,1219);
@@ -2732,13 +2797,13 @@ function draw(){
   x.save();
   x.translate(innerWidth/2,innerHeight/2);x.scale(scale,scale);x.rotate(tilt);x.translate(-cam.x,-cam.y);
 
-  if(inZone()){const zid=curZone().id;zid==='burger'?drawBurgerInside(cam):zid==='pool'?drawPool(cam):drawClassroom(cam);if(zid!=='pool')sunBehind();}
+  if(inZone()){const zid=curZone().id;zid==='burger'?drawBurgerInside(cam):zid==='pool'?drawPool(cam):zid==='library'?drawLibraryInside(cam):drawClassroom(cam);if(zid!=='pool')sunBehind();}
   else{
   drawSky(cam);
   if(!flying){
     drawGround(cam);drawLab(cam);
     drawHouse1();drawHouse2();drawBridge();drawPlayhouse();
-    drawBathHouse();drawTruck();drawTown();drawBurgerFacade();drawSchoolFacade();drawPlayground();drawRaceGate();drawPoolGate();drawLadders();drawLamppost();}
+    drawBathHouse();drawTruck();drawTown();drawBurgerFacade();drawSchoolFacade();drawPlayground();drawRaceGate();drawPoolGate();drawLibraryFacade();drawLadders();drawLamppost();}
   drawPlane();
   if(!flying)drawSigns(cam);}
   NPC.forEach((n,i)=>{
@@ -2755,11 +2820,14 @@ function draw(){
     if(n.onSwing){const q=swingSeat(1);seated(q.x+10,q.y+34,Object.assign({look:n.look,seed:4455+i*37,hand:1,shadow:false},col));return;}
     if(n.onSeesaw){const e=seesawEnds();
       figure(e.rx,e.ry,Object.assign({look:n.look,seed:4455+i*37,arms:P.seesaw?'up':'wave',s:.95},col));return;}
+    if(n.reader){x.save();x.translate(n.x,0);x.scale(-1,1);x.translate(-n.x,0);       // Otto faces the reading table
+      seated(n.x,n.y,Object.assign({look:n.look,seed:4455+i*37,shadow:false},col));openBook(n.x+25,n.y-40,'#e0c49a');x.restore();return;}
     if(n.seat){seated(n.x,n.y,Object.assign({look:n.look,seed:4455+i*37,hand:n.hand},col));
       if(n.id==='bea')icon('fries',n.x+52,n.y-66,.75,4655+i);return;}
     figure(n.x,n.y-hop-(n.hopY||0),Object.assign({look:n.look,walk:n.walk,seed:4455+i*37,
       arms:n.waveT>0?'wave':(dancing||(n.hop&&recess)||n.teacher||n.kidplay?'up':'down')},col));});
   if(inBurger())drawBurgerFront();
+  else if(inLib())drawLibFront();
   else if(!flying)drawCar();
   ITEMS.forEach((it,i)=>{
     if(it.x<cam.x-VW/2-90||it.x>cam.x+VW/2+90)return;
@@ -2829,5 +2897,281 @@ function draw(){
     x.font='700 '+Math.min(13,fs)+'px '+TF;x.fillStyle='#8a8476';
     x.fillText('made by Gaby (age 6) and Papa  ·  credits in the 📖 book',innerWidth/2,innerHeight-16);x.fillStyle=INK;}
   x.restore();}
+/* ======================= the library ======================= */
+/* from her drawing: a big "Library" sign, a "Books" sign hanging on a long string,
+   two tall bookcases, somebody standing by them, and a chair with a little table */
+const SPINES=['#d9786a','#e0b25e','#8fb3a0','#7f9fbf','#b49ac7','#c98a9b','#93b6c9','#d9a27a','#efd27a'];
+function openBook(cx,cy,col){                     // an open book; (cx,cy) is the bottom of the spine
+  x.fillStyle=col||ACCENT;x.beginPath();x.moveTo(cx-21,cy-17);x.lineTo(cx-21,cy+2);x.lineTo(cx,cy+5);
+  x.lineTo(cx+21,cy+2);x.lineTo(cx+21,cy-17);x.closePath();x.fill();stroke(2.5);x.stroke();
+  [-1,1].forEach(d=>{x.fillStyle=PAPER;x.beginPath();x.moveTo(cx,cy);x.quadraticCurveTo(cx+d*9,cy-4,cx+d*19,cy-1);
+    x.lineTo(cx+d*19,cy-19);x.quadraticCurveTo(cx+d*9,cy-22,cx,cy-17);x.closePath();x.fill();stroke(2.5);x.stroke();
+    stroke(1.5,'rgba(43,43,43,.45)');for(let i=0;i<3;i++){x.beginPath();x.moveTo(cx+d*4,cy-13+i*4);x.lineTo(cx+d*15,cy-14+i*4);x.stroke();}});}
+function armchair(cx,dir,base){                   // dir 1: you sit in it facing right
+  base=base==null?GY:base;x.save();x.translate(cx,0);x.scale(dir,1);x.translate(-cx,0);
+  fbox(cx-42,base-116,20,100,9701,ROSE,5);
+  fbox(cx-36,base-38,64,18,9703,'#e9b8c4',5);
+  fbox(cx-38,base-22,68,14,9705,'#a8774f',5);
+  stroke(5);rline(cx-32,base-8,cx-34,base,9707,0);rline(cx+24,base-8,cx+26,base,9709,0);
+  x.restore();}
+function bookcase(sx,w,seed,base,h){
+  base=base==null?GY:base;h=h||280;const top=base-h;
+  fbox(sx,top,w,h,seed,'#a8774f',7);x.fillStyle='#8a5f3e';x.fillRect(sx+10,top+10,w-20,h-20);
+  const rows=4,rh=(h-20)/rows;
+  for(let r=0;r<rows;r++){const sy=top+10+rh*(r+1);let bx=sx+14,k=0;
+    while(bx<sx+w-18){const bw=11+rp(seed+r*31+k)*9,bh=rh*(.62+rp(seed+r*17+k*3)*.3);
+      if(bx+bw>sx+w-12)break;
+      x.fillStyle=SPINES[(seed+r*5+k*7)%SPINES.length];x.fillRect(bx,sy-bh,bw,bh);stroke(2.2);x.strokeRect(bx,sy-bh,bw,bh);
+      stroke(1.5,'rgba(255,253,244,.6)');x.beginPath();x.moveTo(bx+2,sy-bh+7);x.lineTo(bx+bw-2,sy-bh+7);x.stroke();
+      bx+=bw+1;k++;if(rp(seed+r*13+k)>.86)bx+=10;}
+    stroke(6);rline(sx+8,sy,sx+w-8,sy,seed+r*3,1);}}
+function drawLibraryFacade(){                     // on main street, just before the shop
+  const F=LIBF,top=600,cx=F.door,nt=dark();
+  roof(F.x0-16,F.x1+16,top,top-82,9501,'#c9a07a');
+  stroke(6);rline(cx-60,top-50,cx-60,top-94,9507,1);rline(cx+60,top-50,cx+60,top-94,9508,1);
+  fbox(cx-104,top-146,208,54,9509,PAPER,6);
+  x.fillStyle=INK;x.textAlign='center';x.font='700 32px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('Library',cx,top-108);
+  x.fillStyle='#ece0cb';x.fillRect(F.x0,top,F.x1-F.x0,GY-top);glow(F.x0,top,F.x1-F.x0,GY-top);
+  stroke(8);rrect(F.x0,top,F.x1-F.x0,GY-top,9503,3);
+  fbox(F.x0-6,top,F.x1-F.x0+12,22,9505,'#d9c7a8',5);
+  [F.x0+16,F.x1-101].forEach((wx,i)=>{fbox(wx,top+48,85,118,9511+i,nt?'#f3dca0':'#cfe3ea',5);
+    for(let r=0;r<3;r++){const y=top+48+(r+1)*38;
+      for(let k=0;k<6;k++){const bh=20+rp(9531+i*50+r*7+k)*10;x.fillStyle=SPINES[(i*3+r*2+k)%SPINES.length];
+        x.fillRect(wx+7+k*12,y-bh,10,bh);stroke(1.8);x.strokeRect(wx+7+k*12,y-bh,10,bh);}
+      stroke(4);rline(wx,y,wx+85,y,9541+r+i*5,0);}});
+  [cx-62,cx+62].forEach((px,i)=>{fbox(px-9,top+30,18,GY-top-42,9521+i,PAPER,4);fbox(px-14,top+22,28,10,9525+i,'#d9c7a8',3.5);});
+  fbox(cx-38,GY-140,76,140,9531,'#7f9fbf',6);stroke(5);rline(cx,GY-140,cx,GY,9533,1);
+  fillCirc(cx-9,GY-70,4,9535);fillCirc(cx+9,GY-70,4,9537);
+  x.save();x.translate(cx,GY-150);x.scale(1.7,1.7);openBook(0,0,TOMATO);x.restore();
+  fbox(cx-82,GY-12,164,12,9539,'#cdbfa8',4);
+  potted(F.x1-18,GY,9549);}
+function drawLibraryInside(cam){
+  const L=cam.x-VW/2-40,R=cam.x+VW/2+40,T=cam.y-VH/2-40,Bt=cam.y+VH/2+40,Z=ZL,nt=dark();
+  x.fillStyle='#efe3cc';x.fillRect(L,T,R-L,Bt-T);
+  x.fillStyle='rgba(180,154,199,.14)';for(let wx=Math.floor(L/64)*64;wx<R;wx+=64)x.fillRect(wx,Z.ceil,26,GY-Z.ceil);
+  x.fillStyle='#d9c7a8';x.fillRect(Z.x0,GY-110,Z.x1-Z.x0,110);stroke(5);rline(Z.x0,GY-110,Z.x1,GY-110,9601,2);
+  x.fillStyle='#cdb89a';x.fillRect(L,T,R-L,Z.ceil-T);stroke(9);rline(L,Z.ceil,R,Z.ceil,9603,2);
+  x.fillStyle='#c9a47a';x.fillRect(L,GY+4,R-L,Bt-GY);stroke(3,'rgba(43,43,43,.25)');
+  for(let j=0;j<6;j++){const yy=GY+30+j*34;rline(L,yy,R,yy,9605+j,1);
+    for(let fx=Math.floor(L/150)*150+(j%2)*75;fx<R;fx+=150)rline(fx,yy-34,fx,yy,9607+fx+j,0);}
+  stroke(7);rline(L,GY+4,R,GY+4,9609,2);
+  x.fillStyle='#b9a68a';x.fillRect(Z.x0-200,T,200,Bt-T);x.fillRect(Z.x1,T,300,Bt-T);
+  stroke(9);rline(Z.x0,Z.ceil,Z.x0,GY+4,9611,2);rline(Z.x1,Z.ceil,Z.x1,GY+4,9613,2);
+  /* way out */
+  fbox(Z.x0+34,GY-170,72,170,9621,nt?'#2d3657':'#cfe3ea',7);rline(Z.x0+70,GY-170,Z.x0+70,GY,9623,1);
+  fbox(Z.x0+30,GY-216,80,32,9625,SAGE,5);x.fillStyle=INK;x.textAlign='center';x.font='700 17px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
+  x.fillText('way out',Z.x0+70,GY-194);
+  /* the big Library sign, like her drawing */
+  fbox(19560,400,240,64,9627,PAPER,6);x.fillStyle=INK;x.font='700 36px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
+  x.fillText('Library',19680,445);
+  /* the "Books" sign hanging on its long string */
+  const sw=Math.sin(t*.03)*3;stroke(4);rline(19940,Z.ceil,19940+sw,488,9629,1);
+  fbox(19880+sw,488,120,48,9631,'#fdf0c4',5);x.fillStyle=INK;x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
+  x.fillText('Books',19940+sw,521);stroke(3);rline(19940+sw,536,19940+sw,580,9633,1);
+  x.fillStyle=INK;x.beginPath();x.moveTo(19932+sw,574);x.lineTo(19948+sw,574);x.lineTo(19940+sw,588);x.closePath();x.fill();
+  /* hanging lamps */
+  [20050,20530].forEach((lx,i)=>{stroke(3.5);rline(lx,Z.ceil,lx,Z.ceil+50,9641+i,0);
+    x.fillStyle=MUSTARD;x.beginPath();x.moveTo(lx-20,Z.ceil+74);x.lineTo(lx-9,Z.ceil+50);x.lineTo(lx+9,Z.ceil+50);x.lineTo(lx+20,Z.ceil+74);x.closePath();x.fill();stroke(4);x.stroke();});
+  /* the two tall bookcases */
+  bookcase(19570,230,9651);bookcase(19830,230,9677);
+  /* window over the reading corner */
+  fbox(20390,440,190,104,9661,nt?'#2d3657':'#cfe3ea',6);rline(20485,440,20485,544,9663,1);
+  if(nt){stroke(4,'#f3ecd8');star(20430,480,8,9665);star(20540,500,7,9667);}else{stroke(4);cloud(20440,480,14,9669);fcirc(20540,478,14,9671,'#fdf0c4',4);}
+  /* "please be quiet" sign with a sleepy moon face */
+  fbox(20120,480,150,50,9673,PAPER,5);x.fillStyle=INK;x.font='700 19px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('shhh... reading',20195,511);
+  /* rug, two armchairs and the little table with a lamp */
+  x.fillStyle='#c98a9b';x.beginPath();x.ellipse(20520,GY+12,170,14,0,0,7);x.fill();stroke(4);x.stroke();
+  stroke(3,PAPER);x.beginPath();x.ellipse(20520,GY+12,140,8,0,0,7);x.stroke();
+  armchair(READX,1);armchair(20625,-1);
+  fbox(20478,GY-66,96,12,9681,'#c49a74',5);stroke(5);rline(20494,GY-54,20494,GY,9683,1);rline(20558,GY-54,20558,GY,9685,1);
+  stroke(4);rline(20540,GY-66,20540,GY-108,9687,0);
+  x.fillStyle=MUSTARD;x.beginPath();x.moveTo(20520,GY-104);x.lineTo(20530,GY-126);x.lineTo(20550,GY-126);x.lineTo(20560,GY-104);x.closePath();x.fill();stroke(4);x.stroke();
+  x.save();x.globalAlpha=.15;x.fillStyle='#f7d682';x.beginPath();x.moveTo(20520,GY-104);x.lineTo(20470,GY-66);x.lineTo(20610,GY-66);x.lineTo(20560,GY-104);x.fill();x.restore();
+  [[20498,'#d9786a'],[20500,'#7f9fbf']].forEach(([bx,c],i)=>{x.fillStyle=c;x.fillRect(bx-(i?2:0),GY-80-i*10,34,10);stroke(2.5);x.strokeRect(bx-(i?2:0),GY-80-i*10,34,10);});
+  potted(19530,GY,9691);potted(20090,GY,9693);}
+function drawLibFront(){                          // the check-out desk, in front of Mrs. Hush
+  fbox(20140,GY-56,190,56,9801,'#c49a74',6);fbox(20128,GY-66,214,12,9803,'#a8774f',5);
+  fbox(20185,GY-46,100,30,9805,PAPER,4);x.fillStyle=INK;x.textAlign='center';x.font='700 16px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
+  x.fillText('check out',20235,GY-25);
+  [['#b49ac7',0],['#e0b25e',1],['#8fb3a0',2]].forEach(([c,i])=>{x.fillStyle=c;x.fillRect(20150+i*3,GY-78-i*12,44,12);stroke(2.5);x.strokeRect(20150+i*3,GY-78-i*12,44,12);});
+  fbox(20296,GY-78,22,12,9807,TOMATO,3);stroke(4);rline(20307,GY-78,20307,GY-94,9809,0);fillCirc(20307,GY-98,6,9811,'#8a6a4a');}
+
+/* ---------- the books ---------- */
+function pgSky(dk){x.fillStyle=dk?'#2d3657':'#e7f1fb';x.fillRect(0,0,480,300);
+  if(dk){stroke(3,'#f3ecd8');[[60,50],[150,90],[420,40],[360,110],[260,40]].forEach(([a,b],i)=>star(a,b,7,900+i));}}
+function pgFloor(col){x.fillStyle=col||'#ddd2bd';x.fillRect(0,250,480,50);stroke(5);rline(0,250,480,250,77,2);}
+function pgPet(kind,px,py,s,o){x.save();x.translate(px,py);x.scale(s,s);itemArt(kind,0,0,333,0,Object.assign({kind},o||{}));x.restore();}
+function pgGaby(px,py,s,ex){figure(px,py,gabyO(Object.assign({s,hat:null,shadow:false,face:1},ex||{})));}
+function pgWord(txt,px,py,size,col){x.fillStyle=col||INK;x.textAlign='center';x.font='700 '+size+'px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText(txt,px,py);}
+function pgSun(cx,cy){stroke(4);for(let i=0;i<9;i++){const a=i/9*Math.PI*2;rline(cx+Math.cos(a)*30,cy+Math.sin(a)*30,cx+Math.cos(a)*44,cy+Math.sin(a)*44,950+i,1);}
+  fcirc(cx,cy,24,960,'#fdf0c4',4);}
+function zzz(px,py,col){pgWord('z',px,py,20,col);pgWord('z',px+16,py-18,26,col);pgWord('Z',px+38,py-42,32,col);}
+function hearts(list){x.fillStyle=TOMATO;list.forEach(([a,b,r])=>heart(a,b,r||9));}
+function clover(cx,cy,r){stroke(4,'#5e8a52');rline(cx,cy,cx+2,cy+r*2,cx|0,1);x.fillStyle='#8fbf72';
+  for(let i=0;i<3;i++){x.save();x.translate(cx,cy);x.rotate(i*2.094);heart(0,-r,r*.62);x.restore();}}
+function machine(mx,my,shake){const j=shake?Math.sin(t*.9)*3:0;
+  fbox(mx-90+j,my-150,180,150,970,'#bcc8d0',6);for(let i=0;i<4;i++)fcirc(mx-60+i*40+j,my-118,13,971+i,[TOMATO,MUSTARD,SAGE,SKY][i],4);
+  fbox(mx-66+j,my-86,132,56,975,'#e4f0ea',5);}
+function vig(x0,x1,fns,setup){                    // a little picture of a bit of the real town
+  const keep={night,flying,disco,cx:CAR.x,cd:CAR.driving,cf:CAR.face,recess};
+  night=false;flying=false;CAR.driving=false;if(setup)setup();
+  try{const sc=480/(x1-x0);
+    x.fillStyle='#e7f1fb';x.fillRect(0,0,480,300);
+    x.save();x.translate(0,258);x.scale(sc,sc);x.translate(-x0,-GY);
+    stroke(2.4/sc);for(let i=0;i<4;i++)cloud(x0+(i+.5)*(x1-x0)/4,GY-(240/sc)*(.72+(i%2)*.12),22/sc,i*7+3);
+    x.fillStyle='#ddd2bd';x.fillRect(x0-100,GY+4,x1-x0+200,3000);x.fillStyle='#cbdab4';x.fillRect(x0-100,GY+4,x1-x0+200,22);
+    stroke(2.6/sc);rline(x0-100,GY+4,x1+100,GY+4,5597,2.5);
+    fns.forEach(f=>f());x.restore();}
+  finally{night=keep.night;flying=keep.flying;disco=keep.disco;CAR.x=keep.cx;CAR.driving=keep.cd;CAR.face=keep.cf;recess=keep.recess;}}
+const sproutsGrown=()=>ITEMS.filter(o=>o.kind==='sprout');
+const BOOKS=[
+  {title:'How Our Town Grew',col:'#93b6c9',cover:1,pages:[
+    {txt:'A long, long time ago, there was nothing here at all. Just grass, flowers, and a great big sky.',
+     pic:()=>{pgSky();pgSun(400,70);stroke(4);cloud(110,80,22,11);cloud(250,50,16,12);pgFloor('#cbdab4');
+       [40,95,170,230,300,355,430].forEach((fx,i)=>{stroke(4);rline(fx,250,fx,224-(i%3)*8,fx,1);flower(fx,216-(i%3)*8,8,fx+3);});}},
+    {txt:'Then somebody built a little house. Then another one, with a bridge in the middle so the neighbours could visit. And a playhouse, just for playing!',
+     pic:()=>vig(110,2220,[drawHouse1,drawHouse2,drawBridge,drawPlayhouse,drawLadders])},
+    {txt:'Then the airport came! A big plane landed in the field, and it liked it so much that it stayed. Now it is a house you can fly.',
+     pic:()=>vig(3470,5530,[drawPlane])},
+    {txt:'Next, the disco truck rolled into town with its lights and its music. Everybody started dancing!',
+     pic:()=>vig(7560,8900,[drawTruck,()=>{figure(8150,TR.floor,{look:'bun',arms:'up',shirt:ROSE,seed:31});
+       figure(8460,TR.floor,{look:'spike',arms:'up',shirt:SAGE,seed:37});}],()=>{disco=true;})},
+    {txt:'Soon so many people lived here that it became a real town! First came the school, with a playground for playtime.',
+     pic:()=>vig(9030,10460,[drawSchoolFacade,drawPlayground],()=>{recess=false;})},
+    {txt:'Then came the racing street. Ready, steady... vroom!',
+     pic:()=>vig(2180,2900,[drawRaceGate,drawCar],()=>{CAR.x=2400;CAR.face=1;})},
+    {txt:"Then "+BURGER_NAME+" opened, with hot fries, milkshakes, and a twisty slide.",
+     pic:()=>vig(2880,3660,[drawBurgerFacade])},
+    {txt:'Then the pool, for splashing on hot sunny days.',
+     pic:()=>vig(6700,7450,[drawPoolGate])},
+    {txt:'And last of all came the library, where this book lives. The town is still growing. What do you think will come next? The end.',
+     pic:()=>vig(10250,11320,[drawLibraryFacade,drawTown])}]},
+  {title:'Pickles Naps Everywhere',col:'#e0c49a',pages:[
+    {txt:'Pickles is a cat who loves naps. Big naps, little naps, and naps in between naps.',
+     pic:()=>{pgSky();pgFloor();x.fillStyle=ROSE;x.beginPath();x.ellipse(240,250,96,16,0,0,7);x.fill();stroke(5);x.stroke();
+       pgPet('cat',240,240,2.3);zzz(320,120);}},
+    {txt:'She has napped in the bath, on the bridge, and once, inside a teacup!',
+     pic:()=>{pgSky();pgFloor();pgPet('cat',238,212,2);
+       x.fillStyle=PAPER;x.beginPath();x.moveTo(160,165);x.lineTo(320,165);x.lineTo(304,240);x.quadraticCurveTo(240,256,176,240);x.closePath();x.fill();stroke(6);x.stroke();
+       x.beginPath();x.arc(322,195,22,-Math.PI/2,Math.PI/2);x.stroke();x.fillStyle=ROSE;heart(240,212,12);
+       stroke(4);[200,250,290].forEach((sx,i)=>{x.beginPath();x.moveTo(sx,150);x.quadraticCurveTo(sx+10,130,sx,110);x.quadraticCurveTo(sx-10,92,sx,74);x.stroke();});}},
+    {txt:'That makes 47 napping spots! But Pickles is still looking for spot number 48.',
+     pic:()=>{pgSky();pgFloor();pgPet('cat',150,250,1.9);
+       stroke(6);rline(360,250,360,140,61,1);fbox(300,80,120,64,63,PAPER,5);pgWord('48 ?',360,124,34);
+       [210,240,270].forEach((fx,i)=>fillCirc(fx,262+(i%2)*8,4,70+i,'rgba(43,43,43,.4)'));}},
+    {txt:"One day she found it: right on Gaby's lap. “Purrrfect,” said Pickles. The end.",
+     pic:()=>{pgSky();pgFloor();x.save();x.translate(200,250);x.scale(1.6,1.6);x.translate(-200,-250);
+       armchair(200,1,250);seated(200,250,gabyO({hat:null,shadow:false,seed:81}));pgPet('cat',232,214,.8);x.restore();zzz(300,90);hearts([[160,90,10],[330,110,8]]);}}]},
+  {title:'Clover and the Clover Patch',col:'#b8cf8f',pages:[
+    {txt:'One sunny morning, a little patch of clover began to wiggle...',
+     pic:()=>{pgSky();pgSun(400,70);pgFloor('#cbdab4');[[150,226],[200,214],[245,228],[290,212],[335,226],[225,240],[270,242]].forEach(([a,b])=>clover(a,b,11));
+       stroke(4);[[130,190,-1],[355,190,1],[240,170,0]].forEach(([a,b,d],i)=>{x.beginPath();x.arc(a,b,20,Math.PI*(1.1+d*.2),Math.PI*(1.6+d*.2));x.stroke();});}},
+    {txt:'...and out hopped a little bunny! She smelled like grass and sunshine.',
+     pic:()=>{pgSky();pgSun(400,70);pgFloor('#cbdab4');[[130,232],[180,222],[300,224],[350,234]].forEach(([a,b])=>clover(a,b,11));
+       pgPet('bunny',240,246,2.1);stroke(4,MUSTARD);star(150,130,12,41);star(330,110,10,43);star(370,170,8,45);}},
+    {txt:'She hopped to the shop. She hopped to the café. She hopped right into the pool. Hop, hop... SPLASH!',
+     pic:()=>{pgSky();pgFloor();x.fillStyle='#a9d6e3';x.fillRect(340,236,140,64);stroke(5);rline(340,250,340,300,51,1);
+       stroke(3);x.setLineDash([8,10]);x.beginPath();x.moveTo(40,250);x.quadraticCurveTo(110,140,170,250);x.quadraticCurveTo(250,80,390,240);x.stroke();x.setLineDash([]);
+       pgPet('bunny',290,150,1.5,{oy:-10});[[372,214],[392,200],[412,214],[400,186]].forEach(([a,b],i)=>fillCirc(a,b,6,55+i,'#7fb8d6'));
+       pgWord('SPLASH!',410,170,26,'#4a6f8f');}},
+    {txt:'Now her name is Clover, and she hops wherever Gaby goes. The end.',
+     pic:()=>{pgSky();pgSun(400,70);pgFloor('#cbdab4');pgGaby(190,250,1.55);pgPet('bunny',310,250,1.8);hearts([[250,90,11]]);}}]},
+  {title:'Mr. Button Is Brave',col:'#c9a07a',pages:[
+    {txt:'Mr. Button is a teddy bear with button eyes and a very brave heart.',
+     pic:()=>{pgSky();pgFloor();pgPet('teddy',240,250,2.5);hearts([[330,120,14]]);stroke(4,MUSTARD);star(150,110,12,21);star(170,170,8,23);}},
+    {txt:'When the lights go out at night, some toys feel a bit scared. Not Mr. Button. Well... mostly not.',
+     pic:()=>{pgSky(1);x.save();x.beginPath();x.rect(0,0,480,300);x.arc(400,64,26,0,Math.PI*2,true);x.clip();fcirc(386,70,30,31,'#f3ecd8',4);x.restore();
+       pgFloor('#b9ae99');pgPet('teddy',240,250,2.2);}},
+    {txt:'One night he saw a great big spooky shadow! “Who goes there?” he said, in his bravest voice.',
+     pic:()=>{pgSky(1);pgFloor('#b9ae99');pgPet('teddy',130,250,1.8);
+       x.save();x.globalAlpha=.55;x.fillStyle='#141b31';x.beginPath();x.ellipse(340,190,90,64,0,0,7);x.fill();
+       x.beginPath();x.moveTo(275,150);x.lineTo(285,60);x.lineTo(320,135);x.moveTo(360,135);x.lineTo(395,60);x.lineTo(405,150);x.fill();x.restore();
+       pgWord('?!',210,120,36,'#f3ecd8');}},
+    {txt:'It was only Pickles! They laughed and laughed, and then they had a nap together. The end.',
+     pic:()=>{pgSky(1);pgFloor('#b9ae99');pgPet('teddy',200,250,1.9);pgPet('cat',300,250,1.9);zzz(330,120,'#f3ecd8');}}]},
+  {title:'Bolt Says Beep',col:'#bcc8d0',pages:[
+    {txt:'Deep under the ground, in the secret lab, somebody pulled the big lever.',
+     pic:()=>{x.fillStyle='#e4e0ee';x.fillRect(0,0,480,300);pgFloor('#c9c3d9');machine(220,250,0);
+       stroke(6);rline(312,170,370,110,81,1);fcirc(374,104,14,83,TOMATO,5);stroke(4);
+       x.beginPath();x.arc(340,140,48,-Math.PI*.7,-Math.PI*.25);x.stroke();pgWord('pull!',420,80,24);}},
+    {txt:'Something was happening inside the machine. BLOOP! FIZZ! CLANK!',
+     pic:()=>{x.fillStyle='#e4e0ee';x.fillRect(0,0,480,300);pgFloor('#c9c3d9');machine(240,250,1);
+       stroke(4);for(let i=0;i<6;i++)rcirc(150+i*36,70+((i*29+t)%50),8+(i%3)*3,91+i);
+       pgWord('BLOOP!',90,70,34,'#7f9fbf');pgWord('FIZZ!',390,60,34,'#5e8a52');pgWord('CLANK!',400,150,30,ACCENT);}},
+    {txt:'Out stepped a little robot! He beeped two times. Beep beep! That means: I am happy.',
+     pic:()=>{x.fillStyle='#e4e0ee';x.fillRect(0,0,480,300);pgFloor('#c9c3d9');pgPet('robot',240,250,2.2);
+       pgWord('beep beep!',380,110,26);hearts([[110,110,12],[140,160,8]]);}},
+    {txt:'Then he beeped three times. Beep beep beep! That means: is there a snack? (There is always a snack.) The end.',
+     pic:()=>{pgSky();pgFloor();pgPet('robot',170,250,2);pgPet('pizza',320,250,1.6);pgPet('apple',400,250,1.6);pgWord('beep beep beep?',250,60,26);}}]},
+  {title:'Where Sprout Friends Come From',col:'#8fb3a0',pages:[
+    {txt:'If you water a flower very, very kindly...',
+     pic:()=>{pgSky();pgFloor('#cbdab4');stroke(5);rline(280,250,280,170,101,2);flower(280,150,20,103);
+       fbox(80,70,80,56,105,SKY,5);stroke(5);rline(158,84,206,62,107,1);x.beginPath();x.arc(86,98,24,Math.PI*.5,Math.PI*1.5);x.stroke();
+       [[220,90],[236,120],[226,140],[250,104]].forEach(([a,b],i)=>fillCirc(a,b,5,111+i,'#7fb8d6'));}},
+    {txt:'...it wiggles, and it giggles, and two little eyes pop open!',
+     pic:()=>{pgSky();pgFloor('#cbdab4');pgPet('sprout',240,250,2.6,{col:SAGE});stroke(4);
+       [[150,170],[330,170]].forEach(([a,b],i)=>{x.beginPath();x.arc(a,b,22,Math.PI*(i?1.7:.8),Math.PI*(i?2.2:1.3));x.stroke();});pgWord('hee hee!',370,90,26);}},
+    {txt:'Pop! Now it is a sprout friend. “Hello! Can I come along with you?”',
+     pic:()=>{pgSky();pgFloor('#cbdab4');pgGaby(170,250,1.55,{arms:'wave'});pgPet('sprout',310,250,2,{col:'#e3a0a0'});hearts([[330,110,12]]);}},
+    {txt:'Every sprout is different. One hums. One dances. One is scared of snails. And one can count to three!',
+     pic:()=>{pgSky();pgFloor('#cbdab4');SPROUT_COLS.slice(0,4).forEach((c,i)=>pgPet('sprout',75+i*110,250,1.5,{col:c}));
+       note(110,110,121);pgWord('1, 2, 3!',405,130,22);}},
+    {txt:()=>{const n=sproutsGrown().length;return n?'So far you have grown '+n+' sprout friend'+(n===1?'':'s')+'! How many more will you grow? The end.'
+       :'How many sprout friends will you grow? Find a flower and water it to start. The end.';},
+     pic:()=>{pgSky();pgFloor('#cbdab4');const sp=sproutsGrown().slice(0,5);
+       if(!sp.length){stroke(5);rline(240,250,240,180,131,2);flower(240,160,20,133);pgWord('?',320,120,50);return;}
+       sp.forEach((o,i)=>{const px=240+(i-(sp.length-1)/2)*88;pgPet('sprout',px,236,1.5,{col:o.col});pgWord(o.name,px,280,18);});}}]}
+];
+const readDone={};let RD={bk:null,pg:0};
+function drawPage(cv,pic,frame){
+  const ctx=cv.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);x=ctx;
+  try{const sc=cv.width/480;ctx.setTransform(sc,0,0,sc,0,0);x.fillStyle=PAPER;x.fillRect(0,0,480,300);x.save();pic();x.restore();}
+  finally{x=X0;}}
+function drawCover(cv,i){
+  const b=BOOKS[i],ctx=cv.getContext('2d'),sc=cv.width/240;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);x=ctx;
+  try{ctx.setTransform(sc,0,0,sc,0,0);
+    x.fillStyle=b.col;x.fillRect(10,6,220,288);x.fillStyle='rgba(43,43,43,.2)';x.fillRect(10,6,22,288);
+    stroke(6);rrect(10,6,220,288,700+i,2);
+    x.save();x.translate(46,32);x.beginPath();x.rect(0,0,166,104);x.clip();x.scale(166/480,104/300);
+    BOOKS[i].pages[b.cover||0].pic();x.restore();stroke(4);x.strokeRect(46,32,166,104);
+    x.fillStyle=INK;x.textAlign='center';x.font='700 25px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
+    const words=b.title.split(' '),lines=[];let ln='';
+    words.forEach(w=>{const tr=ln?ln+' '+w:w;if(x.measureText(tr).width>170&&ln){lines.push(ln);ln=w;}else ln=tr;});lines.push(ln);
+    lines.forEach((l,k)=>x.fillText(l,129,178+k*32));}
+  finally{x=X0;}}
+function hasBook(i){return BAG.some(o=>o.kind==='book'&&o.bk===i);}
+function openShelf(){
+  const g=document.getElementById('libgrid');g.innerHTML='';
+  BOOKS.forEach((b,i)=>{const d=document.createElement('div');d.className='bk';
+    const cv=document.createElement('canvas');cv.width=240;cv.height=300;drawCover(cv,i);d.appendChild(cv);
+    if(readDone[i]||hasBook(i)){const m=document.createElement('i');m.textContent=(readDone[i]?'⭐':'')+(hasBook(i)?'🎒':'');d.appendChild(m);}
+    d.addEventListener('click',e=>{e.stopPropagation();shut('lib');openReader(i);});g.appendChild(d);});
+  document.getElementById('lib').style.display='flex';started=true;}
+function openReader(i){RD={bk:i,pg:0};showPage();document.getElementById('read').style.display='flex';started=true;tone(520,.08,'sine',.04);}
+function turnPage(d){const b=BOOKS[RD.bk],n=Math.max(0,Math.min(b.pages.length-1,RD.pg+d));
+  if(n===RD.pg)return;RD.pg=n;slide(d>0?500:700,d>0?700:500,.12,'sine',.025);showPage();}
+function showPage(){
+  const b=BOOKS[RD.bk],p=b.pages[RD.pg],last=RD.pg===b.pages.length-1;
+  document.getElementById('readtitle').textContent=b.title;
+  drawPage(document.getElementById('readpic'),p.pic);
+  document.getElementById('readtxt').textContent=typeof p.txt==='function'?p.txt():p.txt;
+  document.getElementById('readnum').textContent=(RD.pg+1)+' / '+b.pages.length;
+  document.getElementById('readprev').classList.toggle('off',RD.pg===0);
+  document.getElementById('readnext').classList.toggle('off',last);
+  if(last&&!readDone[RD.bk]){readDone[RD.bk]=true;mark('readbook');tune([523,659,784],90,'triangle');
+    if(BOOKS.every((q,k)=>readDone[k]))mark('allbooks');}
+  const row=document.getElementById('readbtns'),note=document.getElementById('readnote');row.innerHTML='';note.textContent='';
+  if(hasBook(RD.bk))note.textContent=inLib()?'this one is in your bag. give it back at the desk when you are done!':'a library book from Mrs. Hush';
+  else if(inLib()){const bt=document.createElement('div');bt.className='btn wide';bt.textContent='🎒 check it out';
+    bt.addEventListener('click',e=>{e.stopPropagation();borrow(RD.bk);});row.appendChild(bt);}}
+function borrow(i){
+  if(hasBook(i))return;
+  if(BAG.length>=BAGMAX){document.getElementById('readnote').textContent='your bag is full! put something down first.';beep(200,.15,'square',.03);return;}
+  BAG.push({kind:'book',bk:i});bagSig='';mark('checkout');
+  const h=NPC.find(n=>n.id==='hush');if(h){meet('hush');h.waveT=90;say(h.x,h.y-150,'stamp! enjoy your book!');puff(h.x+40,h.y-120,5);}
+  crunch(.08,.09);tone(880,.09,'sine',.04,.12);tone(1175,.12,'sine',.04,.2);showPage();}
+document.getElementById('readprev').addEventListener('click',e=>{e.stopPropagation();turnPage(-1);});
+document.getElementById('readnext').addEventListener('click',e=>{e.stopPropagation();turnPage(1);});
+
 (function loop(){update();R?raceDraw():draw();if(t%10===0){updatePals();updateBag();}requestAnimationFrame(loop);})();
 </script>
