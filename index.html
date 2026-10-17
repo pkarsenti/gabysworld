@@ -1,3 +1,4 @@
+<!doctype html>
 <!--
   Gaby's World
   Ideas, drawings and scenes: Gaby (age 6)
@@ -40,19 +41,20 @@
   #pad{position:fixed;left:14px;bottom:14px;display:none;grid-template-columns:repeat(3,56px);
     grid-template-rows:repeat(3,56px);gap:4px;}
   #btns{position:fixed;right:16px;bottom:22px;display:none;flex-direction:column;gap:10px;align-items:center;}
-  .btn{background:rgba(255,255,255,.75);border:3px solid #2b2b2b;border-radius:14px;
-    font:700 23px inherit;color:#2b2b2b;display:flex;align-items:center;justify-content:center;}
+  .btn{box-sizing:border-box;background:rgba(255,255,255,.75);border:3px solid #2b2b2b;border-radius:14px;
+    font-weight:700;font-size:23px;font-family:inherit;color:#2b2b2b;display:flex;align-items:center;justify-content:center;}
   .btn:active{background:#ffe9a8;}
   .rnd{border-radius:50%;width:76px;height:76px;font-size:30px;}
   @media (pointer:coarse){#pad{display:grid}#btns{display:flex}}
+  body:not(.playing) #pad,body:not(.playing) #btns{display:none !important;}
   #top{position:fixed;top:12px;right:14px;display:flex;gap:8px;}
   #top .btn{width:60px;height:50px;font-size:24px;}
   #pals{position:fixed;top:72px;right:14px;display:flex;flex-direction:column;gap:7px;align-items:flex-end;}
   #pals .pal{width:56px;height:56px;border:3px solid #2b2b2b;border-radius:50%;background:#f6efdc;overflow:hidden;position:relative;}
   #pals .pal canvas{width:100%;height:100%;display:block;}
-  #pals .lbl{font:700 12px inherit;background:#fffdf4;border:2px solid #2b2b2b;border-radius:8px;padding:1px 6px;margin-top:-6px;}
+  #pals .lbl{font-weight:700;font-size:12px;font-family:inherit;background:#fffdf4;border:2px solid #2b2b2b;border-radius:8px;padding:1px 6px;margin-top:-6px;}
   #bag{position:fixed;top:12px;left:14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;}
-  #bag .lbl{font:700 14px inherit;background:#fffdf4;border:3px solid #2b2b2b;border-radius:12px;padding:4px 8px;}
+  #bag .lbl{font-weight:700;font-size:14px;font-family:inherit;background:#fffdf4;border:3px solid #2b2b2b;border-radius:12px;padding:4px 8px;}
   #bag .slot{width:52px;height:52px;border:3px solid #2b2b2b;border-radius:14px;background:#fffdf4;overflow:hidden;}
   #bag .slot canvas{width:100%;height:100%;display:block;}
   #bag .slot.wanted{background:#ffe9a8;animation:wig 1.2s ease-in-out infinite;}
@@ -103,6 +105,12 @@
   .wopt.on{background:#ffe9a8;box-shadow:0 0 0 3px #c96a2e;}
   #ward .row{display:flex;gap:10px;justify-content:center;margin-top:10px;}
   .close{margin-top:13px;font-size:16px;text-decoration:underline;font-weight:700;}
+  /* phones: smaller controls (these come last so they win) */
+  @media (max-width:520px){#top{gap:6px;right:10px;}#top .btn{width:48px;height:42px;font-size:20px;}
+    #pad{left:10px;bottom:10px;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px);gap:3px;}
+    #btns{right:12px;bottom:16px;gap:8px;}.rnd{width:62px;height:62px;font-size:25px;}}
+  @media (max-width:340px){#top .btn{width:42px;height:38px;font-size:17px;}#bag .lbl{font-size:12px;padding:3px 6px;}
+    #pad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);}.rnd{width:54px;height:54px;font-size:22px;}}
 </style>
 <canvas id="c"></canvas>
 <div id="pad">
@@ -722,8 +730,10 @@ function hook(el,k){
   el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);
   el.addEventListener('pointercancel',off);el.addEventListener('pointerleave',off);}
 document.querySelectorAll('[data-k]').forEach(b=>hook(b,b.dataset.k));
-function sunPos(){const tb=document.getElementById('top').getBoundingClientRect(),r=innerWidth<500?18:Math.max(22,Math.min(34,innerWidth*.06));
-  return{x:Math.min(innerWidth/2,(84+tb.left)/2),y:48,r};}
+function sunPos(){const tb=document.getElementById('top').getBoundingClientRect(),bl=document.querySelector('#bag .lbl'),
+    br=bl?bl.getBoundingClientRect().right:84,r=innerWidth<500?20:Math.max(22,Math.min(34,innerWidth*.06));
+  if(tb.left-br>=2*(r+20)+10)return{x:Math.min(innerWidth/2,(br+tb.left)/2),y:tb.top+tb.height/2,r};
+  return{x:innerWidth/2,y:tb.bottom+r+24,r};}
 function onSun(e){const s=sunPos();return Math.hypot(e.clientX-s.x,e.clientY-s.y)<s.r+24;}
 c.addEventListener('pointerdown',e=>{if(started&&!R&&onSun(e)){toggleSky();return;}started=true;});
 c.addEventListener('pointermove',e=>{c.style.cursor=started&&!R&&onSun(e)?'pointer':'default';});
@@ -842,6 +852,7 @@ let palSig='',palOpen=null;
 function updatePals(){
   const el=document.getElementById('pals');
   el.style.display=(R||!started)?'none':'flex';document.getElementById('top').style.display=R?'none':'flex';
+  document.body.classList.toggle('playing',started);
   const sig=followers.map(f=>f.sid||f.kind).join(',');if(sig===palSig)return;palSig=sig;
   el.innerHTML='';
   followers.slice(0,6).forEach(f=>{const b=document.createElement('div');b.className='pal';
@@ -1354,7 +1365,7 @@ function drawGround(cam){
   const from=Math.floor((cam.x-VW/2)/140)*140;
   for(let dx=from;dx<cam.x+VW/2+140;dx+=140)rline(dx,GY+58,dx+62,GY+58,dx,2);}
 function drawSigns(cam){
-  x.font='700 20px "Comic Sans MS","Chalkboard SE",cursive';x.textAlign='center';
+  x.font='700 20px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
   for(const s of SIGNS){
     if(s.x<cam.x-VW/2-90||s.x>cam.x+VW/2+90)continue;
     stroke(6);rline(s.x,GY,s.x,GY-92,s.x,2);
@@ -1561,7 +1572,7 @@ function drawSchoolFacade(){                     // on main street: you go in th
   rline(S.door,top-38,S.door+Math.cos(t*.01)*12,top-38+Math.sin(t*.01)*12,7526,0);
   /* name */
   fbox(S.door-90,top+20,180,44,7528,PAPER,5);
-  x.fillStyle=INK;x.textAlign='center';x.font='700 26px "Comic Sans MS","Chalkboard SE",cursive';x.fillText('school',S.door,top+51);
+  x.fillStyle=INK;x.textAlign='center';x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('school',S.door,top+51);
   /* windows full of drawings */
   [S.x0+30,S.x0+130,S.x1-210,S.x1-110].forEach((wx,i)=>{
     fbox(wx,top+100,80,90,7536+i,dark()?'#f3dca0':'#cfe3ea',5);rline(wx,top+145,wx+80,top+145,7540+i,1);
@@ -1573,7 +1584,7 @@ function drawSchoolFacade(){                     // on main street: you go in th
   fbox(S.door-38,GY-136,28,40,7560,'#cfe3ea',4);fbox(S.door+10,GY-136,28,40,7562,'#cfe3ea',4);
   fillCirc(S.door-10,GY-70,4,7564);fillCirc(S.door+10,GY-70,4,7566);
   fbox(S.door-64,GY-10,128,10,7568,'#cdbfa8',4);
-  if(recess){x.fillStyle=INK;x.font='700 20px "Comic Sans MS",cursive';x.fillText('playtime!',S.door,GY-166);}
+  if(recess){x.fillStyle=INK;x.font='700 20px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('playtime!',S.door,GY-166);}
   potted(S.x0+90,GY,7570);potted(S.x1-40,GY,7572);}
 function swingAngle(){const busy=P.swing>0||KIDS.some(k=>k.onSwing);return busy?Math.sin(t*.055)*.55:Math.sin(t*.02)*.04;}
 function swingSeat(side){const a=swingAngle()*(side<0?1:-1),px=SWING.x+side*40;
@@ -1614,13 +1625,13 @@ function drawClassroom(cam){
   /* bunting with letters under the ceiling */
   stroke(3);x.beginPath();x.moveTo(Z.x0,Z.ceil+12);
   for(let bx=Z.x0;bx<=Z.x1;bx+=60)x.quadraticCurveTo(bx+30,Z.ceil+26,bx+60,Z.ceil+12);x.stroke();
-  x.font='700 15px "Comic Sans MS",cursive';x.textAlign='center';
+  x.font='700 15px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
   for(let i=0,bx=Z.x0+30;bx<Z.x1;bx+=60,i++){x.fillStyle=SHIRTS[i%SHIRTS.length];
     x.beginPath();x.moveTo(bx-16,Z.ceil+18);x.lineTo(bx+16,Z.ceil+18);x.lineTo(bx,Z.ceil+52);x.closePath();x.fill();stroke(3);x.stroke();
     x.fillStyle=INK;x.fillText('ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i%26],bx,Z.ceil+34);}
   /* way out + clock */
   fbox(Z.x0+34,GY-170,72,170,5621,'#cfe3ea',7);rline(Z.x0+70,GY-170,Z.x0+70,GY,5623,1);
-  fbox(Z.x0+30,GY-216,80,32,5625,SAGE,5);x.fillStyle=INK;x.font='700 17px "Comic Sans MS",cursive';x.fillText('way out',Z.x0+70,GY-194);
+  fbox(Z.x0+30,GY-216,80,32,5625,SAGE,5);x.fillStyle=INK;x.font='700 17px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('way out',Z.x0+70,GY-194);
   fcirc(Z.x0+70,470,30,5627,PAPER);stroke(4);rline(Z.x0+70,470,Z.x0+70,450,5629,0);
   rline(Z.x0+70,470,Z.x0+70+Math.cos(t*.02)*16,470+Math.sin(t*.02)*16,5631,0);
   /* the bell, hanging from the ceiling with a long rope */
@@ -1632,7 +1643,7 @@ function drawClassroom(cam){
   rline(-40,86,40,86,5153,2);fillCirc(0,98,10,5161);
   stroke(5,'#8a6a4a');rline(0,104,0,190,5163,2);fillCirc(0,198,11,5165,TOMATO);
   x.restore();
-  x.font='700 19px "Comic Sans MS",cursive';x.textAlign='center';x.fillStyle=INK;
+  x.font='700 19px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';x.fillStyle=INK;
   x.fillText(recess?'everyone is outside!':'ring for playtime',bx,by-20);
   if(recess){x.save();x.globalAlpha=.5;stroke(4);for(let i=0;i<3;i++)rcirc(bx,by+50,44+i*20+Math.sin(t*.3)*5,5171+i*7);x.restore();}
   /* her banner: "I (heart) mis Bec" */
@@ -1640,12 +1651,12 @@ function drawClassroom(cam){
   x.fillStyle=PAPER;x.beginPath();x.moveTo(8580,566);x.lineTo(8980,566);
   x.quadraticCurveTo(9026,627,8980,688);x.lineTo(8640,688);x.lineTo(8596,722);x.lineTo(8612,688);
   x.quadraticCurveTo(8536,627,8580,566);x.closePath();x.fill();stroke(6);x.stroke();
-  x.fillStyle=INK;x.textAlign='center';x.font='700 34px "Comic Sans MS","Chalkboard SE",cursive';
+  x.fillStyle=INK;x.textAlign='center';x.font='700 34px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
   x.fillText('I',8636,640);x.fillStyle=TOMATO;heart(8686,624,15);x.fillStyle=INK;x.fillText('mis Bec',8834,640);
   x.restore();
   /* chalkboard with the sum */
   fbox(15720,430,340,122,5641,'#5f7a6a',7);x.fillStyle='#c49a74';x.fillRect(15720,552,340,10);
-  x.fillStyle='#f3ecd8';x.font='700 42px "Comic Sans MS",cursive';x.textAlign='center';
+  x.fillStyle='#f3ecd8';x.font='700 42px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
   x.fillText(sumShown?sumA+' + '+sumB+' = '+(sumA+sumB):sumA+' + '+sumB+' = ?',15890,506);
   /* the pictures she can change */
   const frame=(fx,fy,what,seed)=>{fbox(fx,fy,66,66,seed,PAPER,5.5);
@@ -1683,7 +1694,7 @@ function drawRaceGate(){
   x.fillStyle=PAPER;x.fillRect(gx-136,GY-320,272,72);rrect(gx-136,GY-320,272,72,6676,3);
   for(let i=0;i<8;i++)for(let j=0;j<2;j++){
     if((i+j)%2)continue;x.fillStyle=INK;x.fillRect(gx-132+i*33,GY-316+j*32,33,32);}
-  x.fillStyle=INK;x.textAlign='center';x.font='700 34px "Comic Sans MS",cursive';
+  x.fillStyle=INK;x.textAlign='center';x.font='700 34px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
   x.fillText('RACE',gx,GY-160);
   stroke(6);
   for(let i=0;i<3;i++)rline(gx+150+i*40,GY-40,gx+186+i*40,GY-40,6686+i*7,3);}
@@ -1708,7 +1719,7 @@ function drawCar(){
     if(Math.abs(CAR.vx)>4){stroke(5);
       for(let i=0;i<3;i++)rline(cx-96,cy-84+i*26,cx-150,cy-84+i*26,5646+i*7,3);}}
   x.restore();
-  if(CAR.horn>0){x.font='700 26px "Comic Sans MS",cursive';x.textAlign='center';
+  if(CAR.horn>0){x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
     x.fillStyle=INK;x.fillText('HONK',cx,cy-150);}}
 function drawLadders(){
   stroke(7);
@@ -1800,7 +1811,7 @@ function drawPlayer(){
   figure(px,py,Object.assign({},o,{walk:P.walk,turn:P.turnA||0,arms:P.held!==null?'carry':'down',s:1}));}
 function bubble(bx,by,txt,alpha,small){
   x.save();x.globalAlpha=alpha;
-  x.font='700 '+(small?16:19)+'px "Comic Sans MS","Chalkboard SE",cursive';
+  x.font='700 '+(small?16:19)+'px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
   const w=x.measureText(txt).width+22,h=small?27:32;
   x.fillStyle=PAPER;x.beginPath();x.rect(bx-w/2,by-h,w,h);x.fill();
   stroke(3.5);rrect(bx-w/2,by-h,w,h,(bx|0),2);
@@ -1818,16 +1829,16 @@ function drawThought(n,hop){
   x.beginPath();x.ellipse(bx,by,30,26,0,0,7);x.fill();x.stroke();
   x.save();x.translate(bx,by+12);x.scale(.62,.62);x.beginPath();x.rect(-60,-90,120,100);x.clip();
   itemArt(n.wish.k,0,0,51,0,{kind:n.wish.k});x.restore();
-  if(has){x.fillStyle=TOMATO;x.font='700 22px "Comic Sans MS",cursive';x.textAlign='center';x.fillText('!',bx+30,by-16);}
+  if(has){x.fillStyle=TOMATO;x.font='700 22px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';x.fillText('!',bx+30,by-16);}
   x.restore();}
 function beacon(cx,cy){                         // a bobbing star badge over the big things to try
   const b=Math.sin(t*.08)*6;x.save();
   x.globalAlpha=.35+Math.sin(t*.08)*.15;stroke(3,'#c96a2e');rcirc(cx,cy+b,24+Math.sin(t*.08)*3,(t/12|0)%30);
   x.globalAlpha=.95;x.fillStyle='#fdf0c4';rcircPath(cx,cy+b,17,9);x.fill();stroke(3.5);x.stroke();
-  x.fillStyle=INK;x.font='700 19px "Comic Sans MS",cursive';x.textAlign='center';x.fillText('★',cx,cy+b+7);x.restore();}
+  x.fillStyle=INK;x.font='700 19px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';x.fillText('★',cx,cy+b+7);x.restore();}
 function handHint(cx,cy){x.save();x.globalAlpha=.75+Math.sin(t*.15)*.2;
   x.fillStyle=PAPER;rcircPath(cx,cy,15,7);x.fill();stroke(3.5);x.stroke();
-  x.fillStyle=INK;x.font='700 15px "Comic Sans MS",cursive';x.textAlign='center';x.fillText('✋',cx,cy+5);
+  x.fillStyle=INK;x.font='700 15px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';x.fillText('✋',cx,cy+5);
   x.restore();}
 
 /* ======================= Gaby's Burgers ======================= */
@@ -1861,7 +1872,7 @@ function icon(kind,cx,base,sc,seed){
     stroke(4.5);x.beginPath();x.arc(-8,-30,7,Math.PI,0);x.stroke();x.beginPath();x.arc(8,-30,7,Math.PI,0);x.stroke();
     x.fillStyle=TOMATO;x.fillRect(-20,-30,40,30);rrect(-20,-30,40,30,seed,2);
     x.fillStyle=MUSTARD;x.beginPath();x.moveTo(-20,-12);x.lineTo(20,-12);x.lineTo(20,-4);x.lineTo(-20,-4);x.fill();
-    x.fillStyle=PAPER;x.font='700 17px "Comic Sans MS",cursive';x.textAlign='center';x.fillText('?',0,-14);}
+    x.fillStyle=PAPER;x.font='700 17px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';x.fillText('?',0,-14);}
   x.restore();}
 function drawStack(cx,base,n){                   // the burger she builds on the counter, one layer at a time
   let y=base;stroke(4.5);
@@ -1898,7 +1909,7 @@ function drawBurgerFacade(){                     // on main street
   /* name board */
   stroke(5);rline(B.x0+100,B.top,B.x0+100,B.top-14,8130,1);rline(B.x1-30,B.top,B.x1-30,B.top-14,8132,1);
   x.fillStyle=PAPER;x.fillRect(B.x0+66,B.top-62,B.x1-B.x0-62,48);rrect(B.x0+66,B.top-62,B.x1-B.x0-62,48,8134,2);
-  x.fillStyle=INK;x.textAlign='center';x.font='700 21px "Comic Sans MS","Chalkboard SE",cursive';
+  x.fillStyle=INK;x.textAlign='center';x.font='700 21px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
   x.fillText(BURGER_NAME,(B.x0+66+B.x1+4)/2,B.top-31);
   /* stripy awning over the door */
   const ax0=B.door-56,ax1=B.door+56,ay=GY-150;
@@ -1908,7 +1919,7 @@ function drawBurgerFacade(){                     // on main street
   x.fillStyle='#bcd6e0';x.fillRect(B.door-30,GY-122,60,122);stroke(6);rrect(B.door-30,GY-122,60,122,8138,2);
   rline(B.door,GY-122,B.door,GY,8140,1);fillCirc(B.door-8,GY-58,4,8142);fillCirc(B.door+8,GY-58,4,8144);
   x.fillStyle=PAPER;x.fillRect(B.door-22,GY-104,44,18);stroke(3);x.strokeRect(B.door-22,GY-104,44,18);
-  x.fillStyle=INK;x.font='700 12px "Comic Sans MS",cursive';x.fillText('OPEN',B.door,GY-90);
+  x.fillStyle=INK;x.font='700 12px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('OPEN',B.door,GY-90);
   /* window with people inside */
   x.fillStyle=dark()?'#f3dca0':'#cfe3ea';x.fillRect(B.x0+14,B.top+64,72,70);stroke(5);rrect(B.x0+14,B.top+64,72,70,8146,2);
   x.save();x.beginPath();x.rect(B.x0+14,B.top+64,72,70);x.clip();
@@ -1916,7 +1927,7 @@ function drawBurgerFacade(){                     // on main street
   /* the drive-thru window */
   x.fillStyle=dark()?'#f3dca0':'#cfe3ea';x.fillRect(B.x1-60,GY-196,48,46);stroke(5);rrect(B.x1-60,GY-196,48,46,8150,2);
   stroke(6);rline(B.x1-66,GY-148,B.x1+8,GY-148,8152,1);
-  x.fillStyle=INK;x.font='700 14px "Comic Sans MS",cursive';x.textAlign='center';x.fillText('drive-thru',B.x1-36,GY-206);
+  x.fillStyle=INK;x.font='700 14px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';x.fillText('drive-thru',B.x1-36,GY-206);
   if(CAR.driving&&Math.abs(CAR.x-(B.x1-40))<110){x.save();x.globalAlpha=.6+Math.sin(t*.2)*.3;stroke(4,'#c96a2e');
     rcirc(B.x1-36,GY-173,40,8154);x.restore();}
   potted(B.x0+110,GY,8156);}
@@ -1957,17 +1968,17 @@ function drawBurgerInside(cam){
   fbox(LOFT.x0-10,LOFT.y,LOFT.x1-LOFT.x0+10,22,7153,'#c49a74',6);
   fbox(12540,LOFT.y+22,16,GY-LOFT.y-22,7155,'#c49a74',5);
   drawLadderArt(12600,LOFT.y,GY,7157);
-  x.fillStyle=INK;x.font='700 15px "Comic Sans MS",cursive';x.textAlign='center';x.fillText('upstairs',12600,LOFT.y-12);
+  x.fillStyle=INK;x.font='700 15px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';x.fillText('upstairs',12600,LOFT.y-12);
 
   /* ---- downstairs, under the loft: way out + self-serve milkshakes ---- */
   fbox(ZB.x0+34,GY-170,72,170,7111,nightish?'#2d3657':'#cfe3ea',7);rline(ZB.x0+70,GY-170,ZB.x0+70,GY,7113,1);
   fbox(ZB.x0+30,GY-216,80,30,7115,SAGE,5);
-  x.fillStyle=INK;x.font='700 16px "Comic Sans MS",cursive';x.fillText('way out',ZB.x0+70,GY-195);
+  x.fillStyle=INK;x.font='700 16px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('way out',ZB.x0+70,GY-195);
   fbox(12262,GY-150,116,150,7161,'#c9d3d6',6);
   ['#f2c4cf','#b98a6a','#f3dc8a'].forEach((col,i)=>{fcirc(12290+i*30,GY-124,10,7163+i,col,4);
     stroke(5);rline(12290+i*30,GY-110,12290+i*30,GY-92,7167+i,0);});
   fbox(12274,GY-70,92,10,7171,'#9fb0c8',4);
-  x.fillStyle=INK;x.font='700 14px "Comic Sans MS",cursive';x.fillText('shakes',12320,GY-28);
+  x.fillStyle=INK;x.font='700 14px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('shakes',12320,GY-28);
 
   /* ---- the counter area: menu board high up, well above heads ---- */
   const mb=12650;stroke(4);rline(mb+40,C,mb+40,440,7181,1);rline(mb+230,C,mb+230,440,7183,1);
@@ -1984,7 +1995,7 @@ function drawBurgerInside(cam){
   x.fillStyle=MUSTARD;x.fillRect(12960,560,8,GY-560);x.fillRect(13012,560,8,GY-560);
   stroke(5);rrect(12960,560,8,GY-560,7195,1);rrect(13012,560,8,GY-560,7196,1);
   fbox(12904,506,172,54,7197,PAPER,6);
-  x.fillStyle=INK;x.font='700 24px "Comic Sans MS",cursive';x.fillText('play area',12990,541);
+  x.fillStyle=INK;x.font='700 24px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('play area',12990,541);
   /* mural */
   fcirc(13730,430,40,7201,'#fdf0c4');
   for(let i=0;i<8;i++){const a=i/8*Math.PI*2+t*.004;rline(13730+Math.cos(a)*48,430+Math.sin(a)*48,13730+Math.cos(a)*64,430+Math.sin(a)*64,7203+i,1.5);}
@@ -2099,10 +2110,10 @@ function drawPool(cam){
   stroke(6,PAPER);for(let i=0;i<4;i++){const a=i*Math.PI/2+.6;rline(18000+Math.cos(a)*13,GY-72+Math.sin(a)*13,18000+Math.cos(a)*22,GY-72+Math.sin(a)*22,8047+i,0);}
   /* way out, and the name board */
   fbox(Z.x0+34,GY-170,72,170,8051,nt?'#2d3657':'#cfe3ea',7);rline(Z.x0+70,GY-170,Z.x0+70,GY,8053,1);
-  fbox(Z.x0+30,GY-216,80,32,8055,SAGE,5);x.fillStyle=INK;x.textAlign='center';x.font='700 17px "Comic Sans MS",cursive';
+  fbox(Z.x0+30,GY-216,80,32,8055,SAGE,5);x.fillStyle=INK;x.textAlign='center';x.font='700 17px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
   x.fillText('way out',Z.x0+70,GY-194);
   stroke(7);rline(17110,GY-120,17110,GY-200,8057,1);rline(17230,GY-120,17230,GY-200,8059,1);
-  fbox(17070,GY-262,200,64,8061,PAPER,6);x.fillStyle=INK;x.font='700 26px "Comic Sans MS","Chalkboard SE",cursive';
+  fbox(17070,GY-262,200,64,8061,PAPER,6);x.fillStyle=INK;x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
   x.fillText("Gaby's Pool",17170,GY-226);stroke(4,'#7f9fbf');wave(17096,17244,GY-208,8063);
   /* the deck */
   x.fillStyle=nt?'#c9bca2':'#efe3c8';x.fillRect(L,GY+4,R-L,Bt-GY);
@@ -2171,7 +2182,7 @@ function drawPoolGate(){                         // on main street: a wavy blue 
   stroke(4,'#7f9fbf');for(let i=0;i<5;i++)rline(G.door-36+i*18,GY-150,G.door-36+i*18,GY,8421+i,0);
   fbox(G.door-64,GY-214,18,214,8431,SKY,5);fbox(G.door+46,GY-214,18,214,8433,SKY,5);
   fbox(G.door-92,GY-270,184,56,8435,PAPER,6);
-  x.fillStyle=INK;x.textAlign='center';x.font='700 30px "Comic Sans MS","Chalkboard SE",cursive';x.fillText('pool',G.door,GY-236);
+  x.fillStyle=INK;x.textAlign='center';x.font='700 30px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('pool',G.door,GY-236);
   stroke(4,'#7f9fbf');wave(G.door-60,G.door+60,GY-222,8437);
   potted(G.x0+30,GY,8439);}
 
@@ -2556,7 +2567,7 @@ function raceBuilding(bx,b,seed){
   if(b.k==='sign'){                              // the round 51 sign on its pole
     stroke(7);rline(bx+30,top+6,bx+30,top-58,seed+43,2);
     x.fillStyle=PAPER;rcircPath(bx+30,top-84,30,seed+47,.86);x.fill();x.stroke();
-    x.fillStyle=INK;x.textAlign='center';x.font='700 26px "Comic Sans MS",cursive';
+    x.fillStyle=INK;x.textAlign='center';x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
     x.fillText('51',bx+30,top-76);}
   if(b.k==='flat'){                              // parapet ledge with a box on it
     stroke(6);rline(bx-14,top-24,bx+b.w+14,top-20,seed+59,3);
@@ -2590,12 +2601,18 @@ function raceCar(cx,cy,sc,seed,me,who){
     itemArt(f.kind,0,0,seed+i*7,0,f);x.restore();});
   x.restore();}
 function raceDraw(){
-  const sc=Math.min(innerWidth/RW,innerHeight/RH);
+  /* on a tall phone, zoom in (show about 600 of the 900 wide street) rather than shrink it to a strip */
+  const sc=Math.min(innerHeight/RH,Math.max(innerWidth/RW,innerWidth/600));
+  let cy=innerHeight/2;
+  if(matchMedia('(pointer:coarse)').matches){             // keep the road above the touch buttons
+    const a=document.getElementById('pad').getBoundingClientRect(),b2=document.getElementById('btns').getBoundingClientRect();
+    const top=Math.min(a.height?a.top:innerHeight,b2.height?b2.top:innerHeight),road=cy+(510-RH/2)*sc;
+    if(road>top-12)cy-=road-(top-12);}
   x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,innerWidth,innerHeight);
-  x.save();x.translate(innerWidth/2,innerHeight/2);x.scale(sc,sc);
+  x.save();x.translate(innerWidth/2,cy);x.scale(sc,sc);
   if(R.shake>0)x.translate((Math.random()-.5)*R.shake,(Math.random()-.5)*R.shake*.6);
   x.translate(-RW/2,-RH/2);
-  const EL=RW/2-innerWidth/2/sc-10,ER=RW/2+innerWidth/2/sc+10,ET=RH/2-innerHeight/2/sc-10,EB=RH/2+innerHeight/2/sc+10;
+  const EL=RW/2-innerWidth/2/sc-10,ER=RW/2+innerWidth/2/sc+10,ET=RH/2-cy/sc-10,EB=RH/2+(innerHeight-cy)/sc+10;
   /* sky, sun, clouds - her street drawing */
   const g=x.createLinearGradient(0,0,0,RH);g.addColorStop(0,'#e7f1fb');g.addColorStop(1,'#dce9f4');
   x.fillStyle=g;x.fillRect(EL-40,ET-40,ER-EL+80,EB-ET+80);
@@ -2630,7 +2647,7 @@ function raceDraw(){
     RSTARS.forEach((st,i)=>{if(R.got[k+'_'+i])return;const sx=RW*.3+(k*LAP+st.d-R.d)*RSC;if(sx<-60||sx>RW+60)return;
       const sy=LANEY[st.lane]-46+Math.sin(R.t*.12+i)*5;starShape(sx,sy,15);x.fillStyle='#f3d36b';x.fill();stroke(3.5);x.stroke();});}
   if(lineX>-160&&lineX<RW+160){stroke(7);rline(lineX-10,244,lineX-10,96,5101,1);
-    fbox(lineX-80,96,140,40,5103,PAPER,5);x.fillStyle=INK;x.font='700 22px "Comic Sans MS",cursive';x.textAlign='center';
+    fbox(lineX-80,96,140,40,5103,PAPER,5);x.fillStyle=INK;x.font='700 22px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
     x.fillText(R.lap===LAPS?'FINISH':'lap '+R.lap,lineX-10,124);}
   /* cars, far lane first */
   const drawn=[];
@@ -2638,10 +2655,10 @@ function raceDraw(){
     const cx=RW*.3+(rv.d-R.d)*RSC,ly=laneY(l),ls=laneS(l);
     if(cx<EL-220||cx>ER+220)return;
     raceCar(cx,ly,ls,200+i*57,false,rv.who);
-    if(rv.who&&(rv.ch||Math.abs(cx-RW*.3)<330)){x.fillStyle=rv.ch?ACCENT:INK;x.font='700 '+(rv.ch?17:15)+'px "Comic Sans MS",cursive';x.textAlign='center';
+    if(rv.who&&(rv.ch||Math.abs(cx-RW*.3)<330)){x.fillStyle=rv.ch?ACCENT:INK;x.font='700 '+(rv.ch?17:15)+'px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
       x.fillText(rv.who.name,cx,ly-104*ls);}
     if(rv.sayT>0)bubble(cx,ly-128*ls,rv.say,Math.min(1,rv.sayT/20),true);
-    else if(rv.beep>0){x.fillStyle=INK;x.font='700 20px "Comic Sans MS",cursive';x.textAlign='center';
+    else if(rv.beep>0){x.fillStyle=INK;x.font='700 20px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
       x.fillText('beep!',cx,ly-110);}}});});
   const myY=LANEY[0]+(LANEY[2]-LANEY[0])*(R.ly/2);
   const myS=LANES[0]+(LANES[2]-LANES[0])*(R.ly/2);
@@ -2651,54 +2668,61 @@ function raceDraw(){
       rline(RW*.3-100*myS,myY-60+i*16,RW*.3-100*myS-120,myY-60+i*16,640+i*9,2);x.restore();}
     if(R.spd>7){stroke(5);for(let i=0;i<3;i++)
       rline(RW*.3-92*myS,myY-70+i*26,RW*.3-92*myS-60-R.spd*4,myY-70+i*26,600+i*9,3);}
-    if(R.horn>0){x.fillStyle=INK;x.font='700 24px "Comic Sans MS",cursive';x.textAlign='center';
+    if(R.horn>0){x.fillStyle=INK;x.font='700 24px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
       x.fillText('HONK',RW*.3,myY-120);}
-    if(R.bump>0){x.fillStyle=INK;x.font='700 26px "Comic Sans MS",cursive';x.textAlign='center';
+    if(R.bump>0){x.fillStyle=INK;x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
       x.fillText('oops!',RW*.3,myY-130);}}});
   drawn.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
   if(!R.done)R.rivals.forEach(rv=>{if(!rv.warn)return;     // someone is sneaking up behind you!
     const ly=laneY(rv.ly),pl=Math.abs(Math.sin(R.t*.18));
     x.save();x.globalAlpha=.65+pl*.35;fbox(EL+16,ly-78,128,40,7701,'#fdf0c4',4);
-    x.fillStyle=ACCENT;x.font='700 18px "Comic Sans MS",cursive';x.textAlign='center';
+    x.fillStyle=ACCENT;x.font='700 18px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
     x.fillText(rv.who.name+' ▶▶',EL+80,ly-51);x.restore();});
   for(let i=rbits.length-1;i>=0;i--){const b=rbits[i];b.t++;b.x+=b.vx;b.y+=b.vy;b.vy+=.14;
     if(b.t>70){rbits.splice(i,1);continue;}
     x.save();x.globalAlpha=1-b.t/70;stroke(4);star(b.x,b.y,8,b.s);x.restore();}
-  /* dashboard */
+  /* dashboard: pinned to the screen's corners; on a narrow screen the two boxes stack on the left */
+  const narrow=ER-EL<720,LX=Math.max(14,EL+18),RX=narrow?LX:Math.min(RW-274,ER-282),RY=narrow?70:12,TY=ET+22;
+  x.save();x.translate(LX-14,TY);
   x.fillStyle='rgba(255,253,244,.9)';x.fillRect(14,12,350,50);stroke(4);x.strokeRect(14,12,350,50);
-  x.fillStyle=INK;x.textAlign='left';x.font='700 24px "Comic Sans MS",cursive';
+  x.fillStyle=INK;x.textAlign='left';x.font='700 24px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
   x.fillText('lap '+R.lap+'/'+LAPS,28,46);
   x.fillText(ordinal(R.place)+' of '+(FIELD+1),146,46);
   starShape(276,36,13);x.fillStyle='#f3d36b';x.fill();stroke(3);x.stroke();x.fillStyle=INK;x.fillText(String(R.stars),296,46);
+  x.restore();x.save();x.translate(RX-(RW-274),RY-12+TY);x.textAlign='left';
   const bar=(R.d%LAP)/LAP;
   x.fillStyle='rgba(255,253,244,.9)';x.fillRect(RW-274,12,260,50);stroke(4);x.strokeRect(RW-274,12,260,50);
   x.fillStyle=INK;x.fillRect(RW-264,44,240*bar,12);stroke(3);x.strokeRect(RW-264,44,240,12);
-  x.font='700 18px "Comic Sans MS",cursive';x.fillText('how far round',RW-264,36);
-  if(R.count>0){x.textAlign='center';x.fillStyle=INK;x.font='700 90px "Comic Sans MS",cursive';
+  x.font='700 18px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('how far round',RW-264,36);x.restore();
+  if(R.count>0){x.textAlign='center';x.fillStyle=INK;x.font='700 90px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
     const n=Math.ceil(R.count/66);x.fillText(n>0?String(n):'GO!',RW/2,RH/2-40);
-    x.font='700 22px "Comic Sans MS",cursive';
+    x.font='700 22px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
     x.fillText('hold  ▶  to go,  ▲ ▼  to swap lanes',RW/2,RH/2+16);}
   if(R.done&&R.final){
     x.fillStyle='rgba(255,253,244,.88)';x.fillRect(RW/2-300,88,600,360);stroke(5);x.strokeRect(RW/2-300,88,600,360);
-    x.textAlign='center';x.fillStyle=INK;x.font='700 44px "Comic Sans MS",cursive';
+    x.textAlign='center';x.fillStyle=INK;x.font='700 44px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
     x.fillText(R.place===1?'YOU WON!':ordinal(R.place)+' place!',RW/2,140);
-    x.font='700 20px "Comic Sans MS",cursive';x.fillText('you grabbed '+R.stars+' star'+(R.stars===1?'':'s'),RW/2,170);
+    x.font='700 20px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('you grabbed '+R.stars+' star'+(R.stars===1?'':'s'),RW/2,170);
     [[1,RW/2-140,330,70],[0,RW/2,300,100],[2,RW/2+140,345,55]].forEach(([i,px,top,h])=>{const p=R.final[i];if(!p)return;
       fbox(px-62,top,124,400-top+20,5701+i,['#f3d36b','#c9d3d6','#d9a27a'][i],5);
-      x.fillStyle=INK;x.font='700 34px "Comic Sans MS",cursive';x.fillText(String(i+1),px,top+38);
+      x.fillStyle=INK;x.font='700 34px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText(String(i+1),px,top+38);
       const d=p.me?gabyO({hat:null}):{look:p.who.look,hair:p.who.hair,fill:p.who.skin,shirt:p.who.shirt};
       figure(px,top,Object.assign({s:.85,arms:'up',seed:5711+i,shadow:false},d));
-      x.font='700 17px "Comic Sans MS",cursive';x.fillStyle=INK;x.fillText(p.name,px,top+64);});
-    x.font='700 20px "Comic Sans MS",cursive';x.fillText('press ★ to go back',RW/2,436);}
+      x.font='700 17px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillStyle=INK;x.fillText(p.name,px,top+64);});
+    x.font='700 20px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('press ★ to go back',RW/2,436);}
   x.restore();}
 
 function draw(){
   let camY;
   if(flying)camY=640+Math.sin(t*.05)*6;
   else{const below=P.y>GY+60?LAB.floor:GY;
-    const touchPad=matchMedia('(pointer:coarse)').matches?Math.max(120,250/scale):120;  // keep people above the touch buttons
-    camY=Math.min(P.y-VH*.24,below+touchPad-VH/2);
-    if(inZone())camY=curZone().ceil-46+VH/2;}
+    let touchPad=120;                               // keep people above the touch buttons, measured from the real buttons
+    if(matchMedia('(pointer:coarse)').matches){const a=document.getElementById('pad').getBoundingClientRect(),b2=document.getElementById('btns').getBoundingClientRect();
+      const top=Math.min(a.height?a.top:innerHeight,b2.height?b2.top:innerHeight);touchPad=Math.max(120,(innerHeight-top+28)/scale);}
+    const lim=below+touchPad-VH/2;               // on touch screens the ground always sits just above the buttons
+    camY=matchMedia('(pointer:coarse)').matches?Math.min(P.y-below+lim,lim):Math.min(P.y-VH*.24,lim);
+    if(inZone()){camY=curZone().ceil-46+VH/2;
+      if(matchMedia('(pointer:coarse)').matches)camY=(inPool()?POOL.bot+14:GY)+touchPad-VH/2;}}
   const cam={x:Math.max(VW/2,Math.min(W.w-VW/2,P.x)),y:camY};
   if(VW>W.w)cam.x=W.w/2;
   if(inZone()){const z=curZone();cam.x=Math.max(z.x0+VW/2,Math.min(z.x1-VW/2,P.x));if(VW>z.x1-z.x0)cam.x=(z.x0+z.x1)/2;}
@@ -2752,7 +2776,7 @@ function draw(){
 
   for(const b of bits){
     const a=1-b.t/92;x.save();x.globalAlpha=a;stroke(4);
-    if(b.kind==='z'){x.font='700 20px "Comic Sans MS",cursive';x.fillStyle=INK;x.textAlign='center';x.fillText('z',b.x,b.y);}
+    if(b.kind==='z'){x.font='700 20px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillStyle=INK;x.textAlign='center';x.fillText('z',b.x,b.y);}
     else if(b.kind==='heart'){x.fillStyle=INK;heart(b.x,b.y,7);}
     else if(b.kind==='ball')rcirc(b.x,b.y,9,b.s);
     else if(b.kind==='bub')rcirc(b.x,b.y,7,b.s);
@@ -2782,27 +2806,27 @@ function draw(){
   if(sunPop>0)sunPop--;
   if(started)drawSun();
   if(fadeT>0){x.fillStyle='rgba(246,239,220,'+(fadeT/16)+')';x.fillRect(0,0,innerWidth,innerHeight);}
-  if(partyT>0){x.textAlign='center';x.font='700 26px "Comic Sans MS",cursive';
+  if(partyT>0){x.textAlign='center';x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
     x.fillStyle=INK;x.fillText('you did everything!',innerWidth/2,innerHeight-30);
     if(t%6===0)puff(P.x+(Math.random()-.5)*220,P.y-180,2);}
   if(!started){
-    x.fillStyle='rgba(245,239,225,.94)';x.fillRect(0,0,innerWidth,innerHeight);
-    x.fillStyle=INK;x.textAlign='center';
-    x.font='700 32px "Comic Sans MS","Chalkboard SE",cursive';
-    x.fillText("Gaby's World",innerWidth/2,innerHeight/2-104);
-    x.font='700 17px "Comic Sans MS",cursive';
-    ['◀ ▶ walk,  ▲ hop,  ▲ ▼ climb ladders','★ does whatever the little bubble says',
+    x.fillStyle='rgba(245,239,225,.96)';x.fillRect(0,0,innerWidth,innerHeight);
+    const TF='"Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif',touch=matchMedia('(pointer:coarse)').matches;
+    const lines=['◀ ▶ walk,  ▲ hop,  ▲ ▼ climb ladders','★ does whatever the little bubble says',
      '✋ puts things in your bag (tap them to use)','💭 someone wants something? bring it to them!',
      'water a flower and a sprout friend grows!','the ★ badges show big things to try',
-     '☀ tap the sun for day or night','🏁 the race is just past your house!'].forEach((l,i)=>
-      x.fillText(l,innerWidth/2,innerHeight/2-50+i*28));
-    x.font='700 15px "Comic Sans MS",cursive';
-    x.fillText('press anything to start',innerWidth/2,innerHeight/2+214);
-    x.font='700 13px "Comic Sans MS",cursive';x.fillStyle='#8a8476';
-    x.fillText('made by Gaby (age 6) and Papa  ·  credits in the 📖 book',innerWidth/2,
-      matchMedia('(pointer:coarse)').matches?Math.max(92,innerHeight/2-290):innerHeight-18);x.fillStyle=INK;
-    x.save();x.translate(innerWidth/2,innerHeight/2-150);
-    figure(0,0,gabyO({s:.85,hat:'party',arms:'up',seed:777}));x.restore();}
+     '☀ tap the sun for day or night','🏁 the race is just past your house!'];
+    x.font='700 100px '+TF;let mw=0;lines.forEach(l=>mw=Math.max(mw,x.measureText(l).width));
+    const fs=Math.max(11,Math.min(17,(innerWidth-32)*100/mw)),lh=fs*1.6,ts=Math.min(32,innerWidth/11);
+    const total=110+ts*1.5+lines.length*lh+56;
+    let y=Math.max(64,(innerHeight-34-total)/2);
+    x.save();x.translate(innerWidth/2,y+100);figure(0,0,gabyO({s:.85,hat:'party',arms:'up',seed:777}));x.restore();
+    y+=110;x.fillStyle=INK;x.textAlign='center';
+    x.font='700 '+ts+'px '+TF;x.fillText("Gaby's World",innerWidth/2,y+ts);y+=ts*1.5;
+    x.font='700 '+fs+'px '+TF;lines.forEach((l,i)=>x.fillText(l,innerWidth/2,y+fs+i*lh));y+=lines.length*lh;
+    x.font='700 '+Math.min(16,fs+1)+'px '+TF;x.fillText(touch?'tap anywhere to start':'press anything to start',innerWidth/2,y+36);
+    x.font='700 '+Math.min(13,fs)+'px '+TF;x.fillStyle='#8a8476';
+    x.fillText('made by Gaby (age 6) and Papa  ·  credits in the 📖 book',innerWidth/2,innerHeight-16);x.fillStyle=INK;}
   x.restore();}
 (function loop(){update();R?raceDraw():draw();if(t%10===0){updatePals();updateBag();}requestAnimationFrame(loop);})();
 </script>
