@@ -87,7 +87,7 @@
   .sheet{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
     background:rgba(40,38,32,.45);padding:18px;z-index:5;}
   .sheet>div{background:#f6efdc;border:5px solid #2b2b2b;border-radius:22px;padding:16px 14px 18px;
-    max-width:560px;width:100%;max-height:88%;overflow:auto;text-align:center;}
+    max-width:560px;width:100%;max-height:88%;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;text-align:center;box-sizing:border-box;}
   .sheet h2{font-size:23px;margin:2px 0 12px;}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
   .grid div{border:3px solid #2b2b2b;border-radius:14px;padding:13px 8px;background:#fffdf4;
@@ -99,9 +99,10 @@
   #ward>div{max-width:620px;}
   #wardpic{width:130px;height:150px;display:block;margin:0 auto 6px;background:#f3e5bf;border:3px solid #2b2b2b;border-radius:20px;}
   .wlbl{font-weight:700;font-size:16px;text-align:left;margin:8px 4px 4px;}
-  .wrow{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 6px;}
+  .wrow{display:flex;flex-wrap:wrap;gap:7px;padding:2px 2px 6px;align-items:flex-start;}
   .wopt{flex:none;border:3px solid #2b2b2b;border-radius:14px;background:#fffdf4;width:60px;padding:2px;}
-  .wopt canvas{width:60px;display:block;}
+  .wopt canvas{width:60px;height:75px;display:block;}
+  .wopt canvas.face{height:60px;}
   .wopt.on{background:#ffe9a8;box-shadow:0 0 0 3px #c96a2e;}
   #ward .row{display:flex;gap:10px;justify-content:center;margin-top:10px;}
   .close{margin-top:13px;font-size:16px;text-decoration:underline;font-weight:700;}
@@ -1352,7 +1353,8 @@ function drawSky(cam){
     let sx=o.x-px;if(sx<-900)sx+=10200;if(sx>9300)sx-=10200;
     const dx=sx+cam.x-4600;
     if(dx<cam.x-VW/2-120||dx>cam.x+VW/2+120)continue;
-    dark()?star(dx,o.y,o.r,o.s):cloud(dx,o.y,o.r,o.s);}}
+    dark()?star(dx,o.y,o.r,o.s):cloud(dx,o.y,o.r,o.s);}  sunBehind();}
+function sunBehind(){if(!started||R)return;x.save();x.setTransform(DPR,0,0,DPR,0,0);drawSun();x.restore();}
 function drawGround(cam){
   x.fillStyle=dark()?'#b9ae99':'#ddd2bd';x.fillRect(-300,GY+4,W.w+600,1600);
   x.fillStyle=dark()?'#a9b996':'#cbdab4';x.fillRect(-300,GY+4,W.w+600,22);
@@ -2308,7 +2310,7 @@ function fillWardrobe(){
     opts.forEach(o=>{const ch=fn(o),of=Object.assign({},OUTFIT,ch),on=Object.keys(ch).every(k=>same(OUTFIT[k],ch[k]));
       const b=document.createElement('div');b.className='wopt'+(on?' on':'');
       const cv=document.createElement('canvas');cv.width=120;cv.height=label==='sunglasses'?120:150;
-      drawGabyInto(cv,of,label==='sunglasses'?'face':'');b.appendChild(cv);
+      if(label==='sunglasses')cv.className='face';drawGabyInto(cv,of,label==='sunglasses'?'face':'');b.appendChild(cv);
       b.addEventListener('click',e=>{e.stopPropagation();Object.assign(OUTFIT,ch);saveOutfit();mark('dressup');
         tune([660,880,1046],70,'triangle');fillWardrobe();});
       row.appendChild(b);});
@@ -2730,7 +2732,7 @@ function draw(){
   x.save();
   x.translate(innerWidth/2,innerHeight/2);x.scale(scale,scale);x.rotate(tilt);x.translate(-cam.x,-cam.y);
 
-  if(inZone()){const zid=curZone().id;zid==='burger'?drawBurgerInside(cam):zid==='pool'?drawPool(cam):drawClassroom(cam);}
+  if(inZone()){const zid=curZone().id;zid==='burger'?drawBurgerInside(cam):zid==='pool'?drawPool(cam):drawClassroom(cam);if(zid!=='pool')sunBehind();}
   else{
   drawSky(cam);
   if(!flying){
@@ -2804,7 +2806,6 @@ function draw(){
 
   x.save();x.setTransform(DPR,0,0,DPR,0,0);
   if(sunPop>0)sunPop--;
-  if(started)drawSun();
   if(fadeT>0){x.fillStyle='rgba(246,239,220,'+(fadeT/16)+')';x.fillRect(0,0,innerWidth,innerHeight);}
   if(partyT>0){x.textAlign='center';x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
     x.fillStyle=INK;x.fillText('you did everything!',innerWidth/2,innerHeight-30);
