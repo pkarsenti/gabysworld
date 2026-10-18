@@ -2999,6 +2999,7 @@ function raceDraw(){
     x.font='700 20px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('press ★ to go back',RW/2,436);}
   x.restore();}
 
+let camSY=null;                                   // where the camera is (up and down), so it can glide after Gaby
 function draw(){
   let camY;
   if(flying)camY=640+Math.sin(t*.05)*6;
@@ -3009,8 +3010,13 @@ function draw(){
       if(innerWidth>innerHeight)touchPad=innerHeight*.16/scale;}    // on its side the buttons sit at the edges, so the ground can go low
     const lim=below+touchPad-VH/2;               // on touch screens the ground always sits just above the buttons
     camY=matchMedia('(pointer:coarse)').matches?Math.min(P.y-below+lim,lim):Math.min(P.y-VH*.24,lim);
-    if(inZone()){camY=curZone().ceil-46+VH/2;
-      if(matchMedia('(pointer:coarse)').matches)camY=(inPool()?POOL.bot+14:GY)+touchPad-VH/2;}}
+    if(inZone()){const z=curZone(),top=z.ceil-46+VH/2,sky=top-(z.id==='pool'?260:0);   // the pool is outside: the sky goes up and up
+      if(matchMedia('(pointer:coarse)').matches){
+        const floor=(inPool()?POOL.bot+14:GY)+touchPad-VH/2;      // normally: the floor just above the buttons...
+        camY=floor<=top?floor:Math.max(sky,Math.min(floor,P.y-60));}   // ...but follow her up to the loft, the diving board and high dives
+      else camY=top;}}
+  if(camSY==null||fadeT>0||Math.abs(camY-camSY)>500)camSY=camY;      // glide, but jump straight there after the map or a door
+  camSY+=(camY-camSY)*.2;camY=camSY;
   const ed=edgeRoom(scale);
   const cam={x:Math.max(WL+VW/2-ed.l,Math.min(W.w-VW/2+ed.r,P.x)),y:camY};
   if(VW>W.w)cam.x=W.w/2;
