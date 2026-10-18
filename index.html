@@ -205,6 +205,7 @@
     <div data-x="2040" data-y="900">The playhouse</div>
     <div data-x="4255" data-y="762">Inside the plane</div>
     <div data-x="10620" data-y="1330" id="maplab" style="display:none">The secret lab</div>
+    <div data-x="0" data-y="900" id="mapfinn" style="display:none">🏴‍☠️ Captain Finn</div>
     <div data-x="6155" data-y="742">Bath &amp; games house</div>
     <div data-x="8115" data-y="790">The disco truck</div>
     <div data-x="11065" data-y="900">The shop &amp; the caf&eacute;</div>
@@ -334,6 +335,10 @@ function drawLook(px,py,look,s,r,col){
   if(look==='bob'){x.fillStyle=hair;x.beginPath();x.arc(px,py,r*1.12,Math.PI*1.03,Math.PI*1.97);x.fill();
     x.fillRect(px-r*1.12,py-r*.35,r*.38,r*1.25);x.fillRect(px+r*.74,py-r*.35,r*.38,r*1.25);}
   if(look==='cap'){x.fillStyle=col||'#7f9fbf';x.beginPath();x.rect(px-r*.9,py-r*1.45,r*1.8,r*1);x.rect(px-r*.9,py-r*.55,r*2.4,r*.4);x.fill();ol();}
+  if(look==='pirate'){x.fillStyle=col||'#2b2b2b';x.beginPath();x.moveTo(px-r*1.45,py-r*.7);x.quadraticCurveTo(px,py-r*1.12,px+r*1.45,py-r*.7);
+    x.lineTo(px+r*.92,py-r*1.5);x.quadraticCurveTo(px,py-r*2.35,px-r*.92,py-r*1.5);x.closePath();x.fill();ol();
+    x.strokeStyle=MUSTARD;x.lineWidth=Math.max(1.5,r*.12);x.beginPath();x.moveTo(px-r*1.25,py-r*.8);x.quadraticCurveTo(px,py-r*1.18,px+r*1.25,py-r*.8);x.stroke();
+    x.fillStyle=PAPER;x.beginPath();x.arc(px,py-r*1.48,r*.22,0,7);x.fill();}
   if(look==='party'){x.fillStyle=col||'#e3a0a0';x.beginPath();x.moveTo(px-r*.9,py-r*.75);x.lineTo(px,py-r*2.9);
     x.lineTo(px+r*.9,py-r*.75);x.closePath();x.fill();ol();fillCirc(px,py-r*3.1,r*.34,s,'#f3d36b');}
   if(look==='gaby'){gabyHair(px,py,r,col);
@@ -541,7 +546,7 @@ const THINGS=[
   {id:'libdesk',x:20105,y:GY,label:'talk to Mrs. Hush',lbl:()=>BAG.some(o=>o.kind==='book')?'give my books back':'ask Mrs. Hush for a story'},
   {id:'readseat',x:READX,y:GY,label:'sit and read',key:1,by:-175}
 ];
-const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots','egypt','napspot','egyptcats','cloverisland','cloverfamily','cloverhome','bunnywheel','bunnydisco','bunnyice','bunnies'];
+const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots','egypt','napspot','egyptcats','cloverisland','cloverfamily','cloverhome','bunnywheel','bunnydisco','bunnyice','bunnies','ducks','finn','finnfed','duckvillage','duckcannon','giraffe','jetpack','treasure','duckcrew'];
 const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watered the plants',
   bridge:'crossed the bridge',wave:'waved hello',slide:'took the slide',night:'turned on the night',
   fly:'flew the plane',tea:'had a cup of tea',nap:'had a nap',lamp:'lit the dark room',
@@ -563,6 +568,9 @@ const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watere
   enterLib:'went to the library',shelf:'looked at the books',libdesk:'talked to Mrs. Hush',readseat:'sat in the reading chair',
   readbook:'read a whole book',hatch:'found a hole in the old garden',labfound:'found the secret lab',starmap:'looked at the old star map',
   rounddoor:'opened the round door',egypt:'flew Pickles to Egypt',napspot:'found the big napping spot',egyptcats:'met every cat in Egypt',space:'flew Bolt home to his planet',robots:'met every robot on the little planet',checkout:'borrowed a book',mementos:'looked at my special shelf',mybed:'napped in my own bed',socks:'saw the tiny socks',drawings:'looked at my drawings',cloverisland:'flew to Clover Island',cloverfamily:'Clover found her old friends',cloverhome:'Clover chose to live with me',bunnywheel:'got spun out of the bunny wheel',bunnydisco:'went to the bunny disco',bunnyice:'got after-party ice cream',bunnies:'met every bunny on Clover Island',returnbook:'gave my books back',allbooks:'read every library book'};
+Object.assign(LABELS,{ducks:'the pirate ducks hopped into town',finn:'met Captain Finn',finnfed:'fed Captain Finn the BIGGEST burger',
+  duckvillage:'flew to Duck Village',duckcannon:'got shot out of a cannon',giraffe:'rode a giraffe',jetpack:'flew a jetpack',
+  treasure:'found pirate treasure',duckcrew:'met every pirate duck'});
 const FIND=THINGS.map(t=>t.id).filter(k=>k!=='exit'&&k!=='exitSchool'&&k!=='exitPool'&&k!=='exitLib').concat(EXTRA);
 const found={};FIND.forEach(k=>found[k]=false);
 
@@ -570,7 +578,7 @@ const found={};FIND.forEach(k=>found[k]=false);
 const DEF={flower:{},ball:{},cup:{},duck:{},pad:{},beaker:{},balloon:{},starit:{},
   cat:{pet:1},bunny:{pet:1},teddy:{pet:1},robot:{pet:1},sprout:{pet:1},
   cake:{food:1},apple:{food:1},ice:{food:1},pizza:{food:1},
-  cap:{hat:1},party:{hat:1},crown:{hat:1},
+  cap:{hat:1},party:{hat:1},crown:{hat:1},pirate:{hat:1},
   burger:{food:1},fries:{food:1},shake:{food:1},box:{},book:{}};
 const MADE=['cake','apple','ice','pizza','ball','flower','balloon','starit','party','crown','duck','beaker'];
 const ITEMS=[
@@ -677,12 +685,14 @@ function itemArt(k,px,py,s,bob,it){
       rline(px-13,py-20-b,px+13,py-20-b,s+15,1.5);
       rline(px-21,py-39-b,px-34,py-26-b,s+17,2);rline(px+21,py-39-b,px+34,py-26-b,s+19,2);break;
     case 'cap':case 'party':case 'crown':drawLook(px,py-16,k,s,11);break;
+    case 'pirate':drawLook(px,py-6,k,s,10);break;
     case 'book':{const col=it&&it.bk!=null&&BOOKS[it.bk]?BOOKS[it.bk].col:'#93b6c9';
       x.fillStyle=PAPER;x.fillRect(px-13,py-30,30,29);stroke(3);x.strokeRect(px-13,py-30,30,29);
       x.fillStyle=col;x.fillRect(px-17,py-34,30,32);stroke(4.5);rrect(px-17,py-34,30,32,s,1.5);
       x.fillStyle='rgba(43,43,43,.22)';x.fillRect(px-17,py-34,6,32);
       x.fillStyle=PAPER;heart(px+1,py-22,5);break;}
-    case 'burger':case 'fries':case 'shake':case 'box':icon.flavor=it&&it.flavor||0;icon(k,px,py,1,s);icon.flavor=0;break;}
+    case 'burger':case 'fries':case 'shake':case 'box':icon.flavor=it&&it.flavor||0;icon(k,px,py,it&&it.big?1.45:1,s);icon.flavor=0;
+      if(it&&it.big)duckFlag(px+3,py-58,.55);break;}
   x.restore?0:0;}
 
 /* ================= state ================= */
@@ -762,7 +772,7 @@ Object.assign(WANTS,{hush:[{k:'flower',why:'a flower for my desk'},{k:'cup',why:
   pebble:[{k:'ball',why:'a ball to bounce on the water'},{k:'starit',why:'a star to keep at the bottom of the pool'}]});
 const NAMES={flower:'flower',ball:'ball',cup:'cup',duck:'rubber duck',pad:'game pad',beaker:'bubbly beaker',balloon:'balloon',
   starit:'star',cake:'cake',apple:'apple',ice:'ice cream',pizza:'pizza',burger:'burger',fries:'fries',shake:'milkshake',
-  box:'kids meal',cap:'cap',party:'party hat',crown:'crown',book:'book'};
+  box:'kids meal',cap:'cap',party:'party hat',crown:'crown',pirate:'pirate hat',book:'book'};
 const GIFTS=['cake','balloon','starit','duck','ball','apple','crown','party','ice','flower'];
 NPC.forEach(n=>{n.wants=WANTS[n.id]||[];n.wantI=0;n.hearts=0;n.wish=null;});
 const BAG=[],BAGMAX=8;let wishesDone=0,wishTimer=60,giving=null;
@@ -818,13 +828,14 @@ const CHORDS={
   space:[[262,330,392],[220,277,330],[175,220,262],[196,247,294]],
   race:[[262,330,392],[220,262,330],[175,220,262],[196,247,294]],
   disco:[[262,311,392],[233,294,349],[208,247,311],[196,247,294]],
-  island:[[294,370,440],[247,294,370],[330,392,494],[220,277,330]]};
+  island:[[294,370,440],[247,294,370],[330,392,494],[220,277,330]],
+  pirate:[[220,262,330],[196,247,294],[175,220,262],[165,208,247]]};
 let musTimer=null,musName=null,musStep=0,musVol=1;
 function startMusic(name){
   if(musName===name)return;
   stopMusic();if(!CHORDS[name])return;
   musName=name;musStep=0;
-  const ch=CHORDS[name],iv=name==='race'?112:name==='space'?230:name==='egypt'?175:148,ARP=[0,1,2,1,0,2,1,2];
+  const ch=CHORDS[name],iv=name==='race'?112:name==='space'?230:name==='egypt'?175:name==='pirate'?160:148,ARP=[0,1,2,1,0,2,1,2];
   const step=()=>{
     const c=ch[((musStep/8)|0)%ch.length];
     const v=musVol;
@@ -945,7 +956,7 @@ function updateBag(){
 function openItem(it){itmOpen=it;
   portrait(document.getElementById('itmpic'),{item:it});
   document.getElementById('itmname').textContent=it.kind==='book'&&BOOKS[it.bk]?BOOKS[it.bk].title:NAMES[it.kind]||it.kind;
-  const wanters=NPC.filter(n=>n.wish&&n.wish.k===it.kind).map(n=>n.name);
+  const wanters=NPC.filter(n=>n.wish&&n.wish.k===it.kind).map(n=>n.name);if(it.kind==='burger'&&finnHungry())wanters.push('Captain Finn');
   document.getElementById('itmnote').textContent=wanters.length?wanters.join(' and ')+' would love this!':it.kind==='book'?'a library book: give it back to Mrs. Hush when you are done':'';
   const row=document.getElementById('itmbtns');row.innerHTML='';
   const add=(label,fn)=>{const b=document.createElement('div');b.className='btn wide';b.textContent=label;
@@ -979,13 +990,15 @@ function portrait(cv,who){                     // draw anyone into a little roun
   x=ctx;
   try{ctx.setTransform(sc,0,0,sc,0,0);
     if(who.item){const hat=DEF[who.item.kind]&&DEF[who.item.kind].hat;ctx.translate(50,hat?96:88);ctx.scale(hat?2.6:1.45,hat?2.6:1.45);itemArt(who.item.kind,0,0,77,0,who.item);}
+    else if(who.duck){ctx.translate(50,96);ctx.scale(1.2,1.2);drawDuck(0,0,Object.assign({},who.duck,{s:1,face:1,rot:0,sleep:who.duck.sleep}));}
+    else if(who.giraffe){drawGiraffe(-6,214,{s:.55,face:1,shadow:false});}
     else if(who.star){ctx.fillStyle='#2d3657';ctx.fillRect(0,0,100,100);stroke(6,'#f3ecd8');star(50,50,28,7);
       fillCirc(43,48,3,9,'#f3ecd8');fillCirc(57,48,3,11,'#f3ecd8');}
     else figure(50,150,{s:1.25,look:who.look,hat:who.hat,shirt:who.shirt,hair:who.hair,fill:who.skin,seed:303,shadow:false});
   }finally{x=X0;}}
 function friendList(){
   const list=[];
-  NPC.concat(OTHERS).forEach(n=>list.push({id:n.id,name:n.name,story:n.story,who:n.robo?{item:{kind:'robot',col:n.robo}}:n.bunnycol?{item:{kind:'bunny',col:n.bunnycol}}:n.catcol?{item:{kind:'cat',col:n.catcol}}:n}));
+  NPC.concat(OTHERS).forEach(n=>list.push({id:n.id,name:n.name,story:n.story,who:n.duckart?{duck:n.duckart,hearts:n.hearts,wish:n.wish}:n.giraffe?{giraffe:1}:n.robo?{item:{kind:'robot',col:n.robo}}:n.bunnycol?{item:{kind:'bunny',col:n.bunnycol}}:n.catcol?{item:{kind:'cat',col:n.catcol}}:n}));
   Object.keys(PETS).forEach(k=>{const it=ITEMS.find(o=>o.kind===k)||{kind:k};
     list.push({id:k,name:PETS[k].name,story:PETS[k].story,who:{item:it}});});
   ITEMS.filter(o=>o.kind==='sprout').forEach(o=>list.push({id:o.sid,name:o.name,story:o.story,who:{item:o}}));
@@ -1101,7 +1114,7 @@ function actPlan(){
     return{k:'splash',x:P.x,y:P.y-60,txt:P.y>POOL.surf+20?'blow bubbles':'splash!'};}
   const held=P.held!==null?ITEMS[P.held]:null;
   const hd=held?DEF[held.kind]:null;
-  if(held&&hd.hat)return{k:'wear',x:P.x,y:P.y-70,txt:'put on the '+(held.kind==='cap'?'cap':held.kind==='crown'?'crown':'party hat')};
+  if(held&&hd.hat)return{k:'wear',x:P.x,y:P.y-70,txt:'put on the '+NAMES[held.kind]};
   const it=nearItem(true),item=it!==null?ITEMS[it]:null;
   if(held&&held.kind==='box')return{k:'open',x:P.x,y:P.y-70,txt:'open the kids meal'};
   if(held&&hd.food&&item&&DEF[item.kind].pet)return{k:'feed',x:item.x,y:item.y-24,txt:'give it to the '+item.kind};
@@ -1120,11 +1133,13 @@ function actPlan(){
       d:reach(item.x,item.y)+(on?40:-12)});}
   const np=nearNPC();
   if(np)cands.push({k:'hello',np,x:np.x,y:np.y-60,txt:'say hello',d:reach(np.x,np.y)+12});
+  townDuckPlan(cands);
   if(!cands.length)return null;
   cands.sort((a,b)=>a.d-b.d);
   return cands[0];}
 function doAct(){
   const plan=actPlan();if(!plan)return;
+  if(plan.k==='duck'){plan.fn();return;}
   if(plan.k==='wear'){const it=ITEMS[P.held];
     if(P.hat)spawn(P.hat,P.x-40,P.y);
     P.hat=it.kind;ITEMS.splice(P.held,1);P.held=null;
@@ -1167,6 +1182,8 @@ function doAct(){
       if(followers.length>=4)mark('parade');}
     return;}
   if(plan.k==='hello'){const n=plan.np;
+    if(n.scared){meet(n.id);say(n.x,n.y-110,['those ducks are SO naughty!','eek! help, Gaby!','ask their captain to stop them!'][(Math.random()*3)|0]);babble(n.name);return;}
+    if(n.duck)quack(640,2);
     if(meet(n.id)){say(n.x,n.y-110,"hi! i'm "+n.name+'!');puff(n.x,n.y-120,6,'heart');
       if(n.wish)setTimeout(()=>say(n.x,n.y-160,'i wish i had '+n.wish.why),1200);}
     else if(n.wish)say(n.x,n.y-110,'i wish i had '+n.wish.why);
@@ -1292,9 +1309,9 @@ function doThing(th){
     case 'menu':menuSel=(menuSel+1)%3;say(P.x,P.y-110,['fries!','burgers!','milkshakes!'][menuSel]);
       puff(12695+menuSel*90,480,4);beep(600+menuSel*120,.1,'triangle');break;
     case 'grill':
-      if(burgerL>=6){spawn('burger',P.x-70,GY);burgerL=0;say(P.x,P.y-120,'burger ready!');
+      if(burgerL>=6){const bg=spawn('burger',P.x-70,GY);burgerL=0;if(finnHungry()){bg.big=1;say(P.x,P.y-120,'the BIGGEST burger in the world!');}else say(P.x,P.y-120,'burger ready!');
         puff(12790,GY-150,10);tune([523,659,784,1046],90);break;}
-      burgerL++;say(P.x,P.y-110,['bun','meat - sizzle!','cheese','lettuce','tomato','bun on top!'][burgerL-1]);
+      burgerL++;say(P.x,P.y-110,burgerL===6&&finnHungry()?'bun on top, and a pirate flag!':['bun','meat - sizzle!','cheese','lettuce','tomato','bun on top!'][burgerL-1]);
       if(burgerL===2)crunch(.35,.05);else beep(380+burgerL*70,.08,'triangle');
       puff(12790,GY-100-burgerL*7,3,burgerL===2?'bub':'star');return;
     case 'order':{spawn('box',P.x-80,GY);spawn('shake',P.x-140,GY);
@@ -1308,7 +1325,7 @@ function doThing(th){
 
 /* ================= update ================= */
 function activePlats(){const z=curZone();return PLATS.filter(p=>z?p.z===z.id:flying?p.z==='plane':!ZONES.some(q=>q.id===p.z));}
-function wishKinds(){return NPC.filter(n=>n.wish).map(n=>n.wish.k);}
+function wishKinds(){return NPC.filter(n=>n.wish).map(n=>n.wish.k).concat(finnHungry()?['burger']:[]);}
 function assignWish(){
   const free=NPC.filter(n=>!n.wish&&n.wants.length&&!(n.coolT>0)&&Math.abs(n.x-P.x)>500);
   if(!free.length)return;
@@ -1335,6 +1352,12 @@ function giveTo(n,it){
 function stepNPCs(){
   NPC.forEach(n=>{
     if(n.waveT>0)n.waveT--;
+    n.scared=duckScare(n);
+    if(n.scared){if((n.eekCD=(n.eekCD||0)-1)<=0){n.eekCD=280+Math.random()*240;
+        if(Math.abs(n.x-P.x)<VW/2+60&&!inZone()&&!flying)say(n.x,n.y-110,SCARED[(Math.random()*SCARED.length)|0]);}
+      if(n.range&&!n.seat&&!n.leaving&&!n.toSwing&&!n.onSwing&&!n.toSeesaw&&!n.onSeesaw){
+        n.dir=n.scared.x<n.x?1:-1;n.x+=n.dir*3;n.walk=(n.walk||0)+.34;
+        n.x=Math.max(n.home-n.range-260,Math.min(n.home+n.range+260,n.x));return;}}
     if(n.leaving){                                     // running out of the classroom door...
       n.x-=3.2;n.walk=(n.walk||0)+.3;
       if(n.x<SZ.x0+70){n.leaving=0;n.x=SFAC.door;puff(n.x,n.y-60,4);}   // ...and out of the school door
@@ -1355,8 +1378,8 @@ function stepNPCs(){
     if(n.pause>0){n.pause--;n.walk*=.85;return;}
     n.x+=n.dir*n.spd;n.walk=(n.walk||0)+.2;
     if(n.kidplay)n.hopY=Math.abs(Math.sin(t*.12))*8;
-    if(n.x<n.home-n.range){n.x=n.home-n.range;n.dir=1;}
-    if(n.x>n.home+n.range){n.x=n.home+n.range;n.dir=-1;}
+    if(n.x<n.home-n.range)n.dir=1;
+    if(n.x>n.home+n.range)n.dir=-1;
     if(Math.random()<.004)n.pause=50+Math.random()*90;
     if(Math.random()<.003)n.dir*=-1;});}
 function update(){
@@ -1364,10 +1387,11 @@ function update(){
   if((flying&&!R&&!TRIP)||(TRIP&&(TRIP.ph==='out'||TRIP.ph==='back'))){humOn();humTick();}else humOff();
   musVol=1;
   if(R){raceUpdate();return;}
-  labTick();catTick();bunTick();
+  labTick();catTick();bunTick();duckTick();
   if(TRIP){tripUpdate();return;}
   if(disco&&Math.abs(P.x-8215)<1100&&!flying){startMusic('disco');musVol=Math.max(.15,1-Math.abs(P.x-8215)/1100);}
-  else if(musName==='disco')stopMusic();
+  else if(duckNear()<1300&&!flying){startMusic('pirate');musVol=Math.max(.2,1-duckNear()/1300);}
+  else if(musName==='disco'||musName==='pirate')stopMusic();
   if(fire&&!inZone()&&!flying&&Math.abs(P.x-300)<500&&Math.random()<.05)crunch(.025,.004+.014*(1-Math.abs(P.x-300)/500));
   if(P.water>0)P.water--;
   if(P.bath>0)P.bath--;
@@ -1540,7 +1564,7 @@ function stepFollowers(){
 function stepBits(){
   for(let i=bubbles.length-1;i>=0;i--){bubbles[i].t++;if(bubbles[i].t>150)bubbles.splice(i,1);}
   for(let i=bits.length-1;i>=0;i--){const b=bits[i];b.t++;b.x+=b.vx;b.y+=b.vy;
-    b.vy+=(b.kind==='z'||b.kind==='heart'||b.kind==='note'||b.kind==='bub')?-.02:.07;
+    b.vy+=(b.kind==='z'||b.kind==='heart'||b.kind==='note'||b.kind==='bub'||b.kind==='smoke')?-.02:.07;
     if(b.t>92)bits.splice(i,1);
     else if(b.kind==='bub'&&b.y<POOL.surf-4&&b.x>POOL.x0&&b.x<POOL.x1&&inPool())bits.splice(i,1);}}
 
@@ -2055,7 +2079,7 @@ function ring(cx,cy){x.save();x.globalAlpha=.5+Math.sin(t*.12)*.2;stroke(3.5,'#c
   rcirc(cx,cy,17+Math.sin(t*.1)*1.5,(t/9|0)%40);x.restore();}
 function drawThought(n,hop){
   const has=BAG.some(o=>o.kind===n.wish.k),j=has?Math.abs(Math.sin(t*.2))*-8:Math.sin(t*.05+n.x)*2;
-  const hy=n.diver?POOL.surf-118:(n.inPit||n.swimmer)?n.y-96:n.seat?n.y-128:n.y-148-(hop||0)-(n.hopY||0);
+  const hy=n.duck?n.y-(n.big?160:118):n.diver?POOL.surf-118:(n.inPit||n.swimmer)?n.y-96:n.seat?n.y-128:n.y-148-(hop||0)-(n.hopY||0);
   const bx=n.x+30,by=hy+j;
   x.save();x.globalAlpha=.95;x.fillStyle=has?'#fdf0c4':PAPER;stroke(3.5);
   rcircPath(n.x+12,hy+38,4,1);x.fill();x.stroke();rcircPath(n.x+20,hy+26,6,2);x.fill();x.stroke();
@@ -2118,7 +2142,8 @@ function drawStack(cx,base,n){                   // the burger she builds on the
   if(n>=5){fillCirc(cx-12,y-4,8,10772,'#d9786a');fillCirc(cx+12,y-4,8,10774,'#d9786a');y-=8;}
   if(n>=6){x.fillStyle='#e8bf7e';x.beginPath();x.moveTo(cx-25,y);x.quadraticCurveTo(cx-25,y-30,cx,y-30);
     x.quadraticCurveTo(cx+25,y-30,cx+25,y);x.closePath();x.fill();stroke(4.5);x.stroke();
-    fillCirc(cx-9,y-16,2,10776,PAPER);fillCirc(cx+3,y-22,2,10778,PAPER);fillCirc(cx+12,y-13,2,10780,PAPER);}}
+    fillCirc(cx-9,y-16,2,10776,PAPER);fillCirc(cx+3,y-22,2,10778,PAPER);fillCirc(cx+12,y-13,2,10780,PAPER);
+    if(finnHungry())duckFlag(cx+2,y-26,.6);}}
 function zig(x0,x1,y,h,seed){stroke(3.5);x.beginPath();x.moveTo(x0,y);const n=Math.max(2,Math.round((x1-x0)/9));
   for(let i=1;i<=n;i++)x.lineTo(x0+(x1-x0)*i/n,y+(i%2?-h:0)+(rp(seed+i)-.5)*2);x.stroke();}
 function drawSpring(cx,b){                       // an old-fashioned bouncy duck on a big spring
@@ -2437,12 +2462,15 @@ const SHOES=[{shoes:'#c9452f',boots:0},{shoes:'#fffdf4',boots:0},{shoes:'#e3a0b8
 const SHADES=['black','pink','heart','star'];
 let OUTFIT={top:'tee',tcol:'#d9654b',bottom:'skirt',bcol:'#7f9fbf',dress:null,shoes:'#c9452f',boots:0,shades:'black'};
 try{const sv=JSON.parse(localStorage.getItem('gabys-world-outfit')||'null');if(sv)Object.assign(OUTFIT,sv);}catch(e){}
+if(OUTFIT.shades==='patch'&&SHADES.indexOf('patch')<0)SHADES.push('patch');
 function saveOutfit(){try{localStorage.setItem('gabys-world-outfit',JSON.stringify(OUTFIT));}catch(e){}}
 function gabyO(extra,of){of=of||OUTFIT;
   return Object.assign({look:'gaby',hat:P.hat,hair:GHAIR,fill:SKIN,outfit:of,
     shirt:of.dress?of.dress.col:of.tcol,pants:of.bcol,seed:1211,face:P.face},extra||{});}
 let shadesNow=0;                                   // 0 = up on her head, 1 = down over her eyes
 function drawShades(px,py,r,down,style){
+  if(style==='patch'){const ey=py-r*.06,cx=px+r*.34;x.strokeStyle=INK;x.lineWidth=Math.max(1.5,r*.09);x.beginPath();x.moveTo(px-r*1.02,py-r*.52);x.lineTo(cx,ey);x.lineTo(px+r*1.0,py-r*.44);x.stroke();
+    x.fillStyle=INK;x.beginPath();x.ellipse(cx,ey,r*.28,r*.24,0,0,7);x.fill();return;}
   const y=py-r*.78+(r*.72)*down,sc=.82+.18*down,lx=r*.38*(.9+.1*down);
   stroke(Math.max(1.8,r*.1));rline(px-lx,y,px+lx,y,91,0);
   [-1,1].forEach(sd=>{const cx=px+sd*lx,w=r*.3*sc,h=r*.24*sc;
@@ -2988,6 +3016,7 @@ function draw(){
     const hop=(n.hop&&recess)?Math.abs(Math.sin(t*.13+i))*14:(dancing?Math.abs(Math.sin(t*.15+i))*10:0);
     const col={shirt:n.shirt,fill:n.skin,hair:n.hair};
     if(n.wish)drawThought(n,hop);
+    if(n.duck){const hy=n.pause>0?0:Math.abs(Math.sin(t*.2+i))*16;drawDuck(n.x,n.y-hy,Object.assign({},n.duckart,{face:n.waveT>0?(Math.sign(P.x-n.x)||1):n.dir||1,air:hy>4}));return;}
     if(n.swimmer){drawSwimmer(n.x,n.y,Object.assign({look:n.look,seed:4455+i*37},col),n.dir||1,t*.12+i);return;}
     if(n.diver){drawSwimmer(n.x,n.y+Math.sin(t*.04)*8,Object.assign({look:n.look,seed:4455+i*37},col),Math.sin(t*.006)>0?1:-1,t*.07+i,1);return;}
     if(n.inPit){const hy=n.y-50-Math.abs(Math.sin(t*.09+i))*8;
@@ -2999,8 +3028,8 @@ function draw(){
       seated(n.x,n.y,Object.assign({look:n.look,seed:4455+i*37,shadow:false},col));openBook(n.x+25,n.y-40,'#e0c49a');x.restore();return;}
     if(n.seat){seated(n.x,n.y,Object.assign({look:n.look,seed:4455+i*37,hand:n.hand},col));
       if(n.id==='bea')icon('fries',n.x+52,n.y-66,.75,4655+i);return;}
-    figure(n.x,n.y-hop-(n.hopY||0),Object.assign({look:n.look,walk:n.walk,seed:4455+i*37,
-      arms:n.waveT>0?'wave':(dancing||(n.hop&&recess)||n.teacher||n.kidplay?'up':'down')},col));});
+    figure(n.x+(n.scared?Math.sin(t*1.9+i)*1.6:0),n.y-hop-(n.hopY||0),Object.assign({look:n.look,walk:n.walk,seed:4455+i*37,
+      arms:n.scared?'up':n.waveT>0?'wave':(dancing||(n.hop&&recess)||n.teacher||n.kidplay?'up':'down')},col));});
   if(inBurger())drawBurgerFront();
   else if(inLib())drawLibFront();
   else if(!flying)drawCar();
@@ -3015,6 +3044,7 @@ function draw(){
     const ix=it.x+(it.ox||0),iy=(wet?it.y+6+Math.sin(t*.06+i)*3:it.y)+(it.oy||0);
     if(it.rot){x.save();x.translate(ix,iy-20);x.rotate(it.rot);x.translate(-ix,-(iy-20));}
     itemArt(it.kind,ix,iy,i*97+13,bob,it);if(it.rot)x.restore();});
+  if(!inZone()&&!flying)drawTownDucks(cam);
   drawPlayer();
   if(inBurger())drawBurgerTop();
   if(inPool())drawPoolTop();
@@ -3027,6 +3057,7 @@ function draw(){
     else if(b.kind==='bub')rcirc(b.x,b.y,7,b.s);
     else if(b.kind==='crumb')fillCirc(b.x,b.y,4,b.s);
     else if(b.kind==='drop')fillCirc(b.x,b.y,4.5,b.s,'#7fb8d6');
+    else if(b.kind==='smoke'){x.globalAlpha=a*.55;fillCirc(b.x,b.y,6+b.t*.12,b.s,'#c9c3b6');}
     else if(b.kind==='note')note(b.x,b.y,b.s);
     else star(b.x,b.y,7,b.s);
     x.restore();}
@@ -3360,11 +3391,12 @@ const readDone={};let RD={bk:null,pg:0};
 const been={},MEMS=[
   {k:'cup',name:'a race cup',got:()=>!!been.cup},{k:'pyr',name:'a little pyramid',got:()=>!!been.egypt},
   {k:'planet',name:"a tiny robot planet",got:()=>!!been.space},{k:'clover',name:'a lucky clover',got:()=>!!been.clover},
-  {k:'books',name:'a pile of books',got:()=>!!found.allbooks},{k:'star',name:'a wishing star',got:()=>!!found.wish5}];
+  {k:'books',name:'a pile of books',got:()=>!!found.allbooks},{k:'star',name:'a wishing star',got:()=>!!found.wish5},
+  {k:'duck',name:'a little pirate duck',got:()=>!!been.ducks}];
 function drawMementos(){                         // two little shelves over Gaby's bed
-  const x0=466,sy=[GY-112,GY-66];
-  sy.forEach((y,r)=>{fbox(x0,y,136,9,7801+r,'#c49a74',4.5);});
-  MEMS.forEach((m,i)=>{const cx=x0+24+(i%3)*44,by=sy[i/3|0];
+  const x0=452,sy=[GY-112,GY-66];
+  sy.forEach((y,r)=>{fbox(x0,y,176,9,7801+r,'#c49a74',4.5);});
+  MEMS.forEach((m,i)=>{const cx=x0+22+(i%4)*44,by=sy[i/4|0];
     if(!m.got()){x.save();x.globalAlpha=.35;x.setLineDash([4,5]);stroke(3);rcirc(cx,by-14,12,7811+i);x.setLineDash([]);x.restore();return;}
     if(m.k==='cup'){x.fillStyle=MUSTARD;x.beginPath();x.moveTo(cx-12,by-30);x.lineTo(cx+12,by-30);x.quadraticCurveTo(cx+11,by-14,cx,by-12);x.quadraticCurveTo(cx-11,by-14,cx-12,by-30);x.fill();stroke(3.5);x.stroke();
       stroke(3);x.beginPath();x.arc(cx-13,by-24,5,Math.PI*.5,Math.PI*1.5);x.stroke();x.beginPath();x.arc(cx+13,by-24,5,-Math.PI*.5,Math.PI*.5);x.stroke();fbox(cx-8,by-8,16,8,7821,MUSTARD,3);}
@@ -3372,6 +3404,7 @@ function drawMementos(){                         // two little shelves over Gaby
     else if(m.k==='planet')robotPlanet(cx,by-15,14,0);
     else if(m.k==='clover'){fbox(cx-10,by-12,20,12,7825,'#d49a86',3);clover(cx,by-26,7);}
     else if(m.k==='books')['#d9786a','#7f9fbf','#8fb3a0'].forEach((c,j)=>fbox(cx-14+j*2,by-9-j*9,26,9,7827+j,c,2.5));
+    else if(m.k==='duck'){drawDuck(cx,by,{s:.45,hat:'pirate',patch:1});}
     else{starShape(cx,by-15,13);x.fillStyle=MUSTARD;x.fill();stroke(3);x.stroke();}});}
 function drawPage(cv,pic,frame){
   const ctx=cv.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);x=ctx;
@@ -3394,7 +3427,7 @@ function openShelf(){
   const g=document.getElementById('libgrid');g.innerHTML='';
   BOOKS.forEach((b,i)=>{const d=document.createElement('div');d.className='bk';
     const cv=document.createElement('canvas');cv.width=240;cv.height=300;drawCover(cv,i);d.appendChild(cv);
-    if((i===0&&!labOpen)||(i===1&&!catQuest)||(i===2&&!bunQuest)){d.classList.add('myst');const q=document.createElement('i');q.className='q';q.textContent='❓';d.appendChild(q);}
+    if((i===0&&!labOpen)||(i===1&&!catQuest)||(i===2&&!bunQuest)||(i===DUCKBOOK&&!duckQuest)){d.classList.add('myst');const q=document.createElement('i');q.className='q';q.textContent='❓';d.appendChild(q);}
     if(readDone[i]||hasBook(i)){const m=document.createElement('i');m.textContent=(readDone[i]?'⭐':'')+(hasBook(i)?'🎒':'');d.appendChild(m);}
     d.addEventListener('click',e=>{e.stopPropagation();shut('lib');openReader(i);});g.appendChild(d);});
   document.getElementById('lib').style.display='flex';started=true;}
@@ -3412,6 +3445,7 @@ function showPage(){
   if(last&&RD.bk===0&&!labOpen)pendingUnlock=true;
   if(last&&RD.bk===1&&!catQuest)pendingCat=true;
   if(last&&RD.bk===2&&!bunQuest)pendingBun=true;
+  if(last&&RD.bk===DUCKBOOK&&!duckQuest)pendingDucks=true;
   if(last&&!readDone[RD.bk]){readDone[RD.bk]=true;mark('readbook');tune([523,659,784],90,'triangle');
     if(BOOKS.every((q,k)=>readDone[k]))mark('allbooks');}
   const row=document.getElementById('readbtns'),note=document.getElementById('readnote');row.innerHTML='';note.textContent='';
@@ -3648,6 +3682,7 @@ function tripPlan(){
 function tripUpdate(){
   if(TRIP.dest==='egypt'){egyptUpdate();return;}
   if(TRIP.dest==='clover'){cloverUpdate();return;}
+  if(TRIP.dest==='ducks'){dvUpdate();return;}
   const T=TRIP;T.t++;
   T.says.forEach(s=>s.t++);T.says=T.says.filter(s=>s.t<190);if(T.hearts>0)T.hearts--;
   if(T.ph==='out'){
@@ -3667,6 +3702,7 @@ function tripUpdate(){
 function endTrip(){
   const dest=TRIP.dest;TRIP=null;stopMusic();flying=false;P.x=4255;P.y=PLANE.floor;P.vy=0;P.climb=null;P.ground=true;P.face=1;trail.length=0;
   followers.forEach((f,i)=>{f.x=P.x-70*(i+1);f.y=P.y;f.pm=null;});fadeT=16;tune([659,784,1046],120,'triangle');
+  if(dest==='ducks'){mark('fly');setTimeout(()=>say(P.x,P.y-140,'what a fun pirate island!'),600);return;}
   if(dest==='clover'){mark('fly');const c=bunF();
     if(c)setTimeout(()=>say(c.x,c.y-60,'thank you, Gaby! i love my island family... and i love living with you!'),600);return;}
   if(dest==='egypt'){if(catWith())mark('egypt');const c=catF();
@@ -3689,6 +3725,7 @@ function caption(txt){bubble(TW/2,58,txt,.95);}
 function tripDraw(){
   if(TRIP.dest==='egypt'){egyptDraw();return;}
   if(TRIP.dest==='clover'){cloverDraw();return;}
+  if(TRIP.dest==='ducks'){dvDraw();return;}
   const T=TRIP,sc=T.ph==='planet'?Math.min(innerWidth/640,innerHeight/TH):Math.min(innerWidth/TW,innerHeight/TH);
   x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,innerWidth,innerHeight);
   x.save();x.translate(innerWidth/2,innerHeight/2);x.scale(sc,sc);x.translate(-TW/2,-TH/2);
@@ -3938,7 +3975,8 @@ const DESTS=[
   {k:'night',name:'🌙 fly around the night sky',ok:()=>true,go:()=>{flying=true;mark('fly');say(P.x,P.y-120,'up we go');puff(P.x,P.y-70,10);beep(260,.35,'sawtooth');}},
   {k:'egypt',name:'🐈 Egypt',ok:()=>catQuest||found.egypt,go:()=>{mark('fly');startEgypt();}},
   {k:'space',name:"🤖 Bolt's planet",ok:()=>doorOpen||found.space||boltWith(),go:()=>{mark('fly');startTrip();}},
-  {k:'clover',name:'🐰 Clover Island',ok:()=>bunQuest,go:()=>{mark('fly');startClover();}}];
+  {k:'clover',name:'🐰 Clover Island',ok:()=>bunQuest,go:()=>{mark('fly');startClover();}},
+  {k:'ducks',name:'🏴‍☠️ Duck Village',ok:()=>DUCK.villageOpen,go:()=>{mark('fly');startDuckV();}}];
 const anyDest=()=>DESTS.slice(1).some(d=>d.ok());
 function destPic(k){
   if(k==='night'){pgSky(1);moon(400,70,30);[[60,190,'#d49a86'],[150,210,'#9fb0c8'],[330,200,'#c9a07a']].forEach(([hx,hy,rc],i)=>{
@@ -3948,6 +3986,8 @@ function destPic(k){
     egPyramid(160,222,120,1);egPyramid(300,222,80,2);egPillow(400,262,80,24,'#b49ac7','#e0b25e');egCat(400,240,'#e3a46a',9,1);}
   else if(k==='space'){x.fillStyle='#241f45';x.fillRect(0,0,480,300);for(let i=0;i<30;i++)fillCirc(rp(i*3)*480,rp(i*3+1)*300,1.6,i,'#f3ecd8');
     robotPlanet(310,350,170,1);homePlanet(70,70,34);tripPlane(170,140,.8,-.2,1);}
+  else if(k==='ducks'){x.fillStyle='#9fd6ee';x.fillRect(0,0,480,300);pgSun(410,60);x.fillStyle='#8cc3dc';x.fillRect(0,190,480,110);
+    stroke(3,PAPER);wave(30,90,262,1);wave(380,440,280,2);dvIsland(250,222,1.25);tripPlane(110,70,.55,-.15,0);}
   else{x.fillStyle='#bfe3f2';x.fillRect(0,0,480,300);pgSun(410,60);x.fillStyle='#8cc3dc';x.fillRect(0,190,480,110);
     stroke(3,PAPER);wave(30,90,262,1);wave(380,440,280,2);ciIsland(240,220,1.25);tripPlane(110,70,.55,-.15,0);}}
 function openFly(){const g=document.getElementById('flygrid');g.innerHTML='';
@@ -4359,6 +4399,683 @@ function cloverDraw(){
     else if(T.wh.in&&T.wh.fast<20&&Math.abs(T.wh.ws)>.02)egCaption('keep running! faster!');}
   x.restore();
   if(walk){x.setTransform(DPR,0,0,DPR,0,0);ciSun();}}
+
+/* ======================= the pirate ducks ======================= */
+/* Gaby's ducks: round like balls, the beak drawn INSIDE the ball, and they never walk - they HOP.
+   reading "The Naughty Pirate Ducks" to the end brings them hopping into town, with Captain Finn riding in
+   on Spots the giraffe. Finn wants the biggest burger in the world. Once he gets it the crew hops home,
+   Nugget and Wobble stay in town, and the plane can fly to Duck Village. */
+const DUCKY='#f3d36b',BEAK='#e39a5b';
+const DK={
+  finn:{id:'finn',name:'Captain Finn',col:'#f3d36b',patch:1,hat:'pirate',feather:1,s:1.35,
+    says:['ARR!','where is my BURGER?','hop to it, crew!','i am the naughtiest duck on the seven seas!'],
+    story:'Captain Finn is the captain of the pirate ducks. He has one eyepatch, one giraffe and one great big tummy that always wants burgers.'},
+  rocket:{id:'rocket',name:'Rocket',col:'#f6e7a6',jet:1,goggles:1,says:['zoooom!',"can't catch me!",'look, no feet!'],
+    story:'Rocket built his jetpack out of two old rockets and a lot of sticky tape. He has not landed since Thursday.'},
+  bonk:{id:'bonk',name:'Bonk',col:'#efd27a',patch:-1,hat:'bandana',says:['SUS!','honk honk!','beep beep, quack quack!'],
+    story:'Bonk loves anything that honks. He says "SUS!" whenever something looks suspicious, which is almost everything.'},
+  splat:{id:'splat',name:'Splat',col:'#f3eee6',hat:'pirate',says:['splish splash!','yay!','bath time for ducks!'],
+    story:'Splat is the only pirate duck who likes baths. He shouts "yay!" every time he jumps in, which is a lot.'},
+  pudding:{id:'pudding',name:'Pudding',col:'#e9c46a',s:1.15,hat:'bandana',bcol:'#7f9fbf',says:['cake! mine!','nom nom nom','is that a snack?'],
+    story:'Pudding is the roundest of all the round ducks. He once ate a whole cake in one bite. Twice.'},
+  nugget:{id:'nugget',name:'Nugget',col:'#f6e3a0',s:.85,hat:'pirate',says:['quack? quack!','party time!','i love your town!'],
+    story:"Nugget is the littlest pirate duck. He loved the disco so much that he stayed in Gaby's town for good."},
+  wobble:{id:'wobble',name:'Wobble',col:'#f3eee6',patch:1,says:['boing boing boing!','HA HA!','bouncy bouncy!'],
+    story:"Wobble bounces on every bed she can find. Gaby's bed was the bounciest, so she decided to stay."},
+  squint:{id:'squint',name:'Squint',col:'#efd27a',patch:-1,hat:'pirate',says:['land ho!','i can see your house from up here!','i spy... a cloud!'],
+    story:'Squint is the lookout. He has a spyglass and an eyepatch, so he only ever has to close one eye.'},
+  cookie:{id:'cookie',name:'Cookie',col:'#f6e7a6',hat:'chef',says:['seaweed soup! yum!','one more pinch of sand...','who wants soup?'],
+    story:'Cookie cooks for all the pirate ducks. Her seaweed soup smells like socks, and the ducks LOVE it.'},
+  bubbles:{id:'bubbles',name:'Grandpa Bubbles',col:'#e6e1d6',sleep:1,says:['zzz... ARR... zzz','five more minutes...','zzz... burgers... zzz'],
+    story:'Grandpa Bubbles was the very first pirate duck. Now he naps in his hammock and dreams about burgers.'}};
+const STAYERS=['nugget','wobble'],CREW=['rocket','bonk','splat','pudding','nugget','wobble'];
+Object.keys(DK).forEach(k=>OTHERS.push({id:k,name:DK[k].name,duckart:DK[k],story:DK[k].story}));
+OTHERS.push({id:'spots',name:'Spots',giraffe:1,
+  story:"Spots is Captain Finn's giraffe. She is very tall, very spotty, and she can eat a whole treehouse's worth of leaves before breakfast."});
+Object.assign(WANTS,{nugget:[{k:'party',why:'a party hat for the disco'},{k:'cake',why:'cake! all the cake!'}],
+  wobble:[{k:'ball',why:'a bouncy ball'},{k:'balloon',why:'a balloon to bounce with'}]});
+let lastQuack=0;
+function quack(p,n){const now=performance.now();if(now-lastQuack<140)return;lastQuack=now;p=p||640;
+  for(let i=0;i<(n||1);i++)setTimeout(()=>slide(p*(1+(Math.random()-.5)*.12),p*.6,.1,'square',.02),i*130);}
+
+/* ---- drawing them ---- */
+function duckJet(jx,jy,s,fire){[-1,1].forEach(d=>{const rx=jx+d*7*s;
+  if(fire){x.fillStyle='#f3a35b';x.beginPath();x.moveTo(rx-5*s,jy+14*s);x.lineTo(rx,jy+(26+Math.random()*12)*s);x.lineTo(rx+5*s,jy+14*s);x.closePath();x.fill();
+    x.fillStyle='#f3d36b';x.beginPath();x.moveTo(rx-2.5*s,jy+14*s);x.lineTo(rx,jy+(20+Math.random()*6)*s);x.lineTo(rx+2.5*s,jy+14*s);x.closePath();x.fill();}
+  x.fillStyle=TOMATO;x.fillRect(rx-5.5*s,jy-12*s,11*s,26*s);stroke(2.5*s);x.strokeRect(rx-5.5*s,jy-12*s,11*s,26*s);
+  x.fillStyle=PAPER;x.beginPath();x.moveTo(rx-5.5*s,jy-12*s);x.lineTo(rx,jy-22*s);x.lineTo(rx+5.5*s,jy-12*s);x.closePath();x.fill();x.stroke();});}
+function drawDuck(px,py,o){                      // (px,py) is where the feet touch the ground
+  o=o||{};const s=o.s||1,R=22*s,f=o.face||1,sq=Math.max(-.6,Math.min(1,o.squash||0)),c=o.col||DUCKY;
+  x.save();x.translate(px,py);if(o.rot)x.rotate(o.rot);
+  const bw=R*(1+sq*.14),bh=R*(1-sq*.16),cy=-bh-(o.air?0:3*s);
+  if(o.jet)duckJet(-f*R*.55,cy+2*s,s,o.fire);
+  x.fillStyle=BEAK;                              // little orange feet
+  if(!o.air)[-1,1].forEach(d=>{x.beginPath();x.ellipse(d*R*.4+f*3*s,-3*s,7.5*s,4*s,0,0,7);x.fill();stroke(2.5*s);x.stroke();});
+  else [-1,1].forEach(d=>{x.beginPath();x.ellipse(d*R*.35,cy+bh*.95,5*s,6*s,0,0,7);x.fill();stroke(2.5*s);x.stroke();});
+  x.fillStyle=c;[-1,1].forEach(d=>{x.save();x.translate(d*bw*.97,cy+bh*.1);x.rotate(d*(o.air?-.9:.25));   // stubby wings
+    x.beginPath();x.ellipse(0,0,5.5*s,10*s,0,0,7);x.fill();stroke(2.5*s);x.stroke();x.restore();});
+  x.beginPath();x.ellipse(0,cy,bw,bh,0,0,7);x.fillStyle=c;x.fill();stroke(4*s);x.stroke();
+  const ex=f*R*.2,ey=cy-bh*.32,es=R*.3;
+  if(o.sleep){stroke(2.5*s);[-1,1].forEach(d=>{x.beginPath();x.arc(ex+d*es,ey,3.5*s,.15*Math.PI,.85*Math.PI);x.stroke();});}
+  else{fillCirc(ex-es,ey,3.1*s,11);fillCirc(ex+es,ey,3.1*s,13);}
+  const by=cy+bh*.22;                            // the beak, drawn inside the ball, the way she draws it
+  x.fillStyle=BEAK;x.beginPath();x.ellipse(ex,by,R*.42,R*.27,0,0,7);x.fill();stroke(2.6*s);x.stroke();
+  x.beginPath();x.moveTo(ex-R*.4,by);x.quadraticCurveTo(ex,by+R*.1,ex+R*.4,by);x.stroke();
+  if(o.patch){const pe=ex+o.patch*es;stroke(2*s);x.beginPath();x.moveTo(-bw*.95,ey-bh*.42);x.lineTo(pe,ey);x.lineTo(bw*.95,ey-bh*.42);x.stroke();
+    x.fillStyle=INK;x.beginPath();x.ellipse(pe,ey,6.5*s,5.5*s,0,0,7);x.fill();}
+  if(o.goggles){stroke(3*s);x.beginPath();x.moveTo(-bw*.98,cy-bh*.64);x.lineTo(bw*.98,cy-bh*.64);x.stroke();
+    [-1,1].forEach(d=>{x.fillStyle='#cfe3ea';x.beginPath();x.arc(ex+d*R*.28,cy-bh*.7,5.5*s,0,7);x.fill();stroke(2.5*s);x.stroke();});}
+  const top=cy-bh;
+  if(o.hat==='pirate'){drawLook(0,top+R*.8,'pirate',7,R*.72,o.hatcol);
+    if(o.feather){stroke(3.5*s,TOMATO);x.beginPath();x.moveTo(R*.35,top-R*.15);x.quadraticCurveTo(R*.9,top-R*.9,R*1.2,top-R*1.3);x.stroke();}}
+  else if(o.hat==='bandana'){x.fillStyle=o.bcol||TOMATO;x.beginPath();x.ellipse(0,top+R*.45,bw*.92,R*.5,0,Math.PI,0);x.closePath();x.fill();stroke(2.6*s);x.stroke();
+    x.beginPath();x.moveTo(-f*bw*.82,top+R*.32);x.lineTo(-f*bw*1.25,top+R*.12);x.lineTo(-f*bw*1.15,top+R*.5);x.closePath();x.fill();x.stroke();
+    fillCirc(-R*.3,top+R*.2,2.2*s,17,PAPER);fillCirc(R*.25,top+R*.12,2.2*s,19,PAPER);}
+  else if(o.hat==='chef'){x.fillStyle=PAPER;x.fillRect(-R*.5,top-R*.2,R,R*.42);stroke(2.6*s);x.strokeRect(-R*.5,top-R*.2,R,R*.42);
+    [-.35,0,.35].forEach((d,i)=>{x.beginPath();x.arc(d*R,top-R*.38,R*.32,0,7);x.fill();x.stroke();});}
+  x.restore();}
+function duckFlag(px,py,s){                      // the jolly duck: a pirate flag with a duck face on it
+  s=s||1;stroke(4*s,'#8a6a4a');x.beginPath();x.moveTo(px,py);x.lineTo(px,py-60*s);x.stroke();
+  const wv=Math.sin(t*.1+px)*3*s;x.fillStyle=INK;x.beginPath();x.moveTo(px,py-60*s);x.quadraticCurveTo(px+20*s,py-64*s+wv,px+42*s,py-58*s);
+  x.lineTo(px+37*s,py-49*s);x.lineTo(px+44*s,py-40*s);x.quadraticCurveTo(px+20*s,py-36*s-wv,px,py-38*s);x.closePath();x.fill();stroke(2.5*s);x.stroke();
+  x.fillStyle=PAPER;x.beginPath();x.arc(px+19*s,py-49*s,7.5*s,0,7);x.fill();
+  x.fillStyle=BEAK;x.beginPath();x.ellipse(px+20*s,py-46*s,3.6*s,2.4*s,0,0,7);x.fill();
+  x.fillStyle=INK;x.beginPath();x.arc(px+16*s,py-52*s,1.3*s,0,7);x.arc(px+22*s,py-52*s,1.3*s,0,7);x.fill();}
+function giraffeSaddle(px,py,s,f){return{x:px-8*f*s,y:py-206*s};}
+function drawGiraffe(px,py,o){                    // from her drawing: a big spotty body, a long neck, little horns with balls on top
+  o=o||{};const s=o.s||1,f=o.face||1,w=o.walk||0,BODY='#efd08a',SPOT='#c98a4a';
+  if(o.shadow!==false)shadow(px,py,70*s);
+  x.save();x.translate(px,py);x.scale(f*s,s);
+  const leg=(lx,ph,far)=>{const sw=Math.sin(w+ph)*16*Math.min(1,o.move==null?1:o.move),lift=Math.max(0,Math.sin(w+ph))*8*Math.min(1,o.move==null?1:o.move);
+    x.fillStyle=far?'#dcbc77':BODY;x.beginPath();x.moveTo(lx-9,-128);x.lineTo(lx+9,-128);x.lineTo(lx+8+sw,-lift);x.lineTo(lx-8+sw,-lift);x.closePath();x.fill();stroke(4.5);x.stroke();
+    x.fillStyle=INK;x.fillRect(lx-9+sw,-lift-9,18,9);};
+  leg(-48,Math.PI*.5,1);leg(52,Math.PI*1.5,1);
+  stroke(4);x.beginPath();x.moveTo(-82,-180);x.quadraticCurveTo(-98+Math.sin(t*.08)*4,-150,-94,-122);x.stroke();
+  x.fillStyle=INK;x.beginPath();x.ellipse(-94,-116,6,11,0,0,7);x.fill();
+  const neck=()=>{x.beginPath();x.moveTo(40,-172);x.lineTo(80,-182);x.lineTo(114,-300);x.lineTo(84,-308);x.closePath();};
+  neck();x.fillStyle=BODY;x.fill();x.save();neck();x.clip();x.fillStyle=SPOT;
+  [[62,-200,9],[75,-238,8],[88,-272,7],[52,-180,6]].forEach(([a,b,r])=>{x.beginPath();x.arc(a,b,r,0,7);x.fill();stroke(2);x.stroke();});x.restore();
+  neck();stroke(5);x.stroke();
+  stroke(3.5,'#a8774f');x.beginPath();for(let i=0;i<=8;i++){const u=i/8;x.lineTo(40+(84-40)*u-4,-174+(-308+174)*u+(i%2?4:-4));}x.stroke();
+  const body=()=>{x.beginPath();x.moveTo(-80,-200);x.quadraticCurveTo(0,-214,82,-198);x.quadraticCurveTo(94,-160,80,-124);
+    x.quadraticCurveTo(0,-114,-78,-124);x.quadraticCurveTo(-92,-162,-80,-200);x.closePath();};
+  body();x.fillStyle=BODY;x.fill();x.save();body();x.clip();x.fillStyle=SPOT;
+  [[-55,-180,14],[-20,-150,12],[15,-184,13],[52,-152,12],[-62,-134,9],[72,-188,10],[-4,-124,7],[34,-128,8],[-30,-205,8]].forEach(([a,b,r])=>{
+    x.beginPath();x.arc(a,b,r,0,7);x.fill();stroke(2.5);x.stroke();});x.restore();
+  body();stroke(5.5);x.stroke();
+  if(o.saddle){x.fillStyle=TOMATO;x.beginPath();x.moveTo(-34,-209);x.quadraticCurveTo(-8,-214,18,-208);x.lineTo(14,-182);x.lineTo(-30,-184);x.closePath();x.fill();stroke(3.5);x.stroke();
+    x.fillStyle=MUSTARD;x.fillRect(-30,-190,44,4);}
+  leg(-34,Math.PI*1.5,0);leg(66,Math.PI*.5,0);
+  const hb=Math.sin(w*.5)*3+(o.munch?Math.sin(t*.4)*2:0);
+  x.save();x.translate(100,-314+hb);
+  stroke(4);rline(-8,-14,-12,-38,1,0);rline(6,-14,6,-40,2,0);fillCirc(-12,-42,5.5,3,'#a8774f');fillCirc(6,-44,5.5,4,'#a8774f');
+  x.fillStyle=BODY;x.beginPath();x.ellipse(-22,-10,12,6,-.5,0,7);x.fill();stroke(3.5);x.stroke();
+  x.beginPath();x.ellipse(0,0,24,17,.15,0,7);x.fill();stroke(4.5);x.stroke();
+  x.fillStyle='#f6e2b0';x.beginPath();x.ellipse(20,7,17,13,.1,0,7);x.fill();stroke(4);x.stroke();
+  fillCirc(28,3,2.2,5);fillCirc(21,1,2.2,6);fillCirc(-2,-5,3.4,7);
+  stroke(2.5);x.beginPath();x.arc(20,10,7,.25*Math.PI,.75*Math.PI);x.stroke();
+  x.restore();x.restore();}
+
+/* ---- the book ---- */
+let duckQuest=false,pendingDucks=false,patchGiven=false;
+function duckPage(k){
+  if(k===0){pgSky();pgSun(410,60);x.fillStyle='#8cc3dc';x.fillRect(0,180,480,120);stroke(3,PAPER);wave(30,80,250,1);wave(380,440,270,2);dvIsland(240,222,1.3);}
+  if(k===1){pgSky();pgFloor('#cbdab4');[[110,0],[240,1],[370,2]].forEach(([px,i])=>{const h=[60,20,96][i];
+      stroke(3);x.setLineDash([6,8]);x.beginPath();x.moveTo(px-80,250);x.quadraticCurveTo(px-40,250-h*1.6-30,px,250-h);x.stroke();x.setLineDash([]);
+      drawDuck(px,250-h,{s:1.5,col:[DUCKY,'#f3eee6','#efd27a'][i],air:h>30,patch:i===1?1:0,hat:i===2?'pirate':null,face:1});});
+    pgWord('hop! hop! hop!',240,60,30);}
+  if(k===2){pgSky();pgSun(70,60);pgFloor('#cbdab4');drawGiraffe(250,250,{s:.62,face:1,shadow:false,saddle:1,move:0});
+    const sd=giraffeSaddle(250,250,.62,1);drawDuck(sd.x,sd.y+4,Object.assign({},DK.finn,{s:1.05,face:1,air:1}));
+    drawDuck(405,130,Object.assign({},DK.rocket,{s:1.2,air:1,fire:1,face:-1}));drawDuck(85,250,Object.assign({},DK.bonk,{s:1.3,face:1}));pgWord('ARR!',150,90,30);}
+  if(k===3){pgSky();pgFloor();drawDuck(160,250,Object.assign({},DK.finn,{s:2.4,face:1}));
+    x.fillStyle=PAPER;stroke(4);[[250,150,8],[272,128,12]].forEach(([a,b,r])=>{x.beginPath();x.arc(a,b,r,0,7);x.fill();x.stroke();});
+    x.beginPath();x.ellipse(360,90,96,62,0,0,7);x.fill();x.stroke();icon('burger',360,128,2.1,5);duckFlag(366,52,.6);pgWord('ARR!',70,70,32);}
+  if(k===4){pgSky();pgFloor();
+    fbox(40,222,180,28,61,'#c98a9b',5);fbox(32,180,18,70,62,'#c49a74',4.5);fbox(212,206,16,44,63,'#c49a74',4.5);x.fillStyle=PAPER;heart(140,240,9);
+    const b=Math.abs(Math.sin(t*.1))*40;drawDuck(130,206-b,Object.assign({},DK.wobble,{s:1.3,air:b>4}));pgWord('boing!',130,60,26);
+    x.fillStyle='#f3ecd9';stroke(6);x.beginPath();x.moveTo(280,232);x.bezierCurveTo(284,150,390,140,412,192);x.lineTo(440,196);x.lineTo(442,232);x.closePath();x.fill();x.stroke();
+    fillCirc(318,234,20,64);fillCirc(404,234,20,65);drawDuck(345,165,Object.assign({},DK.bonk,{s:1.1,face:1}));pgWord('HONK!',420,90,30);}
+  if(k===5){pgSky();pgFloor();
+    fbox(372,140,100,110,71,'#f2d2c4',5);fbox(372,140,100,26,72,TOMATO,5);icon('burger',422,224,1.5,73);
+    stroke(3);[[372,180],[372,206]].forEach(([a,b],i)=>{x.beginPath();x.moveTo(a,b);x.quadraticCurveTo(a-50,b-20+i*8,a-100,b);x.quadraticCurveTo(a-130,b+12,a-160,b-4);x.stroke();});
+    drawGiraffe(190,250,{s:.55,face:1,shadow:false,saddle:1});const sd=giraffeSaddle(190,250,.55,1);
+    drawDuck(sd.x,sd.y+4,Object.assign({},DK.finn,{s:.95,face:1,air:1}));
+    drawDuck(60,230,Object.assign({},DK.splat,{s:1,air:1,face:1}));drawDuck(105,250,Object.assign({},DK.pudding,{s:.95,face:1}));
+    pgWord('sniff sniff...',250,50,24);pgWord('BURGERS!',300,84,28,ACCENT);}}
+BOOKS.push({title:'The Naughty Pirate Ducks',col:'#e0b25e',cover:2,pages:[
+  {txt:'Far across the sea there is a little island with a wrecked pirate ship and two wobbly treehouses. That is where the pirate ducks live.',pic:()=>duckPage(0)},
+  {txt:'They are round, like balls. Their beaks are on the inside. And they never, ever walk. They HOP!',pic:()=>duckPage(1)},
+  {txt:'Some of them wear eyepatches. One of them has a jetpack. And their captain, Captain Finn, rides a giraffe called Spots!',pic:()=>duckPage(2)},
+  {txt:'Captain Finn is ALWAYS hungry. "ARR!" he says. "Bring me the BIGGEST burger in the whole world!"',pic:()=>duckPage(3)},
+  {txt:'So the pirate ducks hop from town to town, looking for that burger. They bounce on beds. They honk horns. They make a BIG mess!',pic:()=>duckPage(4)},
+  {txt:'And this morning, Captain Finn sniffed the air. "I smell... BURGERS!" Hop, hop, hop... the pirate ducks are coming THIS way! The end... uh oh!',pic:()=>duckPage(5)}]});
+const DUCKBOOK=BOOKS.length-1;
+
+/* ---- the invasion ---- */
+const DUCK={st:'none',t:0,camp:0,fx:0,side:1,list:[],finn:null,gir:null,quest:false,fed:false,q:[],flag:null,wait:0,busy:0,villageOpen:false};
+const finnHungry=()=>DUCK.quest&&!DUCK.fed;
+const duckInvading=()=>DUCK.st==='arrive'||DUCK.st==='invade';
+const duckActive=()=>DUCK.st==='arrive'||DUCK.st==='invade'||DUCK.st==='leaving';
+const SCARED=['eek! ducks!','NO!','help!','pirate ducks!','run!','not on my head!'];
+function dq(d,fn){DUCK.q.push({at:DUCK.t+d,fn});}
+function finnSay(txt){const F=DUCK.finn;if(F){say(F.x,F.y-60,txt);quack(420,2);}}
+function gabySay(txt){say(P.x,P.y-130,txt);}
+function duckSpot(id){
+  switch(id){case 'wobble':return{x:578,y:GY-34};case 'bonk':return{x:CAR.x-16*CAR.face,y:GY-108};case 'splat':return{x:6040,y:BH.top-24};
+    case 'nugget':return{x:8440,y:TR.floor};case 'pudding':return{x:11770,y:GY-60};}
+  return{x:DUCK.camp,y:GY};}
+function newDuck(id,px,py){return{id,k:DK[id],x:px,y:py,st:'arrive',tx:px,ty:GY,ph:Math.random()*6,face:-1,sq:0,leap:null,
+  cd:200+Math.random()*300,act:60,hy:0,jump:0,vx:0,vy:0,cd2:0};}
+function duckLeap(d,x1,y1){d.leap={x0:d.x,y0:d.y,x1,y1,u:0,dur:Math.max(26,Math.abs(y1-d.y)*.12+28),h:Math.max(50,(d.y-y1)*.6+50)};
+  if(x1!==d.x)d.face=Math.sign(x1-d.x);}
+function leapStep(d){const L=d.leap;L.u+=1/L.dur;const u=Math.min(1,L.u);
+  d.x=L.x0+(L.x1-L.x0)*u;d.y=L.y0+(L.y1-L.y0)*u-4*L.h*u*(1-u);
+  if(u>=1){d.leap=null;d.x=L.x1;d.y=L.y1;d.sq=1;if(Math.abs(d.x-P.x)<VW&&!inZone())tone(140+Math.random()*40,.05,'triangle',.02);return true;}
+  return false;}
+function duckTravel(d,sp){                        // hop along the street; big leaps to get up onto (or down off) things
+  const dx=d.tx-d.x;
+  if(Math.abs(d.y-GY)>2){
+    if(Math.abs(dx)<14&&Math.abs(d.y-d.ty)<3)return true;
+    if(Math.abs(dx)<220&&Math.abs(d.ty-d.y)<3)duckLeap(d,d.tx,d.ty);
+    else duckLeap(d,d.x+Math.sign(dx||1)*70,GY);
+    return false;}
+  if(Math.abs(dx)>14){d.x+=Math.sign(dx)*Math.min(sp,Math.abs(dx));d.face=Math.sign(dx);d.ph+=.2;return false;}
+  if(Math.abs(d.ty-GY)>2){duckLeap(d,d.tx,d.ty);return false;}
+  return true;}
+function startInvasion(){
+  const side=P.x>W.w-1500?-1:1,edge=P.x+side*(VW/2+140);
+  DUCK.side=side;DUCK.camp=Math.max(WL+260,Math.min(W.w-260,P.x+side*Math.min(250,VW*.3)));DUCK.fx=DUCK.camp-side*55;
+  DUCK.st='arrive';DUCK.t=0;DUCK.list=[];DUCK.q=[];mark('ducks');
+  let j=0;CREW.forEach((id,i)=>{
+    if(id==='rocket'){const d=newDuck(id,edge+side*60,GY-480);d.st='fly';DUCK.list.push(d);return;}
+    const d=newDuck(id,edge+side*(150+j*85),GY);d.tx=P.x+side*VW*(-.42+j*.17);d.face=-side;DUCK.list.push(d);j++;});
+  DUCK.gir={x:edge+side*30,face:-side,walk:0,st:'gallop',tx:DUCK.camp+side*40};
+  DUCK.finn={x:0,y:0,st:'ride',face:-side,hy:0,sq:0,leap:null};
+  const mf=document.getElementById('mapfinn');mf.dataset.x=DUCK.fx;mf.style.display='';
+  quack(700,3);setTimeout(()=>quack(560,2),500);
+  dq(150,()=>{finnSay('ARR! what a lovely town... for being NAUGHTY in!');});
+  dq(300,()=>{finnSay('crew! HOP TO IT!');DUCK.list.forEach(d=>{if(d.st==='arrive'||d.st==='wait')d.st='go';});DUCK.st='invade';crunch(.1,.03);});
+  dq(380,()=>gabySay('oh no! the pirate ducks from the book!'));
+  dq(560,()=>gabySay('maybe i should talk to their captain...'));}
+function stepRocket(d){
+  if(d.st==='leave'){d.vy-=.12;d.y+=d.vy;d.x+=d.vx;if(d.y<GY-1200)d.gone=1;return;}
+  if(--d.cd2<=0){d.cd2=200+Math.random()*160;
+    const base=DUCK.st==='arrive'||inZone()?DUCK.camp:P.x;
+    d.tx=Math.max(WL+150,Math.min(W.w-150,base+(Math.random()-.5)*800));d.ty=GY-230-Math.random()*170;
+    if(DUCK.st==='invade'&&Math.random()<.3&&!inZone()){d.tx=P.x;d.ty=P.y-175;
+      if(Math.abs(d.x-P.x)<VW)setTimeout(()=>{if(duckInvading())say(d.x,d.y-40,['zoooom!',"can't catch me!",'boop! hee hee!'][(Math.random()*3)|0]);},700);}}
+  d.vx+=(d.tx-d.x)*.0025;d.vy+=(d.ty-d.y)*.0035;d.vx*=.965;d.vy*=.94;d.x+=d.vx;d.y+=d.vy;
+  if(Math.abs(d.vx)>.3)d.face=Math.sign(d.vx);
+  if(t%5===0&&Math.abs(d.x-P.x)<VW)bits.push({x:d.x-d.face*12,y:d.y+4,vx:(Math.random()-.5)*.6,vy:.4,t:0,kind:'smoke',s:0});
+  if(t%40===0&&Math.abs(d.x-P.x)<VW/2&&!inZone()&&!flying)tone(95+Math.random()*30,.25,'sawtooth',.01);}
+function duckPlay(d){
+  const near=Math.abs(d.x-P.x)<VW/2+80&&!inZone()&&!flying;
+  switch(d.id){
+    case 'wobble':{d.x=578+Math.sin(t*.017)*28;d.y=GY-34;const s=Math.sin(t*.13);d.hy=Math.abs(s)*48;d.face=Math.cos(t*.017)>0?1:-1;
+      const b=Math.floor(t*.13/Math.PI);if(b!==d.b){d.b=b;d.sq=1;if(near)slide(260,520,.1,'sine',.02);}break;}
+    case 'bonk':d.x=CAR.x-16*CAR.face;d.y=GY-108;d.face=CAR.face;d.hy=Math.abs(Math.sin(t*.1))*12;
+      if(t%220===0&&Math.abs(d.x-P.x)<900&&!inZone()){CAR.horn=26;tune([250,200],130,'square');}break;
+    case 'splat':{d.x=6040+Math.sin(t*.025)*24;d.y=BH.top-24;const s=Math.sin(t*.11);d.hy=Math.abs(s)*30;
+      const b=Math.floor(t*.11/Math.PI);if(b!==d.b){d.b=b;d.sq=1;if(near){puff(d.x,d.y-6,5,'drop');crunch(.06,.015);}}break;}
+    case 'nugget':d.x=8440+Math.sin(t*.03)*40;d.y=TR.floor;d.hy=Math.abs(Math.sin(t*.16))*22;d.face=Math.cos(t*.03)>0?1:-1;
+      if(!disco&&--d.act<=0){disco=true;d.act=360;if(Math.abs(d.x-P.x)<1000&&!inZone())say(d.x,d.y-40,'party time! QUACK!');}
+      if(disco&&t%30===0&&near)puff(d.x,d.y-60,1,'note');break;
+    case 'pudding':d.x=11770;d.y=GY-60;d.hy=Math.abs(Math.sin(t*.07))*8;if(t%40===0&&near)puff(d.x+10,d.y-30,3,'crumb');break;}
+  if(near&&--d.cd<=0){d.cd=420+Math.random()*360;say(d.x,d.y-d.hy-40,d.k.says[(Math.random()*d.k.says.length)|0]);quack(560+Math.random()*200);}}
+function stepTownDuck(d){
+  if(d.jump>0)d.jump--;d.sq*=.8;
+  if(d.leap){leapStep(d);d.hy=0;return;}
+  if(d.id==='rocket'){stepRocket(d);return;}
+  if(d.st==='arrive'||d.st==='go'||d.st==='leave'||d.st==='come'){
+    const sp=d.st==='leave'?4.8:d.st==='come'?4.2:3.4;
+    if(d.st==='go'){const s=duckSpot(d.id);d.tx=s.x;d.ty=s.y;}
+    const done=duckTravel(d,sp);d.hy=done||d.leap?0:Math.abs(Math.sin(d.ph))*20;
+    if(d.st==='leave'&&(done||Math.abs(d.x-P.x)>VW/2+260))d.gone=1;
+    else if(done)d.st=d.st==='go'?'play':'wait';
+    return;}
+  if(d.st==='wait'){d.hy=Math.abs(Math.sin(t*.09+d.ph))*10;d.face=Math.sign(P.x-d.x)||1;return;}
+  if(d.st==='play')duckPlay(d);}
+function stepFinn(){
+  const F=DUCK.finn,g=DUCK.gir,gs=.8;
+  if(g){
+    if(g.st==='gallop'||g.st==='away'){const dx=g.tx-g.x;g.x+=Math.sign(dx)*Math.min(5.2,Math.abs(dx));g.walk+=.3;if(dx)g.face=Math.sign(dx);
+      if(t%14===0&&Math.abs(g.x-P.x)<VW&&!inZone())tone(110+Math.random()*20,.05,'triangle',.03);
+      if(g.st==='gallop'&&Math.abs(dx)<2){g.st='stand';g.face=Math.sign(P.x-g.x)||g.face;F.st='hopoff';
+        const sd=giraffeSaddle(g.x,GY,gs,g.face);F.x=sd.x;F.y=sd.y;F.leap={x0:F.x,y0:F.y,x1:DUCK.fx,y1:GY,u:0,dur:36,h:60};quack(500,2);}
+      if(g.st==='away'&&(Math.abs(g.x-P.x)>VW/2+380||Math.abs(dx)<2||inZone())){DUCK.gir=null;DUCK.finn=null;duckDone();return;}}
+    else{g.walk*=.9;g.munch=1;}}
+  if(!F)return;
+  if(F.st==='ride'||F.st==='away'){const sd=giraffeSaddle(g.x,GY,gs,g.face);F.x=sd.x;F.y=sd.y+4-Math.abs(Math.sin(g.walk))*4;F.face=g.face;return;}
+  if(F.leap){F.sq*=.8;if(leapStep(F)){
+      if(F.st==='hopoff'){F.st='camp';DUCK.flag=DUCK.fx+DUCK.side*110;crunch(.12,.04);}
+      else if(F.st==='mount'){F.st='away';g.st='away';g.tx=g.x+DUCK.side*(VW+900);g.face=DUCK.side;}}return;}
+  F.sq*=.8;
+  if(F.st==='camp'){F.face=Math.sign(P.x-F.x)||1;const k=DUCK.t%200;F.hy=(F.chomp>0)?0:(k<34?Math.abs(Math.sin(k*.185))*26:0);if(k===34)F.sq=1;
+    if(F.chomp>0){F.chomp--;F.sq=Math.sin(F.chomp*.5)*.6;}}}
+function duckTick(){
+  if(pendingDucks&&document.getElementById('read').style.display!=='flex'){pendingDucks=false;duckQuest=true;DUCK.st='coming';DUCK.wait=100;
+    if(inLib()){const h=NPC.find(n=>n.id==='hush');if(h){h.waveT=90;say(h.x,h.y-150,'goodness! is that... QUACKING? outside?');}
+      setTimeout(()=>gabySay('the pirate ducks! they hopped right out of the book!'),1800);}
+    else gabySay('what is that noise? it sounds like... quacking!');
+    quack(700,3);}
+  if(DUCK.st==='coming'){
+    if(--DUCK.wait<=0&&started&&!TRIP&&!R&&!flying&&!inZone()&&P.y<GY+60&&document.getElementById('read').style.display!=='flex')startInvasion();
+    return;}
+  if(!duckActive()||TRIP||R)return;
+  DUCK.t++;
+  const due=DUCK.q.filter(q=>q.at<=DUCK.t);DUCK.q=DUCK.q.filter(q=>q.at>DUCK.t);due.forEach(q=>q.fn());
+  if(!duckActive())return;
+  DUCK.list.forEach(stepTownDuck);DUCK.list=DUCK.list.filter(d=>!d.gone);
+  stepFinn();}
+function duckNear(){if(!duckActive()||inZone())return 1e9;let m=1e9;
+  DUCK.list.forEach(d=>m=Math.min(m,Math.abs(d.x-P.x)));if(DUCK.finn)m=Math.min(m,Math.abs(DUCK.finn.x-P.x));return m;}
+function duckScare(n){
+  if(!duckInvading()||n.duck||zoneAt(n.x))return null;let best=null,bd=330;
+  const chk=(px,py)=>{const d=Math.abs(px-n.x);if(d<bd&&Math.abs(py-n.y)<200){bd=d;best={x:px};}};
+  DUCK.list.forEach(d=>chk(d.x,d.y));if(DUCK.finn)chk(DUCK.finn.x,DUCK.finn.y);if(DUCK.gir)chk(DUCK.gir.x,GY);return best;}
+function talkFinn(){
+  const F=DUCK.finn;if(!F)return;meet('finn');mark('finn');F.sq=1;
+  if(!DUCK.quest){DUCK.busy=1;
+    finnSay("ARR! i'm Captain Finn, the naughtiest duck on the seven seas!");
+    dq(170,()=>gabySay('please tell your ducks to stop being naughty!'));
+    dq(330,()=>finnSay('hmm... my crew stops being naughty when the captain is NOT hungry...'));
+    dq(520,()=>{finnSay("bring me the BIGGEST burger in the world, and we'll hop home! ARR!");DUCK.quest=true;bagSig='';tune([392,523,659],120,'triangle');});
+    dq(700,()=>{gabySay("i know! i can make one at "+BURGER_NAME+"!");DUCK.busy=0;});
+    return;}
+  finnSay(['where is my BURGER? ARR!','the BIGGEST one, matey!','my tummy is rumbling like a cannon!'][(Math.random()*3)|0]);
+  setTimeout(()=>gabySay(BURGER_NAME+' is '+(BF.door<P.x?'◀ that way':'that way ▶')+'! (or take the 🗺 map)'),1500);}
+function feedFinn(){
+  const b=BAG.find(o=>o.kind==='burger');if(!b)return;bagTake(b);DUCK.fed=true;DUCK.busy=1;const F=DUCK.finn;
+  finnSay(b.big?'the BIGGEST burger in the world! for ME?!':'a burger! for ME?!');puff(F.x,F.y-60,8,'heart');tune([523,659,784],90,'triangle');
+  dq(110,()=>{finnSay('CHOMP!');F.chomp=40;crunch(.35,.09);puff(F.x,F.y-40,16,'crumb');});
+  dq(230,()=>{finnSay('BUUUUURP!');slide(180,60,.8,'sawtooth',.05);});
+  dq(370,()=>{finnSay('ARR! the YUMMIEST burger on the seven seas!');mark('finnfed');});
+  dq(540,()=>{finnSay("crew! we've been naughty enough for one day! back to the ship!");crewLeave();});
+  dq(720,()=>{finnSay("here, matey: a pirate hat! now you're an honorary pirate duck!");bagGive({kind:'pirate'},P.x+40,P.y);tune([784,988,1175,1568],100,'triangle');});
+  dq(880,()=>stayersCome());
+  dq(940,()=>{const d=DUCK.list.find(q=>q.id==='nugget');if(d)say(d.x,d.y-40,'wait! can we stay? we LOVE your town!');quack(760,2);});
+  dq(1100,()=>{const d=DUCK.list.find(q=>q.id==='wobble');if(d)say(d.x,d.y-40,'it has the bounciest beds!');quack(640,2);});
+  dq(1250,()=>{gabySay('of course you can stay!');tune([523,659,784,1046],100,'sine');});
+  dq(1400,()=>{finnSay('come and visit Duck Village any time! the plane knows the way! ARR!');DUCK.villageOpen=true;});
+  dq(1580,()=>{if(!DUCK.finn||!DUCK.gir)return;const g=DUCK.gir,sd=giraffeSaddle(g.x,GY,.8,g.face);F.st='mount';
+    F.leap={x0:F.x,y0:F.y,x1:sd.x,y1:sd.y,u:0,dur:34,h:60};quack(500,2);});}
+function crewLeave(){DUCK.st='leaving';const exit=P.x+DUCK.side*(VW/2+340);
+  DUCK.list.forEach(d=>{if(STAYERS.indexOf(d.id)>=0)return;d.leap=null;
+    if(d.id==='rocket'){d.st='leave';d.vy=-2;d.vx=DUCK.side*2;return;}
+    if(Math.abs(d.x-P.x)>VW/2+150||inZone()){d.gone=1;return;}d.st='leave';d.tx=exit;d.ty=GY;});
+  let k=0;NPC.forEach(n=>{if(zoneAt(n.x)||n.duck||Math.abs(n.x-P.x)>VW/2+100||k>2)return;k++;n.waveT=120;
+    setTimeout(()=>say(n.x,n.y-110,['hooray!','yay, Gaby!','thank you!'][k%3]),300*k);});
+  crowd(10);}
+function stayersCome(){let i=0;
+  DUCK.list.forEach(d=>{if(STAYERS.indexOf(d.id)<0)return;const side=i?1:-1;i++;d.leap=null;
+    if(Math.abs(d.x-P.x)>VW/2+150){d.x=P.x-DUCK.side*(VW/2+80);d.y=GY;}
+    d.st='come';d.tx=Math.max(WL+120,Math.min(W.w-120,(inZone()?DUCK.fx:P.x)+side*95));d.ty=GY;});}
+function duckDone(){
+  DUCK.st='done';DUCK.flag=null;document.getElementById('mapfinn').style.display='none';
+  DUCK.list.forEach(d=>{if(STAYERS.indexOf(d.id)<0)return;const k=DK[d.id];
+    const j=OTHERS.findIndex(o=>o.id===d.id);if(j>=0)OTHERS.splice(j,1);
+    NPC.push({id:d.id,name:k.name,x:d.x,y:GY,duck:1,duckart:k,home:d.id==='wobble'?1060:7300,range:d.id==='wobble'?170:230,spd:1.5,dir:1,
+      says:k.says,story:k.story,shirt:PAPER,skin:SKIN,hair:INK,wants:WANTS[d.id]||[],wantI:0,hearts:0,wish:null});});
+  DUCK.list=[];}
+function helloDuck(d){const first=meet(d.id);d.jump=30;
+  say(d.x,d.y-d.hy-40,first?"quack! i'm "+d.k.name+'! '+d.k.says[0]:d.k.says[(Math.random()*d.k.says.length)|0]);quack(600+Math.random()*160,2);}
+function patSpots(){const g=DUCK.gir;meet('spots');g.munch=0;say(g.x+40*g.face,GY-300,'hmmmmm!');slide(180,140,.45,'triangle',.04);puff(g.x+70*g.face,GY-250,5,'heart');}
+function townDuckPlan(c){
+  if(!duckActive())return;
+  const F=DUCK.finn;
+  if(F&&F.st==='camp'&&!DUCK.fed&&!DUCK.busy){const d=reach(F.x,F.y);
+    if(d<100){const has=DUCK.quest&&BAG.some(o=>o.kind==='burger');
+      c.push({k:'duck',x:F.x,y:F.y-90,d:d-20,txt:has?'give Captain Finn the burger':'talk to Captain Finn',fn:has?feedFinn:talkFinn});}}
+  DUCK.list.forEach(dd=>{if(dd.leap||dd.st==='leave')return;const d=reach(dd.x,dd.y);
+    if(d<70)c.push({k:'duck',x:dd.x,y:dd.y-60,d,txt:'say hello to '+(met[dd.id]?dd.k.name:'the duck'),fn:()=>helloDuck(dd)});});
+  const g=DUCK.gir;if(g&&g.st==='stand'){const d=reach(g.x,GY);if(d<90)c.push({k:'duck',x:g.x,y:GY-200,d:d+15,txt:'pat '+(met.spots?'Spots':'the giraffe'),fn:patSpots});}}
+function drawTownDucks(cam){
+  if(!duckActive())return;
+  const vis=px=>px>cam.x-VW/2-260&&px<cam.x+VW/2+260;
+  if(DUCK.flag!=null&&vis(DUCK.flag))duckFlag(DUCK.flag,GY,3.2);
+  const g=DUCK.gir,F=DUCK.finn;
+  if(g&&vis(g.x))drawGiraffe(g.x,GY,{s:.8,face:g.face,walk:g.walk,saddle:1,munch:g.munch});
+  if(F&&vis(F.x)){drawDuck(F.x,F.y-(F.hy||0),Object.assign({},DK.finn,{face:F.face,air:!!F.leap||F.st==='ride'||F.st==='away'||F.hy>4,squash:F.sq}));
+    if(F.st==='camp'&&!met.finn)beacon(F.x,F.y-170);
+    else if(F.st==='camp'&&finnHungry())drawThought({x:F.x,y:F.y,duck:1,big:1,wish:{k:'burger'}},0);}
+  DUCK.list.forEach(d=>{if(!vis(d.x))return;const hy=(d.hy||0)+(d.jump>0?Math.abs(Math.sin(d.jump*.105))*40:0);
+    drawDuck(d.x,d.y-hy,Object.assign({},d.k,{face:d.face,air:!!d.leap||hy>4||d.id==='rocket',fire:d.id==='rocket',squash:d.sq}));});}
+
+/* ======================= Duck Village ======================= */
+/* a wrecked pirate ship stuck in the sand, and two wobbly treehouses joined by a rope bridge.
+   about as tall as the 3-storey houses in town. ladders everywhere, a slide, a cannon that shoots you
+   to the treehouse, jetpacks, Spots to ride, and Captain Finn on his throne at the very top. */
+const DV={w:3400,gy:470,plane:440,cy:235};
+const DVP=[{x0:330,x1:3150,y:470},
+  {x0:830,x1:1606,y:360},{x0:1376,x1:1616,y:250},{x0:1106,x1:1194,y:140},          // the ship: deck, back deck, crow's nest
+  {x0:1990,x1:2330,y:360},{x0:2010,x1:2300,y:250},{x0:2060,x1:2250,y:140},         // Finn's treehouse
+  {x0:2300,x1:2700,y:250},                                                       // the rope bridge
+  {x0:2700,x1:3000,y:250},{x0:2710,x1:2990,y:360}];                              // the kitchen treehouse
+const DVL=[{x:880,y0:360,y1:470},{x:1420,y0:250,y1:360},{x:1150,y0:140,y1:360,rope:1},
+  {x:2030,y0:360,y1:470},{x:2290,y0:250,y1:360},{x:2090,y0:140,y1:250},
+  {x:2960,y0:360,y1:470},{x:2740,y0:250,y1:360}];
+const VDUCKS=[{id:'finn',x:2193,y:112,face:-1},{id:'squint',x:1150,y:140,face:-1},{id:'bonk',x:1262,y:360,face:1},
+  {id:'bubbles',x:1245,y:440},{id:'splat',x:640,y:470,face:1},{id:'cookie',x:2905,y:250,face:-1},{id:'pudding',x:2795,y:250,face:1},{id:'rocket'}];
+function dvIsland(cx,cy,s){                       // a little picture of the whole island
+  x.save();x.translate(cx,cy);x.scale(s,s);
+  x.fillStyle='#efd9a7';x.beginPath();x.ellipse(0,4,180,32,0,Math.PI,0);x.closePath();x.fill();stroke(4);x.stroke();
+  x.fillStyle='#9cc98a';x.beginPath();x.ellipse(70,2,100,26,0,Math.PI,0);x.closePath();x.fill();stroke(3.5);x.stroke();
+  x.save();x.translate(-80,-6);x.rotate(-.08);x.fillStyle='#8a5f3e';x.beginPath();x.moveTo(-70,-30);x.quadraticCurveTo(-58,8,-30,8);x.lineTo(40,8);
+  x.quadraticCurveTo(62,6,64,-34);x.closePath();x.fill();stroke(3.5);x.stroke();stroke(2,'rgba(255,253,244,.5)');rline(-60,-18,60,-18,1,0);rline(-50,-6,58,-6,2,0);
+  stroke(4,'#8a5f3e');rline(0,-30,2,-92,3,0);x.restore();duckFlag(-77,-96,.6);
+  [[50,-110,'#d9654b'],[130,-80,'#8fb3a0']].forEach(([tx,top,rc],i)=>{x.fillStyle='#7fb069';x.beginPath();x.ellipse(tx,top+10,40,28,0,0,7);x.fill();stroke(3);x.stroke();
+    x.fillStyle='#a8774f';x.fillRect(tx-7,top+20,14,-top-20);stroke(3);x.strokeRect(tx-7,top+20,14,-top-20);
+    fbox(tx-22,top+40,44,22,30+i,'#e9d6b0',3);if(!i)fbox(tx-18,top+72,36,20,32,'#dfe8d3',3);
+    x.fillStyle=rc;x.beginPath();x.moveTo(tx-26,top+40);x.lineTo(tx,top+22);x.lineTo(tx+26,top+40);x.closePath();x.fill();stroke(3);x.stroke();});
+  stroke(2.5);x.beginPath();x.moveTo(72,-60);x.quadraticCurveTo(90,-48,108,-60);x.stroke();
+  x.restore();}
+function startDuckV(){
+  TRIP={dest:'ducks',ph:'out',t:0,says:[],q:[],fx:[],trail:[],chest:0,wheel:0,
+    G:{x:DV.plane+150,y:DV.gy,vy:0,ground:true,climb:null,climbT:0,face:1,walk:0,turnA:0,jet:0,ride:0,can:null,sl:null,bounce:0,spin:0},
+    spots:{x:1830,face:-1,walk:0},noodle:{x:1950,face:-1,walk:0},
+    vd:VDUCKS.map(v=>Object.assign({jump:0},v)),pals:followers.map(f=>({f,x:DV.plane+150-60,y:DV.gy}))};
+  stopMusic();startMusic('pirate');slide(150,700,1.6,'sawtooth',.03);}
+function dvSay(who,txt){const T=TRIP;if(!T)return;if(who!=='gaby')quack(560+Math.random()*240);T.says=T.says.filter(s=>s.who!==who);T.says.push({who,txt,t:0});}
+function dvQ(d,who,txt,fn){TRIP.q.push({at:TRIP.t+d,who,txt,fn});}
+function dvPuff(px,py,n,kind){for(let i=0;i<n;i++)TRIP.fx.push({x:px,y:py,vx:(Math.random()-.5)*3.4,vy:-Math.random()*3-1,t:0,kind:kind||'star',s:(Math.random()*999)|0});}
+function dvGive(kind){if(BAG.length>=BAGMAX)dvSay('gaby',"my bag is full! i'll keep it in the plane");bagGive({kind},P.x,P.y);}
+function dvDuckPos(v){if(v.id==='rocket')return{x:2350+Math.cos(t*.011)*700,y:225+Math.sin(t*.022)*80};return{x:v.x,y:v.y};}
+function dvLand(){
+  dvSay('squint',"LAND HO! a plane! ...it's Gaby!");
+  dvQ(170,'splat','yay! a visitor!');
+  dvQ(340,'rocket','zoom! Captain Finn is up at the top of the big treehouse!');}
+function dvCheckAll(){
+  if(found.duckcrew||!Object.keys(DK).every(k=>met[k])||!met.spots)return;mark('duckcrew');
+  dvQ(160,'finn',"ARR! you met every single pirate duck! here's some pirate gold!",()=>{dvGive('starit');tune([784,988,1175,1568],100,'triangle');});}
+function dvHello(v){
+  const T=TRIP,k=DK[v.id],first=meet(v.id);v.jump=30;
+  if(v.id==='finn'){
+    if(!patchGiven){patchGiven=true;dvSay('finn','ARR! welcome to Duck Village, matey!');
+      dvQ(170,'finn','every pirate needs an eyepatch. here, this one is yours!',()=>{if(SHADES.indexOf('patch')<0)SHADES.push('patch');
+        OUTFIT.shades='patch';saveOutfit();mark('dressup');dvPuff(T.G.x,T.G.y-110,10);tune([523,659,784,1046],90,'triangle');});
+      dvQ(330,'gaby','an eyepatch! i can change it in my wardrobe too!');}
+    else dvSay('finn',k.says[(Math.random()*k.says.length)|0]);}
+  else if(v.id==='bubbles')dvSay('bubbles',first?"zzz... huh? oh! i'm Grandpa Bubbles... zzz":k.says[(Math.random()*3)|0]);
+  else dvSay(v.id,first?"quack! i'm "+k.name+'! '+k.says[0]:k.says[(Math.random()*k.says.length)|0]);
+  dvCheckAll();}
+function dvPlan(){
+  const T=TRIP,G=T.G,c=[],r=(px,py)=>Math.abs(px-G.x)+Math.abs(py-G.y)*1.5;
+  const add=(px,py,lim,txt,fn,bias)=>{const d=r(px,py)+(bias||0);if(d<lim)c.push({d,txt,fn});};
+  if(G.ride)return{txt:'hop off Spots',fn:()=>{G.ride=0;T.spots.x=G.x;T.spots.face=G.face;G.x+=G.face*-70;dvSay('gaby','thank you, Spots!');}};
+  if(G.bounce>0)return null;
+  add(DV.plane,470,95,'fly home',()=>{T.ph='back';T.t=0;T.says=[];T.q=[];slide(200,800,1.2,'sawtooth',.03);});
+  add(1010,470,70,T.chest?'look at the treasure':'open the treasure chest',()=>{
+    if(T.chest){dvSay('gaby','so shiny!');return;}T.chest=1;mark('treasure');dvPuff(1010,440,18,'gold');tune([523,659,784,1046,1318],80,'triangle');
+    dvSay('gaby',"pirate treasure! it's full of... rubber ducks?!");dvGive('duck');dvQ(160,'bubbles','zzz... don\'t tell Finn... zzz');});
+  add(1335,360,60,'climb into the cannon',()=>{G.can={t:0};G.vy=0;meet('bonk');});
+  add(1505,250,60,'steer the ship',()=>{T.wheel=60;dvSay('gaby',['ahoy!','full speed ahead!','land ho!'][(Math.random()*3)|0]);tune([330,392,523],110,'triangle');
+    dvQ(100,'squint','we are stuck in the sand, silly!');});
+  add(1128,140,55,'look through the spyglass',()=>{dvSay('gaby',['i can see my house!','i can see a whale!','i can see Clover Island!'][(Math.random()*3)|0]);tone(880,.1,'triangle',.04);});
+  add(T.spots.x,470,95,'ride Spots',()=>{G.ride=1;G.x=T.spots.x;G.face=T.spots.face;G.climb=null;G.jet=0;meet('spots');mark('giraffe');
+    dvSay('gaby','giddy up, Spots!');slide(180,140,.45,'triangle',.04);dvCheckAll();},4);
+  add(T.noodle.x,470,80,'pat Noodle',()=>{dvSay('gaby','hello, Noodle! you are a baby giraffe!');slide(240,200,.4,'triangle',.04);dvPuff(T.noodle.x+40,250,4,'heart');},6);
+  add(2215,360,55,'bounce on the bunk bed',()=>{G.bounce=170;G.x=2215;dvSay('gaby','boing! boing! boing!');});
+  add(2320,360,40,'go down the slide',()=>{G.sl=0;slide(900,300,1.2,'sine',.04);});
+  add(2157,250,55,'look at the treasure map',()=>{dvSay('gaby','X marks the spot... the X is on '+BURGER_NAME+'!');dvQ(140,'finn','ARR! the best treasure there is!');});
+  add(2850,250,60,'stir the seaweed soup',()=>{dvPuff(2850,190,8,'bub');dvSay('cookie','seaweed soup! it smells like socks!');dvQ(140,'gaby','eww... yum?');meet('cookie');});
+  add(2605,470,70,G.jet>0?'(hold ▲ to fly!)':'put on a jetpack',()=>{if(G.jet>0)return;G.jet=660;mark('jetpack');dvSay('rocket','zoom! hold ▲ to fly!');tune([392,523,659,784],80,'square');});
+  T.vd.forEach(v=>{const p=dvDuckPos(v);add(p.x,p.y,v.id==='rocket'?90:70,'say hello to '+(met[v.id]?DK[v.id].name:'the duck'),()=>dvHello(v),-6);});
+  return c.sort((a,b)=>a.d-b.d)[0]||null;}
+function dvUpdate(){
+  const T=TRIP;T.t++;T.says.forEach(s=>s.t++);T.says=T.says.filter(s=>s.t<200);
+  for(let i=T.fx.length-1;i>=0;i--){const b=T.fx[i];b.t++;b.x+=b.vx;b.y+=b.vy;b.vy+=(b.kind==='heart'||b.kind==='note'||b.kind==='bub'||b.kind==='smoke')?-.02:.07;if(b.t>90)T.fx.splice(i,1);}
+  if(T.ph==='out'){if(actEdge)T.t=Math.max(T.t,T.t<170?170:T.t<430?430:650);
+    if(T.t>=650){T.ph='walk';T.t=0;tone(160,.3,'triangle',.05);crunch(.2,.04);been.ducks=1;mark('duckvillage');dvLand();}}
+  else if(T.ph==='walk')dvWalk();
+  else if(T.ph==='back'){if(actEdge)T.t=Math.max(T.t,300);if(T.t>=300)endTrip();}
+  actEdge=upEdge=downEdge=grabEdge=false;}
+function dvWalk(){
+  const T=TRIP,G=T.G,gy=DV.gy;
+  const due=T.q.filter(q=>q.at<=T.t);T.q=T.q.filter(q=>q.at>T.t);
+  due.forEach(q=>{if(q.who&&q.txt)dvSay(q.who,q.txt);if(q.fn)q.fn();});
+  if(!TRIP||TRIP.ph!=='walk')return;
+  T.vd.forEach(v=>{if(v.jump>0)v.jump--;});if(T.wheel>0)T.wheel--;
+  T.noodle.walk+=.05;T.noodle.x=1950+Math.sin(t*.006)*40;T.noodle.face=Math.cos(t*.006)>0?1:-1;
+  if(t%200===0)dvPuff(1245,400,1,'z');
+  if(G.can){const C=G.can;C.t++;G.x=1335;G.y=360;
+    if(C.t===2)dvSay('bonk','in you go! 3...');if(C.t===42)dvSay('bonk','2...');if(C.t===82)dvSay('bonk','1...');
+    if(C.t===115){crunch(.5,.1);slide(160,60,.5,'sawtooth',.06);dvSay('bonk','BOOM!');for(let i=0;i<10;i++)T.fx.push({x:1390,y:325,vx:Math.random()*2,vy:-Math.random()*1.5,t:0,kind:'smoke',s:i});}
+    if(C.t>115){const u=Math.min(1,(C.t-115)/72);G.x=1385+(2165-1385)*u;G.y=322+(250-322)*u-4*230*u*(1-u);G.spin=u*Math.PI*2;
+      if(u>=1){G.can=null;G.spin=0;G.x=2165;G.y=250;G.vy=0;G.ground=true;mark('duckcannon');dvSay('gaby',"i'm a cannonball! wheee!");
+        dvQ(130,'bonk','again! again!');dvPuff(G.x,G.y-60,8);}}}
+  else if(G.sl!=null){G.sl+=.016;const s=Math.min(1,G.sl),i=1-s;G.x=i*i*2330+2*i*s*2445+s*s*2505;G.y=i*i*360+2*i*s*372+s*s*470;
+    if(s>=1){G.sl=null;G.y=470;G.vy=0;G.ground=true;dvSay('gaby','wheee!');}}
+  else if(G.bounce>0){G.bounce--;G.x=2215;G.y=335-Math.abs(Math.sin(G.bounce*.13))*44;G.ground=true;
+    if(Math.abs(Math.sin(G.bounce*.13))<.07&&G.bounce%2===0)slide(260,520,.1,'sine',.02);
+    if((G.bounce<150&&(key.left||key.right))||G.bounce===0){G.bounce=0;G.y=360;}}
+  else if(G.ride){let mv=0;if(key.left){G.x-=5.5;G.face=-1;mv=1;}if(key.right){G.x+=5.5;G.face=1;mv=1;}
+    G.x=Math.max(1700,Math.min(3080,G.x));G.y=gy;T.spots.x=G.x;T.spots.face=G.face;T.spots.walk+=mv?.28:0;T.spots.move=mv;
+    if(mv&&t%14===0)tone(110+Math.random()*20,.05,'triangle',.03);}
+  else if(G.climb){const L=G.climb;G.climbT++;
+    if((key.left||key.right)&&G.climbT>12){G.climb=null;G.face=key.left?-1:1;G.vy=0;G.ground=false;}
+    else{G.x=L.x;if(key.up)G.y-=3.1;if(key.down)G.y+=3.1;G.walk+=(key.up||key.down)?.26:0;
+      if((key.up||key.down)&&t%12===0)tone(240+((t*11)%80),.03,'square',.012);
+      if(G.y<=L.y0){G.y=L.y0;G.climb=null;G.vy=0;G.ground=true;}
+      if(G.y>=L.y1){G.y=L.y1;G.climb=null;G.vy=0;G.ground=true;}}}
+  else{
+    let mv=0;if(key.left){G.x-=3.6;G.face=-1;mv=1;}if(key.right){G.x+=3.6;G.face=1;mv=1;}
+    G.walk=mv?G.walk+.2:G.walk*.86;G.turnA+=((mv&&G.ground?1:0)-G.turnA)*.2;
+    if(mv&&G.ground&&t%13===0)tone(90+((t*7)%26),.035,'triangle',.014);
+    G.x=Math.max(370,Math.min(3080,G.x));
+    let climbed=false;
+    if(!(G.jet>0&&!G.ground))for(const L of DVL){if(Math.abs(G.x-L.x)>30)continue;
+      if(upEdge&&Math.abs(G.y-L.y1)<12&&!(G.jet>0)){G.climb=L;G.climbT=0;G.y=L.y1-1;climbed=true;break;}
+      if(downEdge&&Math.abs(G.y-L.y0)<12){G.climb=L;G.climbT=0;G.y=L.y0+1;climbed=true;break;}}
+    if(!climbed){
+      if(downEdge&&G.ground&&G.y<gy-2){G.y+=2;G.ground=false;G.vy=1;}            // ▼ hops down off a floor
+      if(G.jet>0&&key.up){G.vy=Math.max(-6,G.vy-1.05);G.ground=false;
+        if(t%3===0)T.fx.push({x:G.x-G.face*13,y:G.y-36,vx:(Math.random()-.5),vy:1.5,t:0,kind:'smoke',s:0});if(t%7===0)tone(90+Math.random()*30,.07,'sawtooth',.012);}
+      else if(upEdge&&G.ground){G.vy=-9.2;G.ground=false;slide(400,640,.12,'sine',.035);}
+      const prev=G.y;G.vy=Math.min(11,G.vy+.5);G.y+=G.vy;G.ground=false;
+      if(G.vy>0)for(const p of DVP)if(G.x>p.x0&&G.x<p.x1&&prev<=p.y+1&&G.y>=p.y){if(G.vy>6)tone(120,.06,'triangle',.03);G.y=p.y;G.vy=0;G.ground=true;break;}
+      if(G.y<-60){G.y=-60;G.vy=0;}
+      if(G.y>gy){G.y=gy;G.vy=0;G.ground=true;}}}
+  if(G.jet>0){G.jet--;if(G.jet===120)dvSay('gaby','my jetpack is nearly empty!');if(G.jet===0)dvSay('rocket','fill up at the jetpack rack any time!');}
+  const last=T.trail[0];if(!last||Math.abs(last.x-G.x)+Math.abs(last.y-G.y)>7){T.trail.unshift({x:G.x,y:G.ride?gy:G.y});if(T.trail.length>200)T.trail.pop();}
+  T.pals.forEach((e,i)=>{const tp=T.trail[Math.min(T.trail.length-1,(i+1)*14)];if(tp){e.x+=(tp.x-e.x)*.2;e.y+=(tp.y-e.y)*.2;}});
+  if(actEdge&&!G.can&&G.sl==null){const p=dvPlan();if(p)p.fn();}}
+
+/* ---- drawing the village ---- */
+function dvHut(x0,x1,y,h,wall,seed){
+  x.fillStyle=wall;x.fillRect(x0,y-h,x1-x0,h);
+  stroke(2,'rgba(43,43,43,.16)');for(let px=x0+22;px<x1;px+=22)rline(px,y-h+4,px,y-2,seed+px,0);
+  stroke(6);rline(x0,y-h,x0,y,seed+3,1);rline(x1,y-h,x1,y,seed+5,1);rline(x0-6,y-h,x1+6,y-h,seed+7,1);
+  fbox(x0-12,y,x1-x0+24,12,seed+1,'#a8774f',5);}
+function dvLeaves(list,seed){x.fillStyle='#7fb069';list.forEach(([a,b,r],i)=>{x.beginPath();x.ellipse(a,b,r,r*.72,0,0,7);x.fill();});
+  stroke(5);list.forEach(([a,b,r],i)=>cloud(a,b,r*.78,seed+i));}
+function dvTrunk(cx,top,w){x.fillStyle='#a8774f';x.beginPath();x.moveTo(cx-w-12,DV.gy);x.quadraticCurveTo(cx-w+6,(DV.gy+top)/2,cx-w+2,top);
+  x.lineTo(cx+w-2,top);x.quadraticCurveTo(cx+w-6,(DV.gy+top)/2,cx+w+12,DV.gy);x.closePath();x.fill();stroke(6);x.stroke();
+  stroke(3,'rgba(43,43,43,.4)');for(let i=0;i<6;i++){const yy=top+40+i*((DV.gy-top-60)/6);x.beginPath();x.arc(cx+(i%2?-10:12),yy,8,Math.PI*.2,Math.PI*.9);x.stroke();}}
+function dvShip(){
+  const D=360,gy=DV.gy,T=TRIP;
+  const hull=()=>{x.beginPath();x.moveTo(752,296);x.quadraticCurveTo(800,330,830,330);x.lineTo(1380,330);x.lineTo(1380,236);x.lineTo(1630,226);
+    x.quadraticCurveTo(1670,330,1640,gy+40);x.lineTo(900,gy+40);x.quadraticCurveTo(790,430,752,296);x.closePath();};
+  stroke(7,'#8a5f3e');rline(760,300,676,236,9000,1);stroke(3);rline(676,236,760,300,9002,0);
+  hull();x.fillStyle='#8a5f3e';x.fill();
+  x.save();hull();x.clip();stroke(3,'rgba(43,43,43,.35)');for(let yy=250;yy<gy+40;yy+=22)rline(700,yy,1700,yy+((yy/22)%2?3:-2),9001+yy,2);
+  x.fillStyle=MUSTARD;x.fillRect(700,340,1000,7);x.restore();
+  stroke(7);hull();x.stroke();
+  x.fillStyle='#3d3230';x.beginPath();x.moveTo(782,380);x.lineTo(800,368);x.lineTo(812,382);x.lineTo(828,372);x.lineTo(836,402);x.lineTo(826,430);
+  x.lineTo(808,422);x.lineTo(792,436);x.lineTo(780,410);x.closePath();x.fill();
+  x.fillStyle='#d9b88c';x.fillRect(850,D+10,740,gy-D-10);                         // the hold, seen from the side
+  stroke(2,'rgba(43,43,43,.18)');for(let yy=D+34;yy<gy;yy+=24)rline(850,yy,1590,yy,9011+yy,1);
+  [940,1100,1340].forEach((px,i)=>{fcirc(px,402,15,9021+i,'#cfe3ea',4);stroke(3);x.beginPath();x.moveTo(px-15,402);x.lineTo(px+15,402);x.stroke();});
+  x.fillStyle='#e3c49a';x.fillRect(1394,260,204,100);                             // the captain's old cabin
+  fbox(1470,282,54,42,9025,'#cfe3ea',4);rline(1497,282,1497,324,9027,0);
+  fbox(822,D,786,12,9031,'#a8774f',5);fbox(1372,250,250,10,9033,'#a8774f',5);
+  stroke(5,'#7a5236');for(let px=850;px<1376;px+=34)rline(px,D-28,px,D,9035+px,0);rline(830,D-28,1376,D-28,9037,1);
+  for(let px=1392;px<1620;px+=34)rline(px,222,px,250,9039+px,0);rline(1380,222,1622,222,9041,1);
+  /* the broken mast, the torn sail and the crow's nest */
+  fbox(1141,92,18,268,9043,'#8a5f3e',5);
+  x.fillStyle='#8a5f3e';x.beginPath();x.moveTo(1141,92);x.lineTo(1145,74);x.lineTo(1150,86);x.lineTo(1155,70);x.lineTo(1159,92);x.closePath();x.fill();stroke(4);x.stroke();
+  duckFlag(1162,118,1.05);
+  fbox(1048,192,204,9,9045,'#8a5f3e',4);
+  x.save();x.globalAlpha=.92;x.fillStyle='#f3ecd8';x.beginPath();x.moveTo(1062,201);x.lineTo(1238,201);x.lineTo(1230,286);
+  for(let i=0;i<=8;i++)x.lineTo(1230-i*20,286+(i%2?12:-4));x.lineTo(1066,292);x.closePath();x.fill();stroke(4);x.stroke();
+  x.fillStyle='#9fd6ee';x.beginPath();x.ellipse(1100,240,10,14,.3,0,7);x.ellipse(1205,262,12,8,0,0,7);x.fill();x.restore();
+  fbox(1104,112,92,28,9047,'#7a5236',5);
+  /* cannon on the deck, pointing at Finn's treehouse */
+  x.save();x.translate(1330,342);x.rotate(-.35);x.fillStyle='#3d3a46';x.fillRect(-10,-11,72,22);stroke(4);x.strokeRect(-10,-11,72,22);
+  x.fillStyle='#55606b';x.fillRect(58,-14,10,28);x.strokeRect(58,-14,10,28);x.restore();
+  fcirc(1316,352,10,9049,'#8a5f3e',4);fcirc(1350,352,10,9051,'#8a5f3e',4);
+  /* the ship's wheel */
+  stroke(5,'#8a5f3e');rline(1505,250,1505,214,9053,0);
+  x.save();x.translate(1505,202);x.rotate((T?T.wheel:0)*.2+t*.002);stroke(4,'#8a5f3e');x.beginPath();x.arc(0,0,18,0,7);x.stroke();
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2;rline(0,0,Math.cos(a)*25,Math.sin(a)*25,9055+i,0);}x.restore();
+  stroke(3);rline(1610,226,1610,206,9057,0);fcirc(1610,214,8,9059,'#fdf0c4',3);
+  /* treasure chest, barrels and Grandpa Bubbles' hammock in the hold */
+  const ch=T&&T.chest;
+  if(ch){x.save();x.globalAlpha=.4+Math.sin(t*.1)*.15;x.fillStyle='#f7d682';x.beginPath();x.ellipse(1010,430,50,30,0,0,7);x.fill();x.restore();}
+  fbox(982,438,56,32,9061,'#a8774f',4.5);x.fillStyle=MUSTARD;x.fillRect(982,448,56,6);fillCirc(1010,454,4,9063,MUSTARD);
+  if(ch){fbox(982,404,56,12,9065,'#a8774f',4.5);for(let i=0;i<5;i++)fillCirc(990+i*10,436-(i%2)*3,5,9067+i,'#f3d36b');}
+  else{x.fillStyle='#a8774f';x.beginPath();x.moveTo(982,438);x.quadraticCurveTo(1010,418,1038,438);x.closePath();x.fill();stroke(4.5);x.stroke();}
+  [1525,1565].forEach((bx,i)=>{fbox(bx-18,424,36,46,9071+i,'#b07f52',4.5);stroke(3,'#55606b');rline(bx-18,436,bx+18,436,9073+i,0);rline(bx-18,458,bx+18,458,9075+i,0);});
+  stroke(5,'#8a5f3e');rline(1188,470,1188,402,9077,0);rline(1302,470,1302,402,9079,0);
+  stroke(4,'#c9a07a');x.beginPath();x.moveTo(1188,410);x.quadraticCurveTo(1245,462,1302,410);x.stroke();
+  drawLadderArt(880,D,gy,9081);drawLadderArt(1420,250,D,9083);drawLadderArt(1150,140,D,9085,'#c9a07a');}
+function dvTrees(){
+  const T=TRIP;
+  dvLeaves([[2010,96,90],[2150,30,125],[2295,96,90],[2060,-30,70],[2245,-30,70]],9101);
+  dvLeaves([[2860,110,110],[2760,150,70],[2965,150,70]],9111);
+  dvTrunk(2150,30,34);dvTrunk(2860,120,28);
+  /* Finn's treehouse: bunk beds, the treasure map, and the throne room at the top */
+  dvHut(1990,2330,360,100,'#e9d6b0',9121);dvHut(2010,2300,250,100,'#dfe8d3',9131);dvHut(2060,2250,140,95,'#f2ddd2',9141);
+  x.fillStyle=TOMATO;x.beginPath();x.moveTo(2034,45);x.lineTo(2155,-26);x.lineTo(2276,45);x.closePath();x.fill();stroke(7);x.stroke();
+  duckFlag(2155,-24,.9);
+  fcirc(2060,300,18,9151,'#cfe3ea',4);
+  stroke(6,'#8a5f3e');rline(2165,360,2165,280,9153,1);rline(2268,360,2268,280,9155,1);
+  fbox(2160,334,112,14,9157,'#7f9fbf',4.5);fbox(2160,290,112,14,9159,'#c98a9b',4.5);
+  drawDuck(2240,290,{s:.55,sleep:1,col:'#f6e3a0'});drawDuck(2200,290,{s:.5,sleep:1,col:'#f3eee6'});
+  if(t%90===0&&T)dvPuff(2225,250,1,'z');
+  fbox(2120,170,74,52,9161,PAPER,4);stroke(2.5,TOMATO);x.setLineDash([4,5]);x.beginPath();x.moveTo(2128,214);x.quadraticCurveTo(2150,182,2176,200);x.stroke();x.setLineDash([]);
+  stroke(3.5,TOMATO);rline(2172,186,2186,200,9163,0);rline(2186,186,2172,200,9165,0);
+  fbox(2040,206,44,44,9167,'#b07f52',4);
+  fcirc(2265,190,16,9169,'#cfe3ea',4);
+  drawLook(2100,104,'crown',9171,15);                 // the crown on the wall, from her drawing
+  fbox(2170,60,46,52,9173,'#b49ac7',5);for(let i=0;i<3;i++){x.fillStyle=MUSTARD;x.beginPath();x.moveTo(2172+i*15,60);x.lineTo(2179+i*15,46);x.lineTo(2186+i*15,60);x.closePath();x.fill();stroke(3);x.stroke();}
+  fbox(2160,112,66,14,9175,'#9d7fb8',5);stroke(5,'#8a5f3e');rline(2166,126,2166,140,9177,0);rline(2220,126,2220,140,9179,0);
+  /* the slide down from the bunk room */
+  x.fillStyle='#e0b25e';x.beginPath();x.moveTo(2326,352);x.quadraticCurveTo(2438,362,2498,470);x.lineTo(2526,470);x.quadraticCurveTo(2462,344,2334,336);x.closePath();x.fill();
+  stroke(7);x.beginPath();x.moveTo(2326,352);x.quadraticCurveTo(2438,362,2498,470);x.stroke();x.beginPath();x.moveTo(2334,336);x.quadraticCurveTo(2462,344,2526,470);x.stroke();
+  /* the rope bridge */
+  stroke(3,'#8a6a4a');for(let px=2306;px<2700;px+=26){const sag=Math.sin((px-2300)/400*Math.PI)*14;x.fillStyle='#c49a74';x.fillRect(px,250+sag*.2,20,8);x.strokeRect(px,250+sag*.2,20,8);
+    rline(px+10,250,px+10,200+sag,9181+px,0);}
+  stroke(4,'#8a6a4a');x.beginPath();x.moveTo(2300,198);x.quadraticCurveTo(2500,236,2700,198);x.stroke();
+  /* the kitchen treehouse */
+  dvHut(2710,2990,360,100,'#dfe8d3',9201);dvHut(2700,3000,250,100,'#f3e4b8',9211);
+  x.fillStyle='#8fb3a0';x.beginPath();x.moveTo(2688,150);x.lineTo(2850,84);x.lineTo(3012,150);x.closePath();x.fill();stroke(7);x.stroke();
+  stroke(4,'#c9a07a');x.beginPath();x.moveTo(2780,300);x.quadraticCurveTo(2830,330,2880,300);x.stroke();drawDuck(2830,324,{s:.5,sleep:1,col:'#efd27a',rot:-.15});
+  fcirc(2930,300,16,9221,'#cfe3ea',4);
+  stroke(4,'#8a6a4a');rline(2790,190,2910,190,9223,0);[[2805,TOMATO],[2835,SAGE],[2865,MUSTARD],[2893,SKY]].forEach(([jx,c],i)=>fbox(jx-8,170,16,20,9225+i,c,3));
+  for(let i=0;i<3;i++){stroke(5,i%2?'#e98b3a':'#f3a35b');rline(2836+i*12,250,2840+i*12,236-Math.sin(t*.3+i)*5,9231+i,1);}
+  x.fillStyle='#3d3a46';x.beginPath();x.moveTo(2818,212);x.lineTo(2882,212);x.quadraticCurveTo(2880,244,2850,244);x.quadraticCurveTo(2820,244,2818,212);x.closePath();x.fill();stroke(4);x.stroke();
+  x.fillStyle='#8fbf72';x.beginPath();x.ellipse(2850,212,32,6,0,0,7);x.fill();stroke(3);x.stroke();
+  if(t%22===0&&T)dvPuff(2840+Math.random()*20,206,1,'bub');
+  drawLadderArt(2030,360,470,9241);drawLadderArt(2290,250,360,9243);drawLadderArt(2090,140,250,9245);
+  drawLadderArt(2960,360,470,9247);drawLadderArt(2740,250,360,9249);
+  /* the jetpack rack */
+  stroke(6,'#8a5f3e');rline(2570,470,2570,392,9251,1);rline(2640,470,2640,392,9253,1);rline(2560,392,2650,392,9255,1);
+  duckJet(2590,425,1.2,false);duckJet(2622,425,1.2,false);
+  fbox(2565,354,80,26,9257,PAPER,3.5);x.fillStyle=INK;x.textAlign='center';x.font='700 14px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('jetpacks',2605,372);}
+function dvScene(camx,people){
+  const T=TRIP,gy=DV.gy,W2=TW/2,TF='"Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
+  const g=x.createLinearGradient(0,-80,0,560);g.addColorStop(0,'#9fd6ee');g.addColorStop(.85,'#f4f0d6');x.fillStyle=g;x.fillRect(-1200,-900,TW+2400,2400);
+  fcirc(W2+300,30,32,9301,'#fdf0c4',4);stroke(4);for(let i=0;i<9;i++){const a=i/9*Math.PI*2+t*.004;rline(W2+300+Math.cos(a)*40,30+Math.sin(a)*40,W2+300+Math.cos(a)*56,30+Math.sin(a)*56,9303+i,1);}
+  stroke(4);for(let i=0;i<7;i++){const cx=((i*260-camx*.1-t*.15)%1800+1800)%1800-450;cloud(cx,40+(i%3)*50,22+(i%2)*8,i*13);}
+  x.fillStyle='#8cc3dc';x.fillRect(-1200,372,TW+2400,1200);stroke(2.5,'rgba(255,255,255,.6)');
+  for(let i=0;i<12;i++){const wx=((i*150-camx*.3+t*.3)%1800+1800)%1800-450;wave(wx,wx+30,392+(i%3)*14,i);}
+  x.save();x.translate(W2-camx*.3,0);x.fillStyle='#b3d69c';[[300,90],[1100,70],[1600,110]].forEach(([ix,w])=>{x.beginPath();x.ellipse(ix,378,w,22,0,Math.PI,0);x.closePath();x.fill();stroke(3);x.stroke();});x.restore();
+  x.save();x.translate(W2-camx,0);
+  x.fillStyle='#efd9a7';x.beginPath();x.moveTo(250,gy+260);x.quadraticCurveTo(290,gy,360,gy);x.lineTo(DV.w-300,gy);x.quadraticCurveTo(DV.w-230,gy,DV.w-190,gy+260);x.closePath();x.fill();stroke(4);x.stroke();
+  x.fillStyle='#9cc98a';x.fillRect(1690,gy,1400,260);zig(Math.max(1690,camx-W2-40),Math.min(3090,camx+W2+40),gy,9,9311);
+  stroke(2.5,'rgba(160,120,60,.35)');for(let i=0;i<14;i++){const rx=400+i*95+(i%3)*20,ry=gy+24+(i%4)*20;x.beginPath();x.moveTo(rx,ry);x.quadraticCurveTo(rx+20,ry-6,rx+40,ry);x.stroke();}
+  x.fillStyle='#8cc3dc';x.beginPath();x.ellipse(640,gy+5,72,10,0,0,7);x.fill();stroke(3.5);x.stroke();
+  egPalm(520,gy,170,9321);egPalm(3060,gy,160,9323);egPalm(1700,gy,150,9325);
+  stroke(6,'#8a6a4a');rline(760,gy,760,gy-96,9327,1);fbox(680,gy-150,160,52,9329,PAPER,5);
+  x.fillStyle=INK;x.textAlign='center';x.font='700 22px '+TF;x.fillText('Duck Village',760,gy-116);duckFlag(830,gy-150,.5);
+  dvShip();dvTrees();
+  if(people){
+    drawGiraffe(T.noodle.x,gy,{s:.62,face:T.noodle.face,walk:T.noodle.walk,move:.4});
+    if(!T.G.ride)drawGiraffe(T.spots.x,gy,{s:.9,face:T.spots.face,walk:T.spots.walk,saddle:1,munch:1,move:0});}
+  tripPlane(DV.plane,gy-24,.95,0,0);
+  if(people){
+    T.vd.forEach(v=>{const p=dvDuckPos(v),k=DK[v.id],j=v.jump>0?Math.abs(Math.sin(v.jump*.105))*40:0;
+      if(v.id==='bubbles'){drawDuck(p.x,p.y,Object.assign({},k,{rot:-1.25,air:1}));return;}
+      if(v.id==='rocket'){drawDuck(p.x,p.y,Object.assign({},k,{face:-Math.sign(Math.sin(t*.011))||1,air:1,fire:1}));return;}
+      const idle=v.id==='splat'?Math.abs(Math.sin(t*.1))*16:v.id==='finn'?0:Math.abs(Math.sin(t*.06+p.x))*5;
+      drawDuck(p.x,p.y-j-idle,Object.assign({},k,{face:Math.sign(T.G.x-p.x)||v.face||1,air:j+idle>4}));
+      if(v.id==='splat'&&Math.abs(Math.sin(t*.1))<.06)dvPuff(p.x,p.y-4,3,'drop');});
+    T.pals.forEach((e,i)=>itemArt(e.f.kind,e.x,e.y,9401+i*7,Math.abs(Math.sin(t*.18+i))*5,Object.assign({},e.f,{pm:null,oy:0})));
+    dvGaby();
+    fbox(1100,118,100,24,9411,'#8a5f3e',5);stroke(3,'rgba(43,43,43,.4)');rline(1100,130,1200,130,9413,0);    // the front of the crow's nest
+    x.fillStyle='#efd9a7';x.fillRect(740,gy+3,980,70);
+    [[812,gy+14,70,40],[1650,gy+12,70,34]].forEach(([a,b,rx,ry])=>{x.beginPath();x.ellipse(a,b,rx,ry,0,Math.PI,0);x.closePath();x.fill();});
+    stroke(4);x.beginPath();x.ellipse(812,gy+14,70,40,0,Math.PI*1.08,Math.PI*1.75);x.stroke();x.beginPath();x.ellipse(1650,gy+12,70,34,0,Math.PI*1.25,Math.PI*1.92);x.stroke();
+    for(const b of T.fx){x.save();x.globalAlpha=1-b.t/90;stroke(4);
+      if(b.kind==='heart'){x.fillStyle=TOMATO;heart(b.x,b.y,7);}else if(b.kind==='note')note(b.x,b.y,b.s);
+      else if(b.kind==='drop')fillCirc(b.x,b.y,4.5,b.s,'#7fb8d6');else if(b.kind==='bub')rcirc(b.x,b.y,6,b.s);
+      else if(b.kind==='smoke'){x.globalAlpha*=.6;fillCirc(b.x,b.y,6+b.t*.12,b.s,'#c9c3b6');}
+      else if(b.kind==='gold')fillCirc(b.x,b.y,5,b.s,'#f3d36b');
+      else if(b.kind==='z'){x.font='700 20px '+TF;x.fillStyle=INK;x.textAlign='center';x.fillText('z',b.x,b.y);}
+      else star(b.x,b.y,7,b.s);x.restore();}}
+  x.restore();}
+function dvGaby(){
+  const T=TRIP,G=T.G,o=gabyO({face:G.face,walk:G.walk,turn:G.turnA,hat:P.hat});
+  if(G.can&&G.can.t<=115)return;
+  if(G.can){x.save();x.translate(G.x,G.y-46);x.rotate(G.spin||0);x.translate(-G.x,-(G.y-46));figure(G.x,G.y,Object.assign(o,{arms:'up',shadow:false}));x.restore();return;}
+  if(G.ride){const s=.9,sd=giraffeSaddle(G.x,DV.gy,s,G.face);drawGiraffe(G.x,DV.gy,{s,face:G.face,walk:T.spots.walk,saddle:1,move:T.spots.move?1:0});
+    x.save();if(G.face<0){x.translate(sd.x,0);x.scale(-1,1);x.translate(-sd.x,0);}seated(sd.x-6,sd.y+34,Object.assign(o,{shadow:false,face:1,hand:1}));x.restore();return;}
+  if(G.jet>0)duckJet(G.x-G.face*13,G.y-64,1.15,key.up&&!G.ground);
+  if(G.climb){figure(G.x,G.y,Object.assign(o,{arms:'up',shadow:false}));return;}
+  if(G.bounce>0){figure(G.x,G.y,Object.assign(o,{arms:'up',shadow:false}));return;}
+  figure(G.x,G.y,Object.assign(o,{shadow:G.ground,arms:G.jet>0&&!G.ground?'up':'down'}));}
+function dvWho(who){const T=TRIP,G=T.G;
+  if(who==='gaby')return{x:G.x,y:G.y-(G.ride?250:150)};
+  const v=T.vd.find(q=>q.id===who);if(v){const p=dvDuckPos(v);return{x:p.x,y:p.y-(who==='finn'?95:70)};}
+  return{x:G.x,y:G.y-150};}
+function dvDraw(){
+  const T=TRIP,scene=T.ph==='walk'||(T.ph==='out'&&T.t>=430)||(T.ph==='back'&&T.t<150);
+  const sc=scene?Math.min(innerWidth/600,innerHeight/580):Math.min(innerWidth/TW,innerHeight/TH);
+  x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,innerWidth,innerHeight);
+  x.save();x.translate(innerWidth/2,innerHeight/2);x.scale(sc,sc);x.translate(-TW/2,scene?-DV.cy:-TH/2);
+  const ease=u=>{u=Math.max(0,Math.min(1,u));return u*u*(3-2*u);};
+  const vw=innerWidth/sc,ed=edgeRoom(sc),camOf=gx=>Math.max(vw/2-ed.l,Math.min(DV.w-vw/2+ed.r,gx));
+  const daySky=()=>{const g=x.createLinearGradient(0,0,0,TH);g.addColorStop(0,'#9fd6ee');g.addColorStop(1,'#f4f0d6');x.fillStyle=g;x.fillRect(-900,-400,TW+1800,TH+800);};
+  const clouds=()=>{for(let i=0;i<9;i++){const cx=((i*170-T.t*4)%1300+1300)%1300-200,cy=330+(i%3)*45;
+    x.save();x.fillStyle=PAPER;[[0,0,46],[34,8,34],[-34,8,32]].forEach(([a,b,r])=>{x.beginPath();x.ellipse(cx+a,cy+b,r,r*.6,0,0,7);x.fill();});x.restore();stroke(3);cloud(cx,cy,38,i*7);}};
+  const sea=()=>{x.fillStyle='#7fb2cf';x.fillRect(-900,470,TW+1800,400);stroke(3,PAPER);
+    for(let i=0;i<14;i++){const wx=((i*90-T.t*3)%1300+1300)%1300-200;wave(wx,wx+30,500+(i%3)*20,i);}};
+  if(T.ph==='out'){
+    if(T.t<170)tripTakeoff(T.t);
+    else if(T.t<430){const u=(T.t-170)/260;tripSky('#1b2340','#2d3657');x.save();x.globalAlpha=ease(u*1.4);daySky();x.restore();
+      pgSun(760,500-ease(u)*400);sea();const v=ease(Math.max(0,(u-.3)/.7));dvIsland(TW+260-v*(TW-60),476,.8+v*.7);
+      clouds();tripPlane(380,220+Math.sin(t*.06)*8,.85,0,1);
+      egCaption(u<.3?'over the sea...':u<.7?'look! a pirate flag!':'Duck Village!');}
+    else{const u=(T.t-430)/220,e=ease(u),cx=camOf(T.G.x);dvScene(cx,false);
+      tripPlane(-120+(DV.plane-cx+TW/2+120)*e,100+(DV.gy-24-100)*e,.95,.1*(1-e),1);
+      if(T.t<450){x.save();x.globalAlpha=1-(T.t-430)/20;x.fillStyle=PAPER;x.fillRect(-900,-400,TW+1800,TH+800);x.restore();}
+      egCaption('the ducks are all hopping over to look!');}}
+  else if(T.ph==='back'){
+    if(T.t<150){const e=ease(T.t/150),cx=camOf(DV.plane);dvScene(cx,false);
+      tripPlane(DV.plane-cx+TW/2+e*700,DV.gy-24-e*420,.95,-.3*Math.min(1,T.t/30),1);egCaption('bye bye, Duck Village!');}
+    else{const u=(T.t-150)/150;daySky();x.save();x.globalAlpha=ease(u);tripSky('#1b2340','#2d3657');tripStars(T.t*2);x.restore();
+      clouds();tripPlane(400,230+Math.sin(t*.06)*8,.85,0,1);egCaption('home again!');}}
+  else{
+    const cx=camOf(T.G.x),sx=wx=>wx-cx+TW/2;dvScene(cx,true);
+    const placed=[];x.font='700 16px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
+    const half=Math.min(vw,1400)/2;
+    T.says.slice().reverse().forEach(s=>{const p=dvWho(s.who),w=x.measureText(s.txt).width+26;
+      const bx=Math.max(TW/2-half+w/2+8,Math.min(TW/2+half-w/2-8,sx(p.x)));let by=Math.max(-20,p.y);
+      for(let k=0;k<8;k++){const hit=placed.find(q=>Math.abs(q.x-bx)<(q.w+w)/2&&Math.abs(q.y-by)<32);if(!hit)break;by=hit.y-34;}
+      placed.push({x:bx,y:by,w});bubble(bx,by,s.txt,Math.min(1,(200-s.t)/30),true);});
+    const pl=dvPlan();if(pl){const p=dvWho('gaby');bubble(sx(p.x),p.y-46+Math.sin(t*.12)*3,'★ '+pl.txt,.95,true);}
+    if(T.t<420)bubble(TW/2,-10,'◀ ▶ walk,  ▲ hop,  ▲ ▼ ladders',.95);}
+  x.restore();}
 
 (function loop(){update();R?raceDraw():TRIP?tripDraw():draw();if(t%10===0){updatePals();updateBag();}requestAnimationFrame(loop);})();
 </script>
