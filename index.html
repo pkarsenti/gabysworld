@@ -76,6 +76,15 @@
   #about .who div{margin:3px 0;}
   #about .who b{display:block;font-size:13px;color:#7d7668;font-weight:700;}
   #about .lic{font-size:13px;color:#5c574d;max-width:420px;margin:0 auto;}
+  #about .savebox{border:3px solid #2b2b2b;border-radius:14px;background:#fffdf4;padding:10px 12px;margin:12px auto 0;max-width:420px;grid-column:1/-1;}
+  #about .savebox b{display:block;font-size:13px;color:#7d7668;}
+  #about .savebox .sv{font-size:13px;color:#5c574d;margin:2px 0 8px;}
+  #about .savebox textarea{width:100%;box-sizing:border-box;font:12px/1.3 ui-monospace,Menlo,monospace;border:2px solid #2b2b2b;border-radius:10px;padding:6px;
+    resize:none;background:#f6efdc;-webkit-user-select:text;user-select:text;word-break:break-all;}
+  #about .savebox .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+  #about .savebox .btn{font-size:14px;padding:8px 10px;}
+  #about #savemsg{font-size:13px;color:#c9452f;font-weight:700;min-height:4px;margin:6px 0 0;}
+  #about #savewipe{font-size:13px;color:#7d7668;margin-top:6px;}
   #about a{color:#c9452f;font-weight:700;}
   .tabs span{border:3px solid #2b2b2b;border-radius:14px;padding:7px 12px;font-weight:700;font-size:16px;background:#f1ead8;color:#7d7668;}
   .tabs span.on{background:#ffe9a8;color:#2b2b2b;}
@@ -209,7 +218,7 @@
     <div data-x="6155" data-y="742">Bath &amp; games house</div>
     <div data-x="8115" data-y="790">The disco truck</div>
     <div data-x="11065" data-y="900">The shop &amp; the caf&eacute;</div>
-    <div data-x="-470" data-y="900">The library</div>
+    <div data-x="2376" data-y="900">The library</div>
     <div data-x="12160" data-y="900">Gaby&#39;s Burgers &amp; play area</div>
     <div data-x="15120" data-y="900">School</div>
     <div data-x="10035" data-y="900">The playground</div>
@@ -239,6 +248,14 @@
       Gaby's drawings and characters are shared under <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC&nbsp;BY-NC&nbsp;4.0</a>:
       share them with credit, but please don't sell them.<br>&copy; 2026 Gaby and Papa</p>
     <div class="btn wide" id="soundbtn" style="display:inline-flex;margin:10px auto 0;">🔊 sound is on</div>
+    <div class="savebox">
+      <b>save code</b>
+      <div class="sv">The game saves by itself on this device. To keep a copy, or to carry on somewhere else, make a save code and keep it safe.</div>
+      <textarea id="savecode" rows="3" spellcheck="false" placeholder="your save code goes here"></textarea>
+      <div class="row"><div class="btn wide" id="savemake">📋 make my save code</div><div class="btn wide" id="saveload">📥 load this code</div></div>
+      <p id="savemsg"></p>
+      <div class="close" id="savewipe">🔄 start the whole game over</div>
+    </div>
   </div>
   <div class="close" data-close="1">close</div>
 </div></div>
@@ -398,7 +415,7 @@ function seated(px,py,o){                      // sitting on a chair, facing rig
 
 /* ================= world layout ================= */
 const GY=900;
-const W={w:11990,h:1480},WL=-1000;            // WL: the street now goes left, past the library
+const W={w:11990,h:1480},WL=-420;             // WL: a little bit of street left of Gaby's house
 const H1={x0:170,x1:840},H2={x0:1270,x1:1830};
 const BR={x0:840,x1:1270,y:742};
 const PH={x0:1900,x1:2170,loft:790};
@@ -426,7 +443,7 @@ const PG={x0:6790,x1:7390,door:7090};                  // the pool house on the 
 const POOL={x0:17520,x1:18120,surf:GY+34,bot:GY+196};
 const BOARD={x0:17262,tip:17560,y:640,lad:17290};
 const CHAIR={x:18440},UMB={x:18296,top:GY-330};
-const LIBF={x0:-780,x1:-160,door:-470};               // the library, seen from the street (left of Gaby's house)
+const LIBF={x0:2196,x1:2556,door:2376};               // the library, seen from the street (right of the playhouse)
 const ZL={x0:19400,x1:20700,ceil:360},READX=20420;     // ...and inside it
 const ZONES=[{id:'library',x0:ZL.x0,x1:ZL.x1,ceil:ZL.ceil},{id:'burger',x0:ZB.x0,x1:ZB.x1,ceil:ZB.ceil},{id:'school',x0:SZ.x0,x1:SZ.x1,ceil:SZ.ceil},{id:'pool',x0:ZP.x0,x1:ZP.x1,ceil:ZP.ceil}];
 const zoneAt=px=>ZONES.find(z=>px>=z.x0-30&&px<=z.x1+30)||null;
@@ -469,7 +486,7 @@ const LADS=[
 ];
 const SIGNS=[{x:1860,txt:'playhouse',a:1},{x:3565,txt:'plane',a:1},
   {x:5725,txt:'bath house',a:1},
-  {x:9825,txt:'playground',a:1},{x:2510,txt:'racing street',a:1},{x:6705,txt:'pool',a:1},{x:7470,txt:'disco',a:1},{x:90,txt:'library',l:1}];
+  {x:9825,txt:'playground',a:1},{x:6705,txt:'pool',a:1},{x:7470,txt:'disco',a:1}];
 
 const clouds=[],stars=[],blooms=[];
 for(let i=0;i<56;i++)clouds.push({x:rp(i*3)*10200-200,y:60+rp(i*3+1)*420,r:20+rp(i*3+2)*28,s:i*17});
@@ -698,7 +715,7 @@ function itemArt(k,px,py,s,bob,it){
 /* ================= state ================= */
 const P={x:700,y:GY,vy:0,face:1,walk:0,ground:true,climb:null,climbT:0,slide:null,sit:0,nap:0,balls:0,
   water:0,bath:0,tv:0,dance:0,ride:0,swing:0,tube:null,swim:false,swimT:0,dive:null,lounge:0,held:null,look:'curl',hat:null,seesaw:false,step:0};
-const CAR={x:2330,y:GY,vx:0,face:-1,driving:false,horn:0};
+const CAR={x:2700,y:GY,vx:0,face:-1,driving:false,horn:0};
 const NPC=[
   {id:'rafi',name:'Rafi',x:300,y:GY,look:'spike',says:['hi!','nice day','have you seen the cat?'],home:300,range:150,spd:1.1,dir:1,
     story:'Rafi walks up and down this street all day looking for the cat. The cat is usually right behind him.'},
@@ -882,6 +899,7 @@ function mark(id){if(!found[id]){found[id]=true;
 const KM={ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right',ArrowUp:'up',w:'up',W:'up',
   ArrowDown:'down',s:'down',S:'down',' ':'act',e:'act',E:'act',Enter:'act',f:'grab',F:'grab',q:'grab',Q:'grab',Shift:'grab'};
 addEventListener('keydown',e=>{
+  if(e.target&&(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'))return;      // typing a save code
   if(document.getElementById('read').style.display==='flex'){
     if(['ArrowRight','d','D',' ','Enter'].indexOf(e.key)>=0){e.preventDefault();turnPage(1);return;}
     if(['ArrowLeft','a','A'].indexOf(e.key)>=0){e.preventDefault();turnPage(-1);return;}}
@@ -1068,7 +1086,9 @@ function goTo(gx,gy){R=null;engineOff();stopMusic();flying=false;CAR.driving=fal
   puff(gx,gy-60,10);beep(660,.12,'sine');}
 function resize(){DPR=Math.min(devicePixelRatio||1,2);c.width=innerWidth*DPR;c.height=innerHeight*DPR;
   const touch=matchMedia('(pointer:coarse)').matches,land=innerWidth>innerHeight;
-  scale=touch?Math.min(2.2,land?Math.min(innerHeight/460,innerWidth/620):Math.min(innerWidth/340,innerHeight/620))   // phones: a bit closer to Gaby
+  const tablet=touch&&Math.min(innerWidth,innerHeight)>=600;          // iPads: show more of the town than on a phone
+  scale=tablet?Math.min(2.2,land?Math.min(innerHeight/640,innerWidth/920):Math.min(innerWidth/500,innerHeight/820))
+    :touch?Math.min(2.2,land?Math.min(innerHeight/460,innerWidth/620):Math.min(innerWidth/340,innerHeight/620))   // phones: a bit closer to Gaby
     :Math.max(.6,Math.min(innerWidth/430,innerHeight/700,2.2));VW=innerWidth/scale;VH=innerHeight/scale;}
 addEventListener('resize',resize);resize();
 
@@ -3138,35 +3158,26 @@ function bookWindow(wx,wy,w,h,seed){
     for(let k=0;k<n;k++){const bh=h/rows*(.55+rp(seed+r*7+k)*.3);x.fillStyle=SPINES[(seed+r*2+k)%SPINES.length];
       x.fillRect(wx+6+k*12,y-bh,10,bh);stroke(1.8);x.strokeRect(wx+6+k*12,y-bh,10,bh);}
     stroke(4);rline(wx,y,wx+w,y,seed+r*5,0);}}
-function drawLibraryFacade(){                     // left of Gaby's house: drawn like her houses - a few big things, thick lines
+function drawLibraryFacade(){                     // right of the playhouse: a cosy little library, drawn like her houses
   const F=LIBF,W2=F.x1-F.x0,top=560,cx=F.door,nt=dark(),TF='"Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
   x.fillStyle='#ece0cb';x.fillRect(F.x0,top,W2,GY-top);glow(F.x0,top,W2,GY-top);
-  roof(F.x0-20,F.x1+20,top,top-130,9501,'#c9a07a');
-  x.save();x.translate(cx,top-40);x.scale(2.6,2.6);openBook(0,0,TOMATO);x.restore();
+  roof(F.x0-16,F.x1+16,top,top-112,9501,'#c9a07a');
+  x.save();x.translate(cx,top-36);x.scale(2.2,2.2);openBook(0,0,TOMATO);x.restore();
   stroke(8);rrect(F.x0,top,W2,GY-top,9503,3);
-  /* the big sign, the same board as inside */
-  fbox(cx-125,top+22,250,64,9505,PAPER,6);x.fillStyle=INK;x.textAlign='center';x.font='700 38px '+TF;x.fillText('Library',cx,top+67);
-  /* two big windows, each full of books */
-  [F.x0+40,F.x1-190].forEach((wx,i)=>{fbox(wx,top+118,150,160,9511+i,nt?'#f3dca0':'#cfe3ea',5.5);
-    for(let r=0;r<3;r++){const y=top+118+(r+1)*53;
-      for(let k=0;k<6;k++){const bh=34+rp(9521+i*20+r*7+k)*12;x.fillStyle=SPINES[(i*3+r*2+k)%SPINES.length];
-        x.fillRect(wx+10+k*22,y-bh,18,bh);stroke(2.5);x.strokeRect(wx+10+k*22,y-bh,18,bh);}
-      stroke(5);rline(wx,y,wx+150,y,9531+r+i*5,1);}});
-  /* two fat columns either side of the door */
-  [cx-115,cx+115].forEach((px,i)=>fbox(px-20,top+96,40,GY-top-120,9541+i,PAPER,6));
+  fbox(cx-112,top+18,224,60,9505,PAPER,6);x.fillStyle=INK;x.textAlign='center';x.font='700 36px '+TF;x.fillText('Library',cx,top+61);
+  /* a window full of books on each side of the door */
+  [F.x0+16,F.x1-96].forEach((wx,i)=>{fbox(wx,top+104,80,150,9511+i,nt?'#f3dca0':'#cfe3ea',5.5);
+    for(let r=0;r<3;r++){const y=top+104+(r+1)*50;
+      for(let k=0;k<4;k++){const bh=30+rp(9521+i*20+r*7+k)*12;x.fillStyle=SPINES[(i*3+r*2+k)%SPINES.length];
+        x.fillRect(wx+6+k*18,y-bh,15,bh);stroke(2.5);x.strokeRect(wx+6+k*18,y-bh,15,bh);}
+      stroke(5);rline(wx,y,wx+80,y,9531+r+i*5,1);}});
   /* the "Books" sign on its string, from her drawing */
-  const sw=Math.sin(t*.03)*3;stroke(4);rline(F.x0+115,top,F.x0+115+sw,top+40,9545,1);
-  fbox(F.x0+75+sw,top+40,80,34,9547,'#fdf0c4',5);x.fillStyle=INK;x.font='700 20px '+TF;x.fillText('Books',F.x0+115+sw,top+64);
-  /* door, with an open book over it */
-  fbox(cx-52,GY-170,104,146,9551,'#7f9fbf',6);stroke(5);rline(cx,GY-170,cx,GY-24,9553,1);
-  fillCirc(cx-12,GY-92,5,9555);fillCirc(cx+12,GY-92,5,9557);
-  x.save();x.translate(cx,GY-180);x.scale(1.6,1.6);openBook(0,0,MUSTARD);x.restore();
-  fbox(cx-170,GY-24,340,12,9559,'#cdbfa8',5);fbox(cx-200,GY-12,400,12,9561,'#cdbfa8',5);
-  /* street lamps, the same as the one by the disco truck */
-  [F.x0-40,F.x1+40].forEach((lx,i)=>{stroke(7);rline(lx,GY,lx,GY-200,9563+i,3);
-    if(nt){x.save();x.globalAlpha=.4;x.fillStyle='#f7d682';x.beginPath();x.moveTo(lx,GY-190);x.lineTo(lx-80,GY);x.lineTo(lx+80,GY);x.closePath();x.fill();x.restore();}
-    x.fillStyle=nt?'#f7d682':PAPER;rcircPath(lx,GY-206,17,9567+i);x.fill();stroke(6);x.stroke();});
-  potted(F.x0+20,GY,9571);potted(F.x1-20,GY,9573);}
+  const sw=Math.sin(t*.03)*3;stroke(4);rline(cx,top+78,cx+sw,top+96,9545,1);
+  fbox(cx-38+sw,top+96,76,30,9547,'#fdf0c4',5);x.fillStyle=INK;x.font='700 19px '+TF;x.fillText('Books',cx+sw,top+118);
+  /* the door, with an open book over it */
+  fbox(cx-44,GY-156,88,132,9551,'#7f9fbf',6);stroke(5);rline(cx,GY-156,cx,GY-24,9553,1);
+  fillCirc(cx-11,GY-88,5,9555);fillCirc(cx+11,GY-88,5,9557);
+  fbox(cx-104,GY-24,208,12,9559,'#cdbfa8',5);fbox(cx-124,GY-12,248,12,9561,'#cdbfa8',5);}
 function drawLibraryInside(cam){
   const L=cam.x-VW/2-40,R=cam.x+VW/2+40,T=cam.y-VH/2-40,Bt=cam.y+VH/2+40,Z=ZL,nt=dark();
   x.fillStyle='#efe3cc';x.fillRect(L,T,R-L,Bt-T);
@@ -3271,7 +3282,7 @@ const BOOKS=[
     {txt:'Soon so many people lived here that it became a real town! First came the school, with a playground for playtime.',
      pic:()=>vig(9030,10460,[drawSchoolFacade,drawPlayground],()=>{recess=false;})},
     {txt:'Then came the racing street. Ready, steady... vroom!',
-     pic:()=>vig(2180,2900,[drawRaceGate,drawCar],()=>{CAR.x=2400;CAR.face=1;})},
+     pic:()=>vig(2470,2930,[drawRaceGate,drawCar],()=>{CAR.x=2690;CAR.face=1;})},
     {txt:"Then "+BURGER_NAME+" opened, with hot fries, milkshakes, and a twisty slide.",
      pic:()=>vig(BF.x0-80,BF.x1+90,[drawBurgerFacade])},
     {txt:'Then the pool, for splashing on hot sunny days.',
@@ -4589,7 +4600,7 @@ function startInvasion(){
   let j=0;CREW.forEach((id,i)=>{
     if(id==='rocket'){const d=newDuck(id,edge+side*60,GY-480);d.st='fly';DUCK.list.push(d);return;}
     const d=newDuck(id,edge+side*(150+j*85),GY);d.tx=P.x+side*VW*(-.42+j*.17);d.face=-side;DUCK.list.push(d);j++;});
-  DUCK.gir={x:edge+side*30,face:-side,walk:0,st:'gallop',tx:DUCK.camp+side*40};
+  DUCK.gir={x:edge+side*30,face:-side,walk:0,st:'gallop',tx:DUCK.fx+side*165};
   DUCK.finn={x:0,y:0,st:'ride',face:-side,hy:0,sq:0,leap:null};
   const mf=document.getElementById('mapfinn');mf.dataset.x=DUCK.fx;mf.style.display='';
   quack(700,3);setTimeout(()=>quack(560,2),500);
@@ -4647,7 +4658,7 @@ function stepFinn(){
   if(!F)return;
   if(F.st==='ride'||F.st==='away'){const sd=giraffeSaddle(g.x,GY,gs,g.face);F.x=sd.x;F.y=sd.y+4-Math.abs(Math.sin(g.walk))*4;F.face=g.face;return;}
   if(F.leap){F.sq*=.8;if(leapStep(F)){
-      if(F.st==='hopoff'){F.st='camp';DUCK.flag=DUCK.fx+DUCK.side*110;crunch(.12,.04);}
+      if(F.st==='hopoff'){F.st='camp';DUCK.flag=DUCK.fx-DUCK.side*150;crunch(.12,.04);}
       else if(F.st==='mount'){F.st='away';g.st='away';g.tx=g.x+DUCK.side*(VW+900);g.face=DUCK.side;}}return;}
   F.sq*=.8;
   if(F.st==='camp'){F.face=Math.sign(P.x-F.x)||1;const k=DUCK.t%200;F.hy=(F.chomp>0)?0:(k<34?Math.abs(Math.sin(k*.185))*26:0);if(k===34)F.sq=1;
@@ -4712,11 +4723,12 @@ function stayersCome(){let i=0;
     d.st='come';d.tx=Math.max(WL+120,Math.min(W.w-120,(inZone()?DUCK.fx:P.x)+side*95));d.ty=GY;});}
 function duckDone(){
   DUCK.st='done';DUCK.flag=null;document.getElementById('mapfinn').style.display='none';
-  DUCK.list.forEach(d=>{if(STAYERS.indexOf(d.id)<0)return;const k=DK[d.id];
-    const j=OTHERS.findIndex(o=>o.id===d.id);if(j>=0)OTHERS.splice(j,1);
-    NPC.push({id:d.id,name:k.name,x:d.x,y:GY,duck:1,duckart:k,home:d.id==='wobble'?1060:7300,range:d.id==='wobble'?170:230,spd:1.5,dir:1,
-      says:k.says,story:k.story,shirt:PAPER,skin:SKIN,hair:INK,wants:WANTS[d.id]||[],wantI:0,hearts:0,wish:null});});
+  DUCK.list.forEach(d=>{if(STAYERS.indexOf(d.id)>=0)addStayer(d.id,d.x);});
   DUCK.list=[];}
+function addStayer(id,px){const k=DK[id];if(NPC.some(n=>n.id===id))return;
+  const j=OTHERS.findIndex(o=>o.id===id);if(j>=0)OTHERS.splice(j,1);
+  NPC.push({id,name:k.name,x:px,y:GY,duck:1,duckart:k,home:id==='wobble'?1060:7300,range:id==='wobble'?170:230,spd:1.5,dir:1,
+    says:k.says,story:k.story,shirt:PAPER,skin:SKIN,hair:INK,wants:WANTS[id]||[],wantI:0,hearts:0,wish:null});}
 function helloDuck(d){const first=meet(d.id);d.jump=30;
   say(d.x,d.y-d.hy-40,first?"quack! i'm "+d.k.name+'! '+d.k.says[0]:d.k.says[(Math.random()*d.k.says.length)|0]);quack(600+Math.random()*160,2);}
 function patSpots(){const g=DUCK.gir;meet('spots');g.munch=0;say(g.x+40*g.face,GY-300,'hmmmmm!');slide(180,140,.45,'triangle',.04);puff(g.x+70*g.face,GY-250,5,'heart');}
@@ -4745,17 +4757,18 @@ function drawTownDucks(cam){
 /* a wrecked pirate ship stuck in the sand, and two wobbly treehouses joined by a rope bridge.
    about as tall as the 3-storey houses in town. ladders everywhere, a slide, a cannon that shoots you
    to the treehouse, jetpacks, Spots to ride, and Captain Finn on his throne at the very top. */
-const DV={w:3400,gy:470,plane:440,cy:235};
-const DVP=[{x0:330,x1:3150,y:470},
-  {x0:830,x1:1606,y:360},{x0:1376,x1:1616,y:250},{x0:1106,x1:1194,y:140},          // the ship: deck, back deck, crow's nest
-  {x0:1990,x1:2330,y:360},{x0:2010,x1:2300,y:250},{x0:2060,x1:2250,y:140},         // Finn's treehouse
-  {x0:2300,x1:2700,y:250},                                                       // the rope bridge
-  {x0:2700,x1:3000,y:250},{x0:2710,x1:2990,y:360}];                              // the kitchen treehouse
-const DVL=[{x:880,y0:360,y1:470},{x:1420,y0:250,y1:360},{x:1150,y0:140,y1:360,rope:1},
-  {x:2030,y0:360,y1:470},{x:2290,y0:250,y1:360},{x:2090,y0:140,y1:250},
-  {x:2960,y0:360,y1:470},{x:2740,y0:250,y1:360}];
-const VDUCKS=[{id:'finn',x:2193,y:112,face:-1},{id:'squint',x:1150,y:140,face:-1},{id:'bonk',x:1262,y:360,face:1},
-  {id:'bubbles',x:1245,y:440},{id:'splat',x:640,y:470,face:1},{id:'cookie',x:2905,y:250,face:-1},{id:'pudding',x:2795,y:250,face:1},{id:'rocket'}];
+const DV={w:4250,gy:470,plane:440,cy:235,so:200,ao:600,bo:800,jet:3330};
+const SO=DV.so,AO=DV.ao,BO=DV.bo;
+const DVP=[{x0:330,x1:DV.w-250,y:470},
+  {x0:830+SO,x1:1606+SO,y:360},{x0:1376+SO,x1:1616+SO,y:250},{x0:1106+SO,x1:1194+SO,y:140},   // the ship: deck, back deck, crow's nest
+  {x0:1990+AO,x1:2330+AO,y:360},{x0:2010+AO,x1:2300+AO,y:250},{x0:2060+AO,x1:2250+AO,y:140}, // Finn's treehouse
+  {x0:2300+AO,x1:2700+BO,y:250},                                                           // the rope bridge
+  {x0:2700+BO,x1:3000+BO,y:250},{x0:2710+BO,x1:2990+BO,y:360}];                            // the kitchen treehouse
+const DVL=[{x:880+SO,y0:360,y1:470},{x:1420+SO,y0:250,y1:360},{x:1150+SO,y0:140,y1:360,rope:1},
+  {x:2030+AO,y0:360,y1:470},{x:2290+AO,y0:250,y1:360},{x:2090+AO,y0:140,y1:250},
+  {x:2960+BO,y0:360,y1:470},{x:2740+BO,y0:250,y1:360}];
+const VDUCKS=[{id:'finn',x:2193+AO,y:112,face:-1},{id:'squint',x:1150+SO,y:140,face:-1},{id:'bonk',x:1262+SO,y:360,face:1},
+  {id:'bubbles',x:1245+SO,y:440},{id:'splat',x:640,y:470,face:1},{id:'cookie',x:2905+BO,y:250,face:-1},{id:'pudding',x:2795+BO,y:250,face:1},{id:'rocket'}];
 function dvIsland(cx,cy,s){                       // a little picture of the whole island
   x.save();x.translate(cx,cy);x.scale(s,s);
   x.fillStyle='#efd9a7';x.beginPath();x.ellipse(0,4,180,32,0,Math.PI,0);x.closePath();x.fill();stroke(4);x.stroke();
@@ -4772,14 +4785,14 @@ function dvIsland(cx,cy,s){                       // a little picture of the who
 function startDuckV(){
   TRIP={dest:'ducks',ph:'out',t:0,says:[],q:[],fx:[],trail:[],chest:0,wheel:0,
     G:{x:DV.plane+150,y:DV.gy,vy:0,ground:true,climb:null,climbT:0,face:1,walk:0,turnA:0,jet:0,ride:0,can:null,sl:null,bounce:0,spin:0},
-    spots:{x:1830,face:-1,walk:0},noodle:{x:1950,face:-1,walk:0},
+    spots:{x:2060,face:-1,walk:0},noodle:{x:2330,face:-1,walk:0},
     vd:VDUCKS.map(v=>Object.assign({jump:0},v)),pals:followers.map(f=>({f,x:DV.plane+150-60,y:DV.gy}))};
   stopMusic();startMusic('pirate');slide(150,700,1.6,'sawtooth',.03);}
 function dvSay(who,txt){const T=TRIP;if(!T)return;if(who!=='gaby')quack(560+Math.random()*240);T.says=T.says.filter(s=>s.who!==who);T.says.push({who,txt,t:0});}
 function dvQ(d,who,txt,fn){TRIP.q.push({at:TRIP.t+d,who,txt,fn});}
 function dvPuff(px,py,n,kind){for(let i=0;i<n;i++)TRIP.fx.push({x:px,y:py,vx:(Math.random()-.5)*3.4,vy:-Math.random()*3-1,t:0,kind:kind||'star',s:(Math.random()*999)|0});}
 function dvGive(kind){if(BAG.length>=BAGMAX)dvSay('gaby',"my bag is full! i'll keep it in the plane");bagGive({kind},P.x,P.y);}
-function dvDuckPos(v){if(v.id==='rocket')return{x:2350+Math.cos(t*.011)*700,y:225+Math.sin(t*.022)*80};return{x:v.x,y:v.y};}
+function dvDuckPos(v){if(v.id==='rocket')return{x:2900+Math.cos(t*.009)*1000,y:225+Math.sin(t*.022)*80};return{x:v.x,y:v.y};}
 function dvLand(){
   dvSay('squint',"LAND HO! a plane! ...it's Gaby!");
   dvQ(170,'splat','yay! a visitor!');
@@ -4804,21 +4817,21 @@ function dvPlan(){
   if(G.ride)return{txt:'hop off Spots',fn:()=>{G.ride=0;T.spots.x=G.x;T.spots.face=G.face;G.x+=G.face*-70;dvSay('gaby','thank you, Spots!');}};
   if(G.bounce>0)return null;
   add(DV.plane,470,95,'fly home',()=>{T.ph='back';T.t=0;T.says=[];T.q=[];slide(200,800,1.2,'sawtooth',.03);});
-  add(1010,470,70,T.chest?'look at the treasure':'open the treasure chest',()=>{
-    if(T.chest){dvSay('gaby','so shiny!');return;}T.chest=1;mark('treasure');dvPuff(1010,440,18,'gold');tune([523,659,784,1046,1318],80,'triangle');
+  add(1010+SO,470,70,T.chest?'look at the treasure':'open the treasure chest',()=>{
+    if(T.chest){dvSay('gaby','so shiny!');return;}T.chest=1;mark('treasure');dvPuff(1010+SO,440,18,'gold');tune([523,659,784,1046,1318],80,'triangle');
     dvSay('gaby',"pirate treasure! it's full of... rubber ducks?!");dvGive('duck');dvQ(160,'bubbles','zzz... don\'t tell Finn... zzz');});
-  add(1335,360,60,'climb into the cannon',()=>{G.can={t:0};G.vy=0;meet('bonk');});
-  add(1505,250,60,'steer the ship',()=>{T.wheel=60;dvSay('gaby',['ahoy!','full speed ahead!','land ho!'][(Math.random()*3)|0]);tune([330,392,523],110,'triangle');
+  add(1335+SO,360,60,'climb into the cannon',()=>{G.can={t:0};G.vy=0;meet('bonk');});
+  add(1505+SO,250,60,'steer the ship',()=>{T.wheel=60;dvSay('gaby',['ahoy!','full speed ahead!','land ho!'][(Math.random()*3)|0]);tune([330,392,523],110,'triangle');
     dvQ(100,'squint','we are stuck in the sand, silly!');});
-  add(1128,140,55,'look through the spyglass',()=>{dvSay('gaby',['i can see my house!','i can see a whale!','i can see Clover Island!'][(Math.random()*3)|0]);tone(880,.1,'triangle',.04);});
+  add(1128+SO,140,55,'look through the spyglass',()=>{dvSay('gaby',['i can see my house!','i can see a whale!','i can see Clover Island!'][(Math.random()*3)|0]);tone(880,.1,'triangle',.04);});
   add(T.spots.x,470,95,'ride Spots',()=>{G.ride=1;G.x=T.spots.x;G.face=T.spots.face;G.climb=null;G.jet=0;meet('spots');mark('giraffe');
     dvSay('gaby','giddy up, Spots!');slide(180,140,.45,'triangle',.04);dvCheckAll();},4);
   add(T.noodle.x,470,80,'pat Noodle',()=>{dvSay('gaby','hello, Noodle! you are a baby giraffe!');slide(240,200,.4,'triangle',.04);dvPuff(T.noodle.x+40,250,4,'heart');},6);
-  add(2215,360,55,'bounce on the bunk bed',()=>{G.bounce=170;G.x=2215;dvSay('gaby','boing! boing! boing!');});
-  add(2320,360,40,'go down the slide',()=>{G.sl=0;slide(900,300,1.2,'sine',.04);});
-  add(2157,250,55,'look at the treasure map',()=>{dvSay('gaby','X marks the spot... the X is on '+BURGER_NAME+'!');dvQ(140,'finn','ARR! the best treasure there is!');});
-  add(2850,250,60,'stir the seaweed soup',()=>{dvPuff(2850,190,8,'bub');dvSay('cookie','seaweed soup! it smells like socks!');dvQ(140,'gaby','eww... yum?');meet('cookie');});
-  add(2605,470,70,G.jet>0?'(hold ▲ to fly!)':'put on a jetpack',()=>{if(G.jet>0)return;G.jet=660;mark('jetpack');dvSay('rocket','zoom! hold ▲ to fly!');tune([392,523,659,784],80,'square');});
+  add(2215+AO,360,55,'bounce on the bunk bed',()=>{G.bounce=170;G.x=2215+AO;dvSay('gaby','boing! boing! boing!');});
+  add(2320+AO,360,40,'go down the slide',()=>{G.sl=0;slide(900,300,1.2,'sine',.04);});
+  add(2157+AO,250,55,'look at the treasure map',()=>{dvSay('gaby','X marks the spot... the X is on '+BURGER_NAME+'!');dvQ(140,'finn','ARR! the best treasure there is!');});
+  add(2850+BO,250,60,'stir the seaweed soup',()=>{dvPuff(2850+BO,190,8,'bub');dvSay('cookie','seaweed soup! it smells like socks!');dvQ(140,'gaby','eww... yum?');meet('cookie');});
+  add(DV.jet,470,70,G.jet>0?'(hold ▲ to fly!)':'put on a jetpack',()=>{if(G.jet>0)return;G.jet=660;mark('jetpack');dvSay('rocket','zoom! hold ▲ to fly!');tune([392,523,659,784],80,'square');});
   T.vd.forEach(v=>{const p=dvDuckPos(v);add(p.x,p.y,v.id==='rocket'?90:70,'say hello to '+(met[v.id]?DK[v.id].name:'the duck'),()=>dvHello(v),-6);});
   return c.sort((a,b)=>a.d-b.d)[0]||null;}
 function dvUpdate(){
@@ -4835,21 +4848,21 @@ function dvWalk(){
   due.forEach(q=>{if(q.who&&q.txt)dvSay(q.who,q.txt);if(q.fn)q.fn();});
   if(!TRIP||TRIP.ph!=='walk')return;
   T.vd.forEach(v=>{if(v.jump>0)v.jump--;});if(T.wheel>0)T.wheel--;
-  T.noodle.walk+=.05;T.noodle.x=1950+Math.sin(t*.006)*40;T.noodle.face=Math.cos(t*.006)>0?1:-1;
-  if(t%200===0)dvPuff(1245,400,1,'z');
-  if(G.can){const C=G.can;C.t++;G.x=1335;G.y=360;
+  T.noodle.walk+=.05;T.noodle.x=2330+Math.sin(t*.006)*40;T.noodle.face=Math.cos(t*.006)>0?1:-1;
+  if(t%200===0)dvPuff(1245+SO,400,1,'z');
+  if(G.can){const C=G.can;C.t++;G.x=1335+SO;G.y=360;
     if(C.t===2)dvSay('bonk','in you go! 3...');if(C.t===42)dvSay('bonk','2...');if(C.t===82)dvSay('bonk','1...');
-    if(C.t===115){crunch(.5,.1);slide(160,60,.5,'sawtooth',.06);dvSay('bonk','BOOM!');for(let i=0;i<10;i++)T.fx.push({x:1390,y:325,vx:Math.random()*2,vy:-Math.random()*1.5,t:0,kind:'smoke',s:i});}
-    if(C.t>115){const u=Math.min(1,(C.t-115)/72);G.x=1385+(2165-1385)*u;G.y=322+(250-322)*u-4*230*u*(1-u);G.spin=u*Math.PI*2;
-      if(u>=1){G.can=null;G.spin=0;G.x=2165;G.y=250;G.vy=0;G.ground=true;mark('duckcannon');dvSay('gaby',"i'm a cannonball! wheee!");
+    if(C.t===115){crunch(.5,.1);slide(160,60,.5,'sawtooth',.06);dvSay('bonk','BOOM!');for(let i=0;i<10;i++)T.fx.push({x:1390+SO,y:325,vx:Math.random()*2,vy:-Math.random()*1.5,t:0,kind:'smoke',s:i});}
+    if(C.t>115){const u=Math.min(1,(C.t-115)/92);G.x=1385+SO+(2165+AO-1385-SO)*u;G.y=322+(250-322)*u-4*260*u*(1-u);G.spin=u*Math.PI*2;
+      if(u>=1){G.can=null;G.spin=0;G.x=2165+AO;G.y=250;G.vy=0;G.ground=true;mark('duckcannon');dvSay('gaby',"i'm a cannonball! wheee!");
         dvQ(130,'bonk','again! again!');dvPuff(G.x,G.y-60,8);}}}
-  else if(G.sl!=null){G.sl+=.016;const s=Math.min(1,G.sl),i=1-s;G.x=i*i*2330+2*i*s*2445+s*s*2505;G.y=i*i*360+2*i*s*372+s*s*470;
+  else if(G.sl!=null){G.sl+=.016;const s=Math.min(1,G.sl),i=1-s;G.x=i*i*(2330+AO)+2*i*s*(2445+AO)+s*s*(2505+AO);G.y=i*i*360+2*i*s*372+s*s*470;
     if(s>=1){G.sl=null;G.y=470;G.vy=0;G.ground=true;dvSay('gaby','wheee!');}}
-  else if(G.bounce>0){G.bounce--;G.x=2215;G.y=335-Math.abs(Math.sin(G.bounce*.13))*44;G.ground=true;
+  else if(G.bounce>0){G.bounce--;G.x=2215+AO;G.y=335-Math.abs(Math.sin(G.bounce*.13))*44;G.ground=true;
     if(Math.abs(Math.sin(G.bounce*.13))<.07&&G.bounce%2===0)slide(260,520,.1,'sine',.02);
     if((G.bounce<150&&(key.left||key.right))||G.bounce===0){G.bounce=0;G.y=360;}}
   else if(G.ride){let mv=0;if(key.left){G.x-=5.5;G.face=-1;mv=1;}if(key.right){G.x+=5.5;G.face=1;mv=1;}
-    G.x=Math.max(1700,Math.min(3080,G.x));G.y=gy;T.spots.x=G.x;T.spots.face=G.face;T.spots.walk+=mv?.28:0;T.spots.move=mv;
+    G.x=Math.max(1940,Math.min(DV.w-350,G.x));G.y=gy;T.spots.x=G.x;T.spots.face=G.face;T.spots.walk+=mv?.28:0;T.spots.move=mv;
     if(mv&&t%14===0)tone(110+Math.random()*20,.05,'triangle',.03);}
   else if(G.climb){const L=G.climb;G.climbT++;
     if((key.left||key.right)&&G.climbT>12){G.climb=null;G.face=key.left?-1:1;G.vy=0;G.ground=false;}
@@ -4861,7 +4874,7 @@ function dvWalk(){
     let mv=0;if(key.left){G.x-=3.6;G.face=-1;mv=1;}if(key.right){G.x+=3.6;G.face=1;mv=1;}
     G.walk=mv?G.walk+.2:G.walk*.86;G.turnA+=((mv&&G.ground?1:0)-G.turnA)*.2;
     if(mv&&G.ground&&t%13===0)tone(90+((t*7)%26),.035,'triangle',.014);
-    G.x=Math.max(370,Math.min(3080,G.x));
+    G.x=Math.max(370,Math.min(DV.w-350,G.x));
     let climbed=false;
     if(!(G.jet>0&&!G.ground))for(const L of DVL){if(Math.abs(G.x-L.x)>30)continue;
       if(upEdge&&Math.abs(G.y-L.y1)<12&&!(G.jet>0)){G.climb=L;G.climbT=0;G.y=L.y1-1;climbed=true;break;}
@@ -4892,7 +4905,7 @@ function dvTrunk(cx,top,w){x.fillStyle='#a8774f';x.beginPath();x.moveTo(cx-w-12,
   x.lineTo(cx+w-2,top);x.quadraticCurveTo(cx+w-6,(DV.gy+top)/2,cx+w+12,DV.gy);x.closePath();x.fill();stroke(6);x.stroke();
   stroke(3,'rgba(43,43,43,.4)');for(let i=0;i<6;i++){const yy=top+40+i*((DV.gy-top-60)/6);x.beginPath();x.arc(cx+(i%2?-10:12),yy,8,Math.PI*.2,Math.PI*.9);x.stroke();}}
 function dvShip(){
-  const D=360,gy=DV.gy,T=TRIP;
+  const D=360,gy=DV.gy,T=TRIP;x.save();x.translate(SO,0);
   const hull=()=>{x.beginPath();x.moveTo(752,296);x.quadraticCurveTo(800,330,830,330);x.lineTo(1380,330);x.lineTo(1380,236);x.lineTo(1630,226);
     x.quadraticCurveTo(1670,330,1640,gy+40);x.lineTo(900,gy+40);x.quadraticCurveTo(790,430,752,296);x.closePath();};
   stroke(7,'#8a5f3e');rline(760,300,676,236,9000,1);stroke(3);rline(676,236,760,300,9002,0);
@@ -4910,15 +4923,15 @@ function dvShip(){
   fbox(822,D,786,12,9031,'#a8774f',5);fbox(1372,250,250,10,9033,'#a8774f',5);
   stroke(5,'#7a5236');for(let px=850;px<1376;px+=34)rline(px,D-28,px,D,9035+px,0);rline(830,D-28,1376,D-28,9037,1);
   for(let px=1392;px<1620;px+=34)rline(px,222,px,250,9039+px,0);rline(1380,222,1622,222,9041,1);
-  /* the broken mast, the torn sail and the crow's nest */
-  fbox(1141,92,18,268,9043,'#8a5f3e',5);
-  x.fillStyle='#8a5f3e';x.beginPath();x.moveTo(1141,92);x.lineTo(1145,74);x.lineTo(1150,86);x.lineTo(1155,70);x.lineTo(1159,92);x.closePath();x.fill();stroke(4);x.stroke();
-  duckFlag(1162,118,1.05);
-  fbox(1048,192,204,9,9045,'#8a5f3e',4);
+  /* the torn sail and the back of the crow's nest go behind the mast, so the mast stays in one piece */
   x.save();x.globalAlpha=.92;x.fillStyle='#f3ecd8';x.beginPath();x.moveTo(1062,201);x.lineTo(1238,201);x.lineTo(1230,286);
   for(let i=0;i<=8;i++)x.lineTo(1230-i*20,286+(i%2?12:-4));x.lineTo(1066,292);x.closePath();x.fill();stroke(4);x.stroke();
   x.fillStyle='#9fd6ee';x.beginPath();x.ellipse(1100,240,10,14,.3,0,7);x.ellipse(1205,262,12,8,0,0,7);x.fill();x.restore();
   fbox(1104,112,92,28,9047,'#7a5236',5);
+  fbox(1141,92,18,268,9043,'#8a5f3e',5);
+  x.fillStyle='#8a5f3e';x.beginPath();x.moveTo(1141,92);x.lineTo(1145,74);x.lineTo(1150,86);x.lineTo(1155,70);x.lineTo(1159,92);x.closePath();x.fill();stroke(4);x.stroke();
+  duckFlag(1162,118,1.05);
+  fbox(1048,192,204,9,9045,'#8a5f3e',4);
   /* cannon on the deck, pointing at Finn's treehouse */
   x.save();x.translate(1330,342);x.rotate(-.35);x.fillStyle='#3d3a46';x.fillRect(-10,-11,72,22);stroke(4);x.strokeRect(-10,-11,72,22);
   x.fillStyle='#55606b';x.fillRect(58,-14,10,28);x.strokeRect(58,-14,10,28);x.restore();
@@ -4937,12 +4950,12 @@ function dvShip(){
   [1525,1565].forEach((bx,i)=>{fbox(bx-18,424,36,46,9071+i,'#b07f52',4.5);stroke(3,'#55606b');rline(bx-18,436,bx+18,436,9073+i,0);rline(bx-18,458,bx+18,458,9075+i,0);});
   stroke(5,'#8a5f3e');rline(1188,470,1188,402,9077,0);rline(1302,470,1302,402,9079,0);
   stroke(4,'#c9a07a');x.beginPath();x.moveTo(1188,410);x.quadraticCurveTo(1245,462,1302,410);x.stroke();
-  drawLadderArt(880,D,gy,9081);drawLadderArt(1420,250,D,9083);drawLadderArt(1150,140,D,9085,'#c9a07a');}
+  drawLadderArt(880,D,gy,9081);drawLadderArt(1420,250,D,9083);drawLadderArt(1150,140,D,9085,'#c9a07a');x.restore();}
 function dvTrees(){
   const T=TRIP;
+  x.save();x.translate(AO,0);
   dvLeaves([[2010,96,90],[2150,30,125],[2295,96,90],[2060,-30,70],[2245,-30,70]],9101);
-  dvLeaves([[2860,110,110],[2760,150,70],[2965,150,70]],9111);
-  dvTrunk(2150,30,34);dvTrunk(2860,120,28);
+  dvTrunk(2150,30,34);
   /* Finn's treehouse: bunk beds, the treasure map, and the throne room at the top */
   dvHut(1990,2330,360,100,'#e9d6b0',9121);dvHut(2010,2300,250,100,'#dfe8d3',9131);dvHut(2060,2250,140,95,'#f2ddd2',9141);
   x.fillStyle=TOMATO;x.beginPath();x.moveTo(2034,45);x.lineTo(2155,-26);x.lineTo(2276,45);x.closePath();x.fill();stroke(7);x.stroke();
@@ -4951,7 +4964,7 @@ function dvTrees(){
   stroke(6,'#8a5f3e');rline(2165,360,2165,280,9153,1);rline(2268,360,2268,280,9155,1);
   fbox(2160,334,112,14,9157,'#7f9fbf',4.5);fbox(2160,290,112,14,9159,'#c98a9b',4.5);
   drawDuck(2240,290,{s:.55,sleep:1,col:'#f6e3a0'});drawDuck(2200,290,{s:.5,sleep:1,col:'#f3eee6'});
-  if(t%90===0&&T)dvPuff(2225,250,1,'z');
+  if(t%90===0&&T)dvPuff(2225+AO,250,1,'z');
   fbox(2120,170,74,52,9161,PAPER,4);stroke(2.5,TOMATO);x.setLineDash([4,5]);x.beginPath();x.moveTo(2128,214);x.quadraticCurveTo(2150,182,2176,200);x.stroke();x.setLineDash([]);
   stroke(3.5,TOMATO);rline(2172,186,2186,200,9163,0);rline(2186,186,2172,200,9165,0);
   fbox(2040,206,44,44,9167,'#b07f52',4);
@@ -4959,14 +4972,23 @@ function dvTrees(){
   drawLook(2100,104,'crown',9171,15);                 // the crown on the wall, from her drawing
   fbox(2170,60,46,52,9173,'#b49ac7',5);for(let i=0;i<3;i++){x.fillStyle=MUSTARD;x.beginPath();x.moveTo(2172+i*15,60);x.lineTo(2179+i*15,46);x.lineTo(2186+i*15,60);x.closePath();x.fill();stroke(3);x.stroke();}
   fbox(2160,112,66,14,9175,'#9d7fb8',5);stroke(5,'#8a5f3e');rline(2166,126,2166,140,9177,0);rline(2220,126,2220,140,9179,0);
-  /* the slide down from the bunk room */
   x.fillStyle='#e0b25e';x.beginPath();x.moveTo(2326,352);x.quadraticCurveTo(2438,362,2498,470);x.lineTo(2526,470);x.quadraticCurveTo(2462,344,2334,336);x.closePath();x.fill();
   stroke(7);x.beginPath();x.moveTo(2326,352);x.quadraticCurveTo(2438,362,2498,470);x.stroke();x.beginPath();x.moveTo(2334,336);x.quadraticCurveTo(2462,344,2526,470);x.stroke();
-  /* the rope bridge */
-  stroke(3,'#8a6a4a');for(let px=2306;px<2700;px+=26){const sag=Math.sin((px-2300)/400*Math.PI)*14;x.fillStyle='#c49a74';x.fillRect(px,250+sag*.2,20,8);x.strokeRect(px,250+sag*.2,20,8);
+  drawLadderArt(2030,360,470,9241);drawLadderArt(2290,250,360,9243);drawLadderArt(2090,140,250,9245);
+  x.restore();
+  /* the rope bridge between the two treehouses */
+  const b0=2300+AO,b1=2700+BO;
+  stroke(3,'#8a6a4a');for(let px=b0+6;px<b1;px+=26){const sag=Math.sin((px-b0)/(b1-b0)*Math.PI)*14;x.fillStyle='#c49a74';x.fillRect(px,250,20,8);x.strokeRect(px,250,20,8);
     rline(px+10,250,px+10,200+sag,9181+px,0);}
-  stroke(4,'#8a6a4a');x.beginPath();x.moveTo(2300,198);x.quadraticCurveTo(2500,236,2700,198);x.stroke();
-  /* the kitchen treehouse */
+  stroke(4,'#8a6a4a');x.beginPath();x.moveTo(b0,198);x.quadraticCurveTo((b0+b1)/2,236,b1,198);x.stroke();
+  /* the jetpack rack */
+  const J=DV.jet;
+  stroke(6,'#8a5f3e');rline(J-35,470,J-35,392,9251,1);rline(J+35,470,J+35,392,9253,1);rline(J-45,392,J+45,392,9255,1);
+  duckJet(J-15,425,1.2,false);duckJet(J+17,425,1.2,false);
+  fbox(J-40,354,80,26,9257,PAPER,3.5);x.fillStyle=INK;x.textAlign='center';x.font='700 14px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('jetpacks',J,372);
+  x.save();x.translate(BO,0);
+  dvLeaves([[2860,110,110],[2760,150,70],[2965,150,70]],9111);
+  dvTrunk(2860,120,28);
   dvHut(2710,2990,360,100,'#dfe8d3',9201);dvHut(2700,3000,250,100,'#f3e4b8',9211);
   x.fillStyle='#8fb3a0';x.beginPath();x.moveTo(2688,150);x.lineTo(2850,84);x.lineTo(3012,150);x.closePath();x.fill();stroke(7);x.stroke();
   stroke(4,'#c9a07a');x.beginPath();x.moveTo(2780,300);x.quadraticCurveTo(2830,330,2880,300);x.stroke();drawDuck(2830,324,{s:.5,sleep:1,col:'#efd27a',rot:-.15});
@@ -4975,13 +4997,9 @@ function dvTrees(){
   for(let i=0;i<3;i++){stroke(5,i%2?'#e98b3a':'#f3a35b');rline(2836+i*12,250,2840+i*12,236-Math.sin(t*.3+i)*5,9231+i,1);}
   x.fillStyle='#3d3a46';x.beginPath();x.moveTo(2818,212);x.lineTo(2882,212);x.quadraticCurveTo(2880,244,2850,244);x.quadraticCurveTo(2820,244,2818,212);x.closePath();x.fill();stroke(4);x.stroke();
   x.fillStyle='#8fbf72';x.beginPath();x.ellipse(2850,212,32,6,0,0,7);x.fill();stroke(3);x.stroke();
-  if(t%22===0&&T)dvPuff(2840+Math.random()*20,206,1,'bub');
-  drawLadderArt(2030,360,470,9241);drawLadderArt(2290,250,360,9243);drawLadderArt(2090,140,250,9245);
+  if(t%22===0&&T)dvPuff(2840+BO+Math.random()*20,206,1,'bub');
   drawLadderArt(2960,360,470,9247);drawLadderArt(2740,250,360,9249);
-  /* the jetpack rack */
-  stroke(6,'#8a5f3e');rline(2570,470,2570,392,9251,1);rline(2640,470,2640,392,9253,1);rline(2560,392,2650,392,9255,1);
-  duckJet(2590,425,1.2,false);duckJet(2622,425,1.2,false);
-  fbox(2565,354,80,26,9257,PAPER,3.5);x.fillStyle=INK;x.textAlign='center';x.font='700 14px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.fillText('jetpacks',2605,372);}
+  x.restore();}
 function dvScene(camx,people){
   const T=TRIP,gy=DV.gy,W2=TW/2,TF='"Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
   const g=x.createLinearGradient(0,-80,0,560);g.addColorStop(0,'#9fd6ee');g.addColorStop(.85,'#f4f0d6');x.fillStyle=g;x.fillRect(-1200,-900,TW+2400,2400);
@@ -4992,17 +5010,17 @@ function dvScene(camx,people){
   x.save();x.translate(W2-camx*.3,0);x.fillStyle='#b3d69c';[[300,90],[1100,70],[1600,110]].forEach(([ix,w])=>{x.beginPath();x.ellipse(ix,378,w,22,0,Math.PI,0);x.closePath();x.fill();stroke(3);x.stroke();});x.restore();
   x.save();x.translate(W2-camx,0);
   x.fillStyle='#efd9a7';x.beginPath();x.moveTo(250,gy+260);x.quadraticCurveTo(290,gy,360,gy);x.lineTo(DV.w-300,gy);x.quadraticCurveTo(DV.w-230,gy,DV.w-190,gy+260);x.closePath();x.fill();stroke(4);x.stroke();
-  x.fillStyle='#9cc98a';x.fillRect(1690,gy,1400,260);zig(Math.max(1690,camx-W2-40),Math.min(3090,camx+W2+40),gy,9,9311);
+  x.fillStyle='#9cc98a';x.fillRect(1900,gy,DV.w-2210,260);zig(Math.max(1900,camx-W2-40),Math.min(DV.w-310,camx+W2+40),gy,9,9311);
   stroke(2.5,'rgba(160,120,60,.35)');for(let i=0;i<14;i++){const rx=400+i*95+(i%3)*20,ry=gy+24+(i%4)*20;x.beginPath();x.moveTo(rx,ry);x.quadraticCurveTo(rx+20,ry-6,rx+40,ry);x.stroke();}
   x.fillStyle='#8cc3dc';x.beginPath();x.ellipse(640,gy+5,72,10,0,0,7);x.fill();stroke(3.5);x.stroke();
-  egPalm(520,gy,170,9321);egPalm(3060,gy,160,9323);egPalm(1700,gy,150,9325);
+  egPalm(520,gy,170,9321);egPalm(DV.w-370,gy,160,9323);
   stroke(6,'#8a6a4a');rline(760,gy,760,gy-96,9327,1);fbox(680,gy-150,160,52,9329,PAPER,5);
   x.fillStyle=INK;x.textAlign='center';x.font='700 22px '+TF;x.fillText('Duck Village',760,gy-116);duckFlag(830,gy-150,.5);
   dvShip();dvTrees();
   if(people){
     drawGiraffe(T.noodle.x,gy,{s:.62,face:T.noodle.face,walk:T.noodle.walk,move:.4});
     if(!T.G.ride)drawGiraffe(T.spots.x,gy,{s:.9,face:T.spots.face,walk:T.spots.walk,saddle:1,munch:1,move:0});}
-  tripPlane(DV.plane,gy-24,.95,0,0);
+  if(people)tripPlane(DV.plane,gy-24,.95,0,0);               // parked: only once we've landed
   if(people){
     T.vd.forEach(v=>{const p=dvDuckPos(v),k=DK[v.id],j=v.jump>0?Math.abs(Math.sin(v.jump*.105))*40:0;
       if(v.id==='bubbles'){drawDuck(p.x,p.y,Object.assign({},k,{rot:-1.25,air:1}));return;}
@@ -5011,11 +5029,14 @@ function dvScene(camx,people){
       drawDuck(p.x,p.y-j-idle,Object.assign({},k,{face:Math.sign(T.G.x-p.x)||v.face||1,air:j+idle>4}));
       if(v.id==='splat'&&Math.abs(Math.sin(t*.1))<.06)dvPuff(p.x,p.y-4,3,'drop');});
     T.pals.forEach((e,i)=>itemArt(e.f.kind,e.x,e.y,9401+i*7,Math.abs(Math.sin(t*.18+i))*5,Object.assign({},e.f,{pm:null,oy:0})));
-    dvGaby();
-    fbox(1100,118,100,24,9411,'#8a5f3e',5);stroke(3,'rgba(43,43,43,.4)');rline(1100,130,1200,130,9413,0);    // the front of the crow's nest
-    x.fillStyle='#efd9a7';x.fillRect(740,gy+3,980,70);
-    [[812,gy+14,70,40],[1650,gy+12,70,34]].forEach(([a,b,rx,ry])=>{x.beginPath();x.ellipse(a,b,rx,ry,0,Math.PI,0);x.closePath();x.fill();});
-    stroke(4);x.beginPath();x.ellipse(812,gy+14,70,40,0,Math.PI*1.08,Math.PI*1.75);x.stroke();x.beginPath();x.ellipse(1650,gy+12,70,34,0,Math.PI*1.25,Math.PI*1.92);x.stroke();
+    dvGaby();}
+  x.save();x.translate(SO,0);                                      // in front: the crow's nest rail, and the sand the ship is stuck in
+  fbox(1100,118,100,24,9411,'#8a5f3e',5);stroke(3,'rgba(43,43,43,.4)');rline(1100,130,1200,130,9413,0);
+  x.fillStyle='#efd9a7';x.fillRect(740,gy+3,980,70);
+  [[812,gy+14,70,40],[1650,gy+12,70,34]].forEach(([a,b,rx,ry])=>{x.beginPath();x.ellipse(a,b,rx,ry,0,Math.PI,0);x.closePath();x.fill();});
+  stroke(4);x.beginPath();x.ellipse(812,gy+14,70,40,0,Math.PI*1.08,Math.PI*1.75);x.stroke();x.beginPath();x.ellipse(1650,gy+12,70,34,0,Math.PI*1.25,Math.PI*1.92);x.stroke();
+  x.restore();
+  if(people){
     for(const b of T.fx){x.save();x.globalAlpha=1-b.t/90;stroke(4);
       if(b.kind==='heart'){x.fillStyle=TOMATO;heart(b.x,b.y,7);}else if(b.kind==='note')note(b.x,b.y,b.s);
       else if(b.kind==='drop')fillCirc(b.x,b.y,4.5,b.s,'#7fb8d6');else if(b.kind==='bub')rcirc(b.x,b.y,6,b.s);
@@ -5077,5 +5098,70 @@ function dvDraw(){
     if(T.t<420)bubble(TW/2,-10,'◀ ▶ walk,  ▲ hop,  ▲ ▼ ladders',.95);}
   x.restore();}
 
-(function loop(){update();R?raceDraw():TRIP?tripDraw():draw();if(t%10===0){updatePals();updateBag();}requestAnimationFrame(loop);})();
+/* ======================= saving ======================= */
+/* everything Gaby has done is kept in this browser (localStorage), every few seconds and when the page closes.
+   a save code (in the book's About tab) copies it to another device, or keeps it safe. */
+const SAVEKEY='gabys-world-save';let noSave=false;
+function gatherSave(){
+  const clean=o=>{const r={};['kind','x','y','flavor','big','bk','col','name','sid','story'].forEach(k=>{if(o[k]!=null)r[k]=typeof o[k]==='number'?Math.round(o[k]):o[k];});return r;};
+  const npcs={};NPC.forEach(n=>{if(n.hearts||n.wantI||n.wish)npcs[n.id]=[n.hearts||0,n.wantI||0,n.wish?n.wish.k:0];});
+  return{v:1,found:Object.keys(found).filter(k=>found[k]),met:Object.keys(met).filter(k=>met[k]),
+    read:Object.keys(readDone).filter(k=>readDone[k]).map(Number),been:Object.keys(been).filter(k=>been[k]),
+    f:{labOpen,doorOpen,catQuest,bunQuest,duckQuest,boltAsked,boltPlaneSaid,catPlaneSaid,bunPlaneSaid,patchGiven,night,disco,fire,lamp},
+    duck:{st:DUCK.st==='done'||DUCK.fed?'done':DUCK.st==='none'?(pendingDucks?'coming':'none'):'coming',quest:DUCK.quest},
+    n:{wishesDone,sproutN,drinkN},p:(R||TRIP)?null:{x:Math.round(P.x),y:Math.round(P.y),face:P.face},hat:P.hat,
+    bag:BAG.map(clean),items:ITEMS.map(clean),fol:followers.map(f=>ITEMS.indexOf(f)).filter(i=>i>=0),npcs,outfit:OUTFIT};}
+function applySave(s){
+  if(!s||!s.v)return false;
+  FIND.forEach(k=>found[k]=false);(s.found||[]).forEach(k=>{if(k in found)found[k]=true;});
+  (s.met||[]).forEach(k=>met[k]=true);(s.read||[]).forEach(i=>readDone[i]=true);(s.been||[]).forEach(k=>been[k]=1);
+  const f=s.f||{};labOpen=!!f.labOpen;doorOpen=f.doorOpen?1:0;doorA=doorOpen;catQuest=!!f.catQuest;bunQuest=!!f.bunQuest;
+  boltAsked=!!f.boltAsked;boltPlaneSaid=!!f.boltPlaneSaid;catPlaneSaid=!!f.catPlaneSaid;bunPlaneSaid=!!f.bunPlaneSaid;patchGiven=!!f.patchGiven;
+  night=!!f.night;disco=!!f.disco;fire=!!f.fire;lamp=!!f.lamp;
+  if(found.labfound)document.getElementById('maplab').style.display='';
+  if(patchGiven&&SHADES.indexOf('patch')<0)SHADES.push('patch');
+  const n=s.n||{};wishesDone=n.wishesDone||0;sproutN=n.sproutN||0;drinkN=n.drinkN||0;
+  ITEMS.length=0;(s.items||[]).forEach(o=>ITEMS.push(Object.assign({},o)));
+  followers.length=0;(s.fol||[]).forEach(i=>{if(ITEMS[i]&&followers.indexOf(ITEMS[i])<0)followers.push(ITEMS[i]);});
+  BAG.length=0;(s.bag||[]).forEach(o=>BAG.push(Object.assign({},o)));P.held=null;P.hat=s.hat||null;
+  const d=s.duck||{};duckQuest=!!f.duckQuest;DUCK.quest=!!d.quest;
+  if(d.st==='done'){DUCK.st='done';DUCK.fed=true;DUCK.quest=true;DUCK.villageOpen=true;duckQuest=true;STAYERS.forEach(id=>addStayer(id,id==='wobble'?1060:7300));}
+  else if(d.st==='coming'){DUCK.st='coming';DUCK.wait=100;duckQuest=true;}
+  NPC.forEach(q=>{const r=(s.npcs||{})[q.id];if(!r)return;q.hearts=r[0];q.wantI=r[1];q.wish=r[2]?(q.wants.find(w=>w.k===r[2])||null):null;});
+  if(s.outfit&&typeof s.outfit==='object'){Object.assign(OUTFIT,s.outfit);saveOutfit();}
+  if(s.p&&isFinite(s.p.x)&&isFinite(s.p.y)){P.x=s.p.x;P.y=s.p.y;P.face=s.p.face||1;P.vy=0;}
+  trail.length=0;followers.forEach((q,i)=>{q.x=P.x-70*(i+1)*(P.face||1);q.y=P.y;});
+  bagSig='';palSig='';return true;}
+function writeSave(){if(noSave||!started)return;try{localStorage.setItem(SAVEKEY,JSON.stringify(gatherSave()));}catch(e){}}
+function b64(u){let s='';for(let i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function unb64(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+async function makeSaveCode(){const txt=JSON.stringify(gatherSave());
+  try{if(window.CompressionStream){const st=new Blob([txt]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    return 'GW1-'+b64(new Uint8Array(await new Response(st).arrayBuffer()));}}catch(e){}
+  return 'GW0-'+b64(new TextEncoder().encode(txt));}
+async function readSaveCode(code){const m=/^GW([01])-([A-Za-z0-9_-]+)$/.exec((code||'').replace(/\s+/g,''));if(!m)return null;
+  try{const u=unb64(m[2]);let txt;
+    if(m[1]==='1'){const st=new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'));txt=await new Response(st).text();}
+    else txt=new TextDecoder().decode(u);
+    const s=JSON.parse(txt);return s&&s.v?s:null;}catch(e){return null;}}
+document.getElementById('savemake').addEventListener('click',async e=>{e.stopPropagation();
+  const code=await makeSaveCode(),ta=document.getElementById('savecode'),msg=document.getElementById('savemsg');ta.value=code;
+  let copied=false;try{await navigator.clipboard.writeText(code);copied=true;}catch(err){}
+  if(!copied){try{ta.focus();ta.select();copied=document.execCommand('copy');}catch(err){}}
+  msg.textContent=copied?'✔ copied! paste it somewhere safe, like a note or an email to yourself.':'here it is! select it all and copy it somewhere safe.';
+  tune([523,659,784],80,'triangle');});
+document.getElementById('saveload').addEventListener('click',async e=>{e.stopPropagation();
+  const msg=document.getElementById('savemsg'),s=await readSaveCode(document.getElementById('savecode').value);
+  if(!s){msg.textContent="hmm, that code doesn't look right. check it was copied all the way to the end.";beep(200,.15,'square',.03);return;}
+  if(!confirm('Load this save code? It will replace the game on this device.'))return;
+  noSave=true;try{localStorage.setItem(SAVEKEY,JSON.stringify(s));location.reload();}
+  catch(err){noSave=false;applySave(s);msg.textContent='✔ loaded!';shut('book');}});
+document.getElementById('savewipe').addEventListener('click',e=>{e.stopPropagation();
+  if(!confirm("Start the whole game over? Everything Gaby found, every friend and every quest will be forgotten. (Her clothes and the sound setting stay.)"))return;
+  noSave=true;try{localStorage.removeItem(SAVEKEY);}catch(err){}location.reload();});
+addEventListener('pagehide',writeSave);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')writeSave();});
+try{const sv=JSON.parse(localStorage.getItem(SAVEKEY)||'null');if(sv)applySave(sv);}catch(e){}
+
+(function loop(){update();R?raceDraw():TRIP?tripDraw():draw();if(t%10===0){updatePals();updateBag();}if(t%300===150)writeSave();requestAnimationFrame(loop);})();
 </script>
