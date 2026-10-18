@@ -420,7 +420,7 @@ const THINGS=[
   {id:'wave',x:1600,y:582,label:'wave back'},
   {id:'slide',x:1790,y:582,label:'take the slide'},
   {id:'night',x:7575,y:GY,label:'flip the lamp switch'},
-  {id:'fly',x:3755,y:PLANE.floor,label:'fly the plane',key:1,by:-120,lbl:()=>flying?'land the plane':boltWith()?'fly Bolt home!':'fly the plane'},
+  {id:'fly',x:3755,y:PLANE.floor,label:'fly the plane',key:1,by:-120,lbl:()=>flying?'land the plane':catQuest&&catWith()?'fly Pickles to the napping spot!':boltWith()?'fly Bolt home!':'fly the plane'},
   {id:'tea',x:4255,y:PLANE.floor,label:'sit down for tea'},
   {id:'nap',x:4585,y:PLANE.floor,label:'nap in the spotty room'},
   {id:'lamp',x:4805,y:PLANE.floor,label:'find the light switch'},
@@ -476,7 +476,7 @@ const THINGS=[
   {id:'libdesk',x:20105,y:GY,label:'talk to Mrs. Hush',lbl:()=>BAG.some(o=>o.kind==='book')?'give my books back':'ask Mrs. Hush for a story'},
   {id:'readseat',x:READX,y:GY,label:'sit and read',key:1,by:-175}
 ];
-const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots'];
+const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots','egypt','napspot','egyptcats'];
 const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watered the plants',
   bridge:'crossed the bridge',wave:'waved hello',slide:'took the slide',night:'turned on the night',
   fly:'flew the plane',tea:'had a cup of tea',nap:'had a nap',lamp:'lit the dark room',
@@ -497,7 +497,7 @@ const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watere
   lounge:'lay on the lounge chair',icecream:'got a poolside ice cream',swim:'went swimming',sun:'tapped the sun',dressup:'changed my clothes',wardrobe:'opened my wardrobe',underwater:'swam under the water',
   enterLib:'went to the library',shelf:'looked at the books',libdesk:'talked to Mrs. Hush',readseat:'sat in the reading chair',
   readbook:'read a whole book',hatch:'found a hole by the library',labfound:'found the secret lab',starmap:'looked at the old star map',
-  rounddoor:'opened the round door',space:'flew Bolt home to his planet',robots:'met every robot on the little planet',checkout:'borrowed a book',returnbook:'gave my books back',allbooks:'read every library book'};
+  rounddoor:'opened the round door',egypt:'flew Pickles to Egypt',napspot:'found the big napping spot',egyptcats:'met every cat in Egypt',space:'flew Bolt home to his planet',robots:'met every robot on the little planet',checkout:'borrowed a book',returnbook:'gave my books back',allbooks:'read every library book'};
 const FIND=THINGS.map(t=>t.id).filter(k=>k!=='exit'&&k!=='exitSchool'&&k!=='exitPool'&&k!=='exitLib').concat(EXTRA);
 const found={};FIND.forEach(k=>found[k]=false);
 
@@ -587,7 +587,7 @@ function itemArt(k,px,py,s,bob,it){
     case 'starit':star(px,py-20,18,s);break;
     case 'cat':case 'bunny':{
       const ear=k==='bunny'?24:13;
-      rcircPath(px,py-18-b,19,s,.8);x.fillStyle=k==='bunny'?'#f3eee6':'#e0c49a';x.fill();x.stroke();
+      rcircPath(px,py-18-b,19,s,.8);x.fillStyle=(it&&it.col)||(k==='bunny'?'#f3eee6':'#e0c49a');x.fill();x.stroke();
       rline(px-11,py-29-b,px-17,py-29-ear-b,s+7,2);rline(px-11,py-29-b,px-4,py-28-ear-b,s+9,2);
       rline(px-17,py-29-ear-b,px-4,py-28-ear-b,s+11,2);
       rline(px+9,py-29-b,px+3,py-28-ear-b,s+13,2);rline(px+9,py-29-b,px+16,py-29-ear-b,s+15,2);
@@ -740,6 +740,7 @@ function beep(f,d,type,vol){tone(f,d||.1,type,vol);}
 function tune(list,gap,type){list.forEach((f,i)=>setTimeout(()=>tone(f,.13,type||'triangle',.05),i*(gap||110)));}
 /* ---- little 8-bit music loops (original chord patterns, nothing borrowed) ---- */
 const CHORDS={
+  egypt:[[220,262,330],[233,294,349],[220,277,330],[196,247,294]],
   space:[[262,330,392],[220,277,330],[175,220,262],[196,247,294]],
   race:[[262,330,392],[220,262,330],[175,220,262],[196,247,294]],
   disco:[[262,311,392],[233,294,349],[208,247,311],[196,247,294]]};
@@ -748,7 +749,7 @@ function startMusic(name){
   if(musName===name)return;
   stopMusic();if(!CHORDS[name])return;
   musName=name;musStep=0;
-  const ch=CHORDS[name],iv=name==='race'?112:name==='space'?230:148,ARP=[0,1,2,1,0,2,1,2];
+  const ch=CHORDS[name],iv=name==='race'?112:name==='space'?230:name==='egypt'?175:148,ARP=[0,1,2,1,0,2,1,2];
   const step=()=>{
     const c=ch[((musStep/8)|0)%ch.length];
     tone(c[ARP[musStep%8]]*2,.085,'square',.022);
@@ -884,7 +885,7 @@ function portrait(cv,who){                     // draw anyone into a little roun
   }finally{x=X0;}}
 function friendList(){
   const list=[];
-  NPC.concat(OTHERS).forEach(n=>list.push({id:n.id,name:n.name,story:n.story,who:n.robo?{item:{kind:'robot',col:n.robo}}:n}));
+  NPC.concat(OTHERS).forEach(n=>list.push({id:n.id,name:n.name,story:n.story,who:n.robo?{item:{kind:'robot',col:n.robo}}:n.catcol?{item:{kind:'cat',col:n.catcol}}:n}));
   Object.keys(PETS).forEach(k=>{const it=ITEMS.find(o=>o.kind===k)||{kind:k};
     list.push({id:k,name:PETS[k].name,story:PETS[k].story,who:{item:it}});});
   ITEMS.filter(o=>o.kind==='sprout').forEach(o=>list.push({id:o.sid,name:o.name,story:o.story,who:{item:o}}));
@@ -1123,7 +1124,8 @@ function doThing(th){
     case 'slide':P.slide=0;beep(700,.5,'sine');break;
     case 'night':night=!night;say(P.x,P.y-110,night?'good night':'good morning');
       puff(P.x,P.y-100,8);tune(night?[520,400,300]:[300,400,520],120,'sine');break;
-    case 'fly':if(!flying&&boltWith()){startTrip();break;}
+    case 'fly':if(!flying&&catQuest&&catWith()){startEgypt();break;}
+      if(!flying&&boltWith()){startTrip();break;}
       flying=!flying;say(P.x,P.y-120,flying?'up we go':'landed');puff(P.x,P.y-70,10);
       beep(flying?260:520,.35,'sawtooth');break;
     case 'tea':P.sit=260;say(P.x,P.y-130,'one cup of tea');beep(900,.1,'triangle');break;
@@ -1250,7 +1252,7 @@ function stepNPCs(){
 function update(){
   t++;
   if(R){raceUpdate();return;}
-  labTick();
+  labTick();catTick();
   if(TRIP){tripUpdate();return;}
   if(disco&&Math.abs(P.x-8215)<1100&&!flying)startMusic('disco');
   else if(musName==='disco')stopMusic();
@@ -3101,9 +3103,14 @@ const BOOKS=[
      pic:()=>{pgSky();pgFloor();pgPet('cat',150,250,1.9);
        stroke(6);rline(360,250,360,140,61,1);fbox(300,80,120,64,63,PAPER,5);pgWord('48 ?',360,124,34);
        [210,240,270].forEach((fx,i)=>fillCirc(fx,262+(i%2)*8,4,70+i,'rgba(43,43,43,.4)'));}},
-    {txt:"One day she found it: right on Gaby's lap. “Purrrfect,” said Pickles. The end.",
-     pic:()=>{pgSky();pgFloor();x.save();x.translate(200,250);x.scale(1.6,1.6);x.translate(-200,-250);
-       armchair(200,1,250);seated(200,250,gabyO({hat:null,shadow:false,seed:81}));pgPet('cat',232,214,.8);x.restore();zzz(300,90);hearts([[160,90,10],[330,110,8]]);}}]},
+    {txt:'One night, Pickles dreamed of a faraway land where it is always sunny, where cats nap on soft pillows next to giant pyramids.',
+     pic:()=>{pgSky(1);pgFloor('#b9ae99');pgPet('cat',120,250,1.7);zzz(150,140,'#f3ecd8');
+       x.fillStyle=PAPER;[[200,170,8],[225,145,12]].forEach(([a,b,r])=>{x.beginPath();x.arc(a,b,r,0,7);x.fill();stroke(3);x.stroke();});
+       x.save();x.beginPath();x.ellipse(340,110,120,80,0,0,7);x.fillStyle='#fbe8c4';x.fill();x.clip();
+       x.fillStyle='#efd9a7';x.fillRect(220,130,240,80);egPyramid(300,140,60,1);egPyramid(380,140,45,2);fcirc(420,60,14,9,'#fdf0c4',3);
+       egPillow(330,170,60,16,'#b49ac7','#e0b25e');x.restore();stroke(4);x.beginPath();x.ellipse(340,110,120,80,0,0,7);x.stroke();}},
+    {txt:'The biggest, softest napping spot in the whole world! Maybe one day, somebody will help Pickles find it... The end... for now.',
+     pic:()=>{pgSky();pgFloor();pgPet('cat',240,250,2.1);pgWord('?',330,110,60);tripPlane(110,80,.5,-.2,0);}}]},
   {title:'Clover and the Clover Patch',col:'#b8cf8f',pages:[
     {txt:'One sunny morning, a little patch of clover began to wiggle...',
      pic:()=>{pgSky();pgSun(400,70);pgFloor('#cbdab4');[[150,226],[200,214],[245,228],[290,212],[335,226],[225,240],[270,242]].forEach(([a,b])=>clover(a,b,11));
@@ -3194,7 +3201,7 @@ function openShelf(){
   const g=document.getElementById('libgrid');g.innerHTML='';
   BOOKS.forEach((b,i)=>{const d=document.createElement('div');d.className='bk';
     const cv=document.createElement('canvas');cv.width=240;cv.height=300;drawCover(cv,i);d.appendChild(cv);
-    if(i===0&&!labOpen){d.classList.add('myst');const q=document.createElement('i');q.className='q';q.textContent='❓';d.appendChild(q);}
+    if((i===0&&!labOpen)||(i===1&&!catQuest)){d.classList.add('myst');const q=document.createElement('i');q.className='q';q.textContent='❓';d.appendChild(q);}
     if(readDone[i]||hasBook(i)){const m=document.createElement('i');m.textContent=(readDone[i]?'⭐':'')+(hasBook(i)?'🎒':'');d.appendChild(m);}
     d.addEventListener('click',e=>{e.stopPropagation();shut('lib');openReader(i);});g.appendChild(d);});
   document.getElementById('lib').style.display='flex';started=true;}
@@ -3210,6 +3217,7 @@ function showPage(){
   document.getElementById('readprev').classList.toggle('off',RD.pg===0);
   document.getElementById('readnext').classList.toggle('off',last);
   if(last&&RD.bk===0&&!labOpen)pendingUnlock=true;
+  if(last&&RD.bk===1&&!catQuest)pendingCat=true;
   if(last&&!readDone[RD.bk]){readDone[RD.bk]=true;mark('readbook');tune([523,659,784],90,'triangle');
     if(BOOKS.every((q,k)=>readDone[k]))mark('allbooks');}
   const row=document.getElementById('readbtns'),note=document.getElementById('readnote');row.innerHTML='';note.textContent='';
@@ -3430,6 +3438,7 @@ function tripPlan(){
       tripSay('volt','for you, Gaby: a star from our sky!');tune([784,988,1175,1568],100,'triangle');},3400);}}}));
   const best=c.filter(q=>q.d<q.lim).sort((a,b)=>a.d-b.d)[0];return best||null;}
 function tripUpdate(){
+  if(TRIP.dest==='egypt'){egyptUpdate();return;}
   const T=TRIP;T.t++;
   T.says.forEach(s=>s.t++);T.says=T.says.filter(s=>s.t<190);if(T.hearts>0)T.hearts--;
   if(T.ph==='out'){
@@ -3447,16 +3456,27 @@ function tripUpdate(){
   else if(T.ph==='back'){if(actEdge)T.t=Math.max(T.t,400);if(T.t>=400)endTrip();}
   actEdge=upEdge=downEdge=grabEdge=false;}
 function endTrip(){
-  TRIP=null;stopMusic();flying=false;P.x=4255;P.y=PLANE.floor;P.vy=0;P.climb=null;P.ground=true;P.face=1;trail.length=0;
-  followers.forEach((f,i)=>{f.x=P.x-70*(i+1);f.y=P.y;f.pm=null;});fadeT=16;mark('space');
-  const b=boltF();tune([659,784,1046],120,'triangle');
+  const dest=TRIP.dest;TRIP=null;stopMusic();flying=false;P.x=4255;P.y=PLANE.floor;P.vy=0;P.climb=null;P.ground=true;P.face=1;trail.length=0;
+  followers.forEach((f,i)=>{f.x=P.x-70*(i+1);f.y=P.y;f.pm=null;});fadeT=16;tune([659,784,1046],120,'triangle');
+  if(dest==='egypt'){mark('egypt');const c=catF();
+    if(c)setTimeout(()=>say(c.x,c.y-60,'thank you, Gaby! now i know where the big napping spot is!'),600);return;}
+  mark('space');const b=boltF();
   if(b)setTimeout(()=>say(b.x,b.y-70,'thank you, Gaby! now i can visit my friends any time!'),600);}
+function tripTakeoff(tt){                         // taking off over the sleeping town (both trips start like this)
+  const u=Math.max(0,Math.min(1,tt/170)),e=u*u*(3-2*u);tripSky('#1b2340','#2d3657');tripStars(0);
+  x.fillStyle='#4a5a48';x.fillRect(-600,470,TW+1200,400);stroke(5);rline(-600,470,TW+600,470,3,2);
+  [[60,90,'#d49a86','#b9aac4'],[170,70,'#9fb0c8','#b5c2b0'],[520,80,'#c9a07a','#c4b0a4'],[640,70,'#b9a0c9','#aeb6c9'],[760,60,'#8fb3a0','#c9bfae']].forEach(([hx,hw,rc,wc],i)=>{
+    const top=470-hw*.8;x.fillStyle=wc;x.fillRect(hx,top,hw,hw*.8);stroke(4);x.strokeRect(hx,top,hw,hw*.8);
+    x.fillStyle=rc;x.beginPath();x.moveTo(hx-8,top);x.lineTo(hx+hw/2,470-hw*1.3);x.lineTo(hx+hw+8,top);x.closePath();x.fill();x.stroke();
+    fbox(hx+hw*.33,470-hw*.55,hw*.34,hw*.26,620+i,'#f3dca0',3);fbox(hx+hw*.1,470-hw*.3,hw*.18,hw*.3,630+i,'#7d6a5a',3);});
+  tripPlane(120+e*620,440-e*330,.9,-.32*Math.min(1,tt/40),1);caption('up, up and away!');}
 function tripSky(top,bot){const g=x.createLinearGradient(0,0,0,TH);g.addColorStop(0,top);g.addColorStop(1,bot);
   x.fillStyle=g;x.fillRect(-600,-400,TW+1200,TH+800);}
 function tripStars(drift){for(const s of TSTARS){const sx=((s.x-drift*s.d)%1300+1300)%1300-200;
   x.save();x.globalAlpha=.55+.45*Math.sin(t*.05+s.x);fillCirc(sx,s.y,s.r,s.x|0,'#f3ecd8');x.restore();}}
 function caption(txt){bubble(TW/2,58,txt,.95);}
 function tripDraw(){
+  if(TRIP.dest==='egypt'){egyptDraw();return;}
   const T=TRIP,sc=T.ph==='planet'?Math.min(innerWidth/640,innerHeight/TH):Math.min(innerWidth/TW,innerHeight/TH);
   x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,innerWidth,innerHeight);
   x.save();x.translate(innerWidth/2,innerHeight/2);x.scale(sc,sc);x.translate(-TW/2,-TH/2);
@@ -3464,15 +3484,10 @@ function tripDraw(){
   if(T.ph==='out'||T.ph==='back'){
     const back=T.ph==='back',tt=back?T.t:T.t;
     if(!back&&tt<170){                                    // taking off over the sleeping town
-      const u=ease(tt/170);tripSky('#1b2340','#2d3657');tripStars(0);twinkleStar(780,90,16);
-      x.fillStyle='#4a5a48';x.fillRect(-600,470,TW+1200,400);stroke(5);rline(-600,470,TW+600,470,3,2);
-      [[60,90,'#d49a86'],[170,70,'#9fb0c8'],[520,80,'#c9a07a'],[640,70,'#b9a0c9'],[760,60,'#8fb3a0']].forEach(([hx,hw,rc],i)=>{
-        x.fillStyle='#2b3350';x.fillRect(hx,470-hw*.8,hw,hw*.8);x.fillStyle=rc;x.beginPath();x.moveTo(hx-8,470-hw*.8);
-        x.lineTo(hx+hw/2,470-hw*1.3);x.lineTo(hx+hw+8,470-hw*.8);x.fill();x.fillStyle='#f3dca0';x.fillRect(hx+hw*.35,470-hw*.55,hw*.3,hw*.25);});
-      tripPlane(120+u*620,440-u*330,.9,-.32*Math.min(1,tt/40),1);caption('up, up and away!');}
+      tripTakeoff(tt);twinkleStar(780,90,16);}
     else{
       const u=back?T.t/400:(tt<480?(tt-170)/310:(tt-480)/300);
-      tripSky('#141b31','#2a2350');tripStars(T.t*2.4*(back?-1:1));
+      tripSky('#141b31','#2a2350');tripStars(T.t*2.4);
       if(!back&&tt<480){                                  // out past the moon, following Twinkle
         homePlanet(200-u*330,640-u*150,300-u*210);moon(1000-u*1250,190,40);ringed(760-u*90,420,30);
         twinkleStar(700+Math.sin(t*.04)*14,150,15);
@@ -3484,8 +3499,8 @@ function tripDraw(){
         const px=390+(PCX-390)*e,py=(290)+((PCY-PR-24)-290)*e;tripPlane(px,py,.8+e*.15,-.05+e*.05,1);
         caption("there it is: Bolt's planet!");}
       else{                                                // going home again
-        const e=ease(u);robotPlanet(PCX+e*700,PCY-e*300,PR-e*260,1);homePlanet(-200+e*520,900-e*360,60+e*260);
-        moon(900-e*700,160,34);tripPlane(450-e*60,280+e*40,.85,.08,1);caption(u<.5?'bye bye, robot planet!':'home again!');}}}
+        const e=ease(u);robotPlanet(PCX-e*900,PCY-e*200,PR-e*250,1);homePlanet(1150-e*560,900-e*330,60+e*260);
+        moon(1000-e*900,160,34);tripPlane(330+e*60,260+e*50,.85,.06*e,1);caption(u<.5?'bye bye, robot planet!':'home again!');}}}
   else{                                                   // walking round the little planet
     tripSky('#241f45','#4a3f6b');
     for(const s of TSTARS)if(s.y<420){x.save();x.globalAlpha=.5+.5*Math.sin(t*.04+s.x);fillCirc((s.x+300)%TW,s.y,s.r,s.x|0,'#f3ecd8');x.restore();}
@@ -3517,6 +3532,192 @@ function tripDraw(){
       bubble(Math.max(230,Math.min(TW-230,p.x)),p.y,s.txt,Math.min(1,(190-s.t)/30),true);});
     const pl=tripPlan();if(pl)bubble(PCX,PCY-PR-205+Math.sin(t*.12)*3,'★ '+pl.txt,.95,true);
     if(T.t<360)caption('◀ ▶ walk round the little planet');}
+  x.restore();}
+
+/* ======================= Pickles and the big napping spot ======================= */
+/* reading "Pickles Naps Everywhere" to the end: Pickles walks in from the left and asks for help.
+   flying the plane with her goes to Egypt (Gaby's idea: they love cats there). */
+let catQuest=false,pendingCat=false,catWalk=null,catPlaneSaid=false;
+const catWith=()=>followers.some(f=>f.kind==='cat');
+const catF=()=>followers.find(f=>f.kind==='cat');
+function catTick(){
+  if(pendingCat&&document.getElementById('read').style.display!=='flex'){pendingCat=false;catArrives();}
+  if(catWalk){const c=catWalk;c.x+=3.2;
+    if(t%14===0)tone(900+((t*13)%200),.03,'sine',.012);
+    if(c.x>=P.x-80*(P.face||1)-10&&c.x>=P.x-100){catWalk=null;followers.unshift(c);meet('cat');mark('cat');
+      say(c.x,c.y-60,'meow! Gaby, will you help me find the big napping spot?');tune([659,784,988],120,'sine');puff(c.x,c.y-40,6,'heart');
+      setTimeout(()=>say(c.x,c.y-60,'it is far, far away... where it is always sunny'),3200);
+      setTimeout(()=>say(P.x,P.y-140,'far away? maybe the plane can take us!'),6200);}}
+  const c=catF();
+  if(c&&catQuest&&!catPlaneSaid&&!flying&&Math.abs(P.y-PLANE.floor)<3&&P.x>PLANE.x0&&P.x<PLANE.x1){catPlaneSaid=true;
+    say(c.x,c.y-60,'purr... can this plane take us to the big napping spot?');tune([523,659,784],110,'sine');
+    setTimeout(()=>say(P.x,P.y-150,"let's go to the front and fly it!"),2400);}}
+function catArrives(){
+  catQuest=true;const c=ITEMS.find(o=>o.kind==='cat');if(!c)return;
+  const j=followers.indexOf(c);if(j>=0)followers.splice(j,1);
+  if(P.held!==null&&ITEMS[P.held]===c)P.held=null;
+  c.x=P.x-VW*.62-40;c.y=P.y;c.pm=null;catWalk=c;tone(700,.1,'sine',.03);}
+
+const EG={w:2900,gy:470,plane:560,sphinx:2150,fluff:2340,big:2660};
+const EGCATS=[
+  {id:'cleo',name:'Cleo',col:'#e3a46a',x:900,pc:TOMATO,says:'meow! visitors! how lovely!',
+    story:'Cleo naps on the red pillow and says hello to every visitor with a slow blink. That is cat for "hello, friend".'},
+  {id:'mau',name:'Mau',col:'#b9b4ac',x:1130,pc:SKY,sleep:1,says:'zzz... oh! hello! zzz...',
+    story:'Mau has been asleep since Tuesday. He woke up just long enough to say hello.'},
+  {id:'toffee',name:'Toffee',col:'#c9a07a',x:1360,pc:SAGE,says:'you came in a plane? how exciting!',
+    story:'Toffee has never been on a plane. She thinks it looks like a very loud bird.'},
+  {id:'sandy',name:'Sandy',col:'#f3eee6',x:1760,pc:ROSE,says:'welcome! take any pillow you like!',
+    story:'Sandy fluffs every single pillow in the sand each morning. It takes her until lunchtime.'},
+  {id:'nefi',name:'Nefi',col:'#8a817a',x:1960,pc:MUSTARD,says:'purr... we love visitors here',
+    story:'Nefi chases the shadows of birds across the sand. She has never caught one, and she does not mind.'},
+  {id:'fluff',name:'Pharaoh Fluff',col:'#f2d58a',x:EG.fluff,pc:'#b49ac7',crown:1,says:'welcome! i am Pharaoh Fluff, queen of the pillows!',
+    story:'Pharaoh Fluff wears a tiny gold crown and is the queen of all the pillows. She is very kind and very, very fluffy.'}];
+EGCATS.forEach(k=>OTHERS.push({id:k.id,name:k.name,catcol:k.col,story:k.story}));
+const EGNAP=[{x:1240,col:'#d9d4cc',pc:'#e0b25e'},{x:1530,col:'#e3a46a',pc:'#93b6c9'},{x:2500,col:'#7d7470',pc:TOMATO},{x:2840,col:'#f3eee6',pc:SAGE}];
+function startEgypt(){
+  TRIP={dest:'egypt',ph:'out',t:0,gx:700,face:1,walk:0,turnA:0,says:[],fol:followers.map((f,i)=>700-70*(i+1)),nap:0};
+  stopMusic();startMusic('egypt');slide(150,700,1.6,'sawtooth',.03);}
+function egSay(who,txt){TRIP.says=TRIP.says.filter(s=>s.who!==who);TRIP.says.push({who,txt,t:0});}
+function egPlan(){
+  const T=TRIP,c=[],d=v=>Math.abs(v-T.gx);
+  c.push({d:d(EG.plane),lim:70,txt:'fly home',fn:()=>{T.ph='back';T.t=0;slide(200,800,1.2,'sawtooth',.03);egSay('pickles','bye bye, kitties!');}});
+  c.push({d:d(EG.sphinx-110),lim:70,txt:'look at the giant stone cat',fn:()=>{egSay('gaby',"a giant stone cat! and it's smiling!");tone(440,.2,'sine',.03);
+    if(catWith())setTimeout(()=>TRIP&&egSay('pickles','she looks a bit like my granny!'),1600);}});
+  if(catWith())c.push({d:d(EG.big),lim:90,txt:T.napDone?'look at the giant pillow':'show Pickles the giant pillow',fn:()=>{
+    if(T.napDone){egSay('gaby','the biggest, softest pillow in the whole world');return;}
+    T.nap=420;T.napDone=1;mark('napspot');tune([523,659,784,1046,1318],110,'sine');
+    egSay('pickles','the BIG napping spot! spot number 48! purrrfect...');}});
+  EGCATS.forEach(k=>c.push({d:d(k.x),lim:60,txt:'say hello to '+(met[k.id]?k.name:'the cat'),fn:()=>{
+    const first=meet(k.id);egSay(k.id,first&&!k.sleep&&!k.crown?k.says.replace(/!$/,'')+"! i'm "+k.name+'.':k.says);tune([784,988],110,'sine');
+    if(first&&EGCATS.every(q=>met[q.id])){mark('egyptcats');setTimeout(()=>{if(!TRIP)return;bagGive({kind:'crown'},P.x,P.y);
+      egSay('fluff','a crown for our new friend Gaby!');tune([784,988,1175,1568],100,'triangle');},2200);}}}));
+  return c.filter(q=>q.d<q.lim).sort((a,b)=>a.d-b.d)[0]||null;}
+function egyptUpdate(){
+  const T=TRIP;T.t++;T.says.forEach(s=>s.t++);T.says=T.says.filter(s=>s.t<190);
+  if(T.ph==='out'){
+    if(actEdge)T.t=Math.max(T.t,T.t<170?170:T.t<430?430:650);
+    if(T.t>=650){T.ph='walk';T.t=0;tone(160,.3,'triangle',.05);crunch(.2,.04);
+      egSay('pickles','it smells like warm sunshine here!');setTimeout(()=>TRIP&&egSay('cleo','meow? visitors!'),900);}}
+  else if(T.ph==='walk'){
+    let mv=0;if(key.left){T.gx-=3.6;T.face=-1;mv=1;}if(key.right){T.gx+=3.6;T.face=1;mv=1;}
+    T.gx=Math.max(140,Math.min(EG.w-60,T.gx));T.walk=mv?T.walk+.2:T.walk*.86;T.turnA+=((mv?1:0)-T.turnA)*.2;
+    if(mv&&t%13===0)crunch(.04,.012);
+    followers.forEach((f,i)=>{const goal=T.gx-T.face*70*(i+1);T.fol[i]+=(goal-T.fol[i])*.1;});
+    if(T.nap>0){T.nap--;if(T.nap===1)egSay('pickles','what a nap! now i know the way, we can come back any time!');}
+    if(actEdge){const p=egPlan();if(p)p.fn();}}
+  else if(T.ph==='back'){if(actEdge)T.t=Math.max(T.t,300);if(T.t>=300)endTrip();}
+  actEdge=upEdge=downEdge=grabEdge=false;}
+function egPillow(px,py,w,h,col,trim){
+  const l=px-w/2,r=px+w/2,tp=py-h;x.fillStyle=col;x.beginPath();x.moveTo(l+8,tp);x.quadraticCurveTo(px,tp-6,r-8,tp);
+  x.quadraticCurveTo(r+5,tp+h/2,r-8,py);x.quadraticCurveTo(px,py+4,l+8,py);x.quadraticCurveTo(l-5,tp+h/2,l+8,tp);x.closePath();x.fill();stroke(4);x.stroke();
+  stroke(3,trim);x.beginPath();x.moveTo(l+10,tp+h*.5);x.quadraticCurveTo(px,tp+h*.5+3,r-10,tp+h*.5);x.stroke();
+  [[l+6,tp+2],[r-6,tp+2],[l+6,py-2],[r-6,py-2]].forEach(([a,b],i)=>fcirc(a,b,4.5,900+i,trim,2.5));}
+function egCat(px,py,col,seed,sleep,crown){
+  itemArt('cat',px,py,seed,sleep?0:Math.abs(Math.sin(t*.06+seed))*2,{kind:'cat',col});
+  if(sleep){x.fillStyle=INK;x.font='700 15px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
+    const z=(t*.5+seed*7)%60;x.save();x.globalAlpha=1-z/60;x.fillText('z',px+18+z*.3,py-40-z*.6);x.restore();
+    stroke(3);x.beginPath();x.moveTo(px-10,py-21);x.lineTo(px-4,py-21);x.moveTo(px+4,py-21);x.lineTo(px+10,py-21);x.stroke();}   // closed eyes
+  if(crown)drawLook(px,py-40,'crown',seed,9);}
+function egPyramid(cx,base,h,seed){
+  x.fillStyle='#e6c27f';x.beginPath();x.moveTo(cx-h*1.1,base);x.lineTo(cx,base-h);x.lineTo(cx+h*1.1,base);x.closePath();x.fill();
+  x.fillStyle='#cfa865';x.beginPath();x.moveTo(cx,base-h);x.lineTo(cx+h*1.1,base);x.lineTo(cx+h*.25,base);x.closePath();x.fill();
+  stroke(2.5,'rgba(43,43,43,.25)');for(let k=1;k<6;k++){const y=base-h*k/6,w=h*1.1*(1-k/6);x.beginPath();x.moveTo(cx-w,y);x.lineTo(cx+w,y);x.stroke();}
+  stroke(5);x.beginPath();x.moveTo(cx-h*1.1,base);x.lineTo(cx,base-h);x.lineTo(cx+h*1.1,base);x.stroke();}
+function egColumn(cx,base,h,broken,seed){
+  fbox(cx-16,base-h,32,h,seed,'#e9d6ad',4);stroke(2,'rgba(43,43,43,.3)');rline(cx-6,base-h+6,cx-6,base-4,seed+1,0);rline(cx+6,base-h+6,cx+6,base-4,seed+2,0);
+  if(!broken)fbox(cx-24,base-h-12,48,12,seed+3,'#e9d6ad',4);
+  else{x.fillStyle='#e9d6ad';x.beginPath();x.moveTo(cx-16,base-h);x.lineTo(cx-6,base-h-10);x.lineTo(cx+4,base-h-3);x.lineTo(cx+16,base-h-12);x.lineTo(cx+16,base-h);x.fill();}
+  fbox(cx-22,base-10,44,10,seed+4,'#e9d6ad',4);}
+function egPalm(px,base,h,seed){stroke(9,'#8a6a4a');x.beginPath();x.moveTo(px,base);x.quadraticCurveTo(px+18,base-h*.5,px+6,base-h);x.stroke();
+  stroke(5);x.beginPath();x.moveTo(px,base);x.quadraticCurveTo(px+18,base-h*.5,px+6,base-h);x.stroke();
+  [-2.6,-2,-1.3,-.6,0].forEach((a,i)=>{x.fillStyle='#7fa06a';x.save();x.translate(px+6,base-h);x.rotate(a);
+    x.beginPath();x.ellipse(36,0,40,10,.25,0,7);x.fill();stroke(3.5);x.stroke();x.restore();});
+  fillCirc(px+2,base-h+6,6,seed,'#8a6a4a');fillCirc(px+12,base-h+8,6,seed+1,'#8a6a4a');}
+function egSphinx(cx,gy){                         // the giant smiling stone cat
+  x.fillStyle='#d9b77a';x.beginPath();x.moveTo(cx-140,gy);x.lineTo(cx-140,gy-50);x.quadraticCurveTo(cx-60,gy-110,cx+60,gy-92);
+  x.quadraticCurveTo(cx+130,gy-80,cx+130,gy);x.closePath();x.fill();stroke(6);x.stroke();
+  fbox(cx-230,gy-26,110,26,9301,'#d9b77a',5);stroke(3);for(let i=0;i<3;i++)rline(cx-226,gy-8-i*0,cx-226+i*8,gy,9303+i,0);
+  x.fillStyle='#d9b77a';x.beginPath();x.arc(cx-140,gy-130,52,0,7);x.fill();stroke(6);x.stroke();
+  x.fillStyle='#7f9fbf';[[-1],[1]].forEach(([d])=>{x.beginPath();x.moveTo(cx-140+d*44,gy-150);x.lineTo(cx-140+d*68,gy-60);x.lineTo(cx-140+d*40,gy-70);x.closePath();x.fill();stroke(4);x.stroke();});
+  stroke(5,'#e0b25e');for(let i=0;i<3;i++){x.beginPath();x.moveTo(cx-140-58,gy-120+i*18);x.lineTo(cx-140-44,gy-120+i*18);x.moveTo(cx-140+44,gy-120+i*18);x.lineTo(cx-140+58,gy-120+i*18);x.stroke();}
+  x.fillStyle='#d9b77a';[[-1],[1]].forEach(([d])=>{x.beginPath();x.moveTo(cx-140+d*20,gy-176);x.lineTo(cx-140+d*44,gy-214);x.lineTo(cx-140+d*48,gy-160);x.closePath();x.fill();stroke(5);x.stroke();});
+  fillCirc(cx-158,gy-136,5,9305);fillCirc(cx-122,gy-136,5,9307);stroke(4);x.beginPath();x.arc(cx-140,gy-118,13,.2*Math.PI,.8*Math.PI);x.stroke();
+  stroke(2.5);[[-1],[1]].forEach(([d])=>{rline(cx-140+d*16,gy-118,cx-140+d*40,gy-124,9309+d,0);rline(cx-140+d*16,gy-114,cx-140+d*40,gy-112,9311+d,0);});}
+function egScene(camx,people){
+  const T=TRIP,W2=TW/2;
+  const g=x.createLinearGradient(0,0,0,TH);g.addColorStop(0,'#a9d4ea');g.addColorStop(.75,'#fbe8c4');x.fillStyle=g;x.fillRect(-900,-400,TW+1800,TH+800);
+  fcirc(W2+260,96,40,9401,'#fdf0c4',4);stroke(4);for(let i=0;i<10;i++){const a=i/10*Math.PI*2+t*.003;rline(W2+260+Math.cos(a)*50,96+Math.sin(a)*50,W2+260+Math.cos(a)*68,96+Math.sin(a)*68,9403+i,1);}
+  x.save();x.translate(W2-camx*.25,0);x.fillStyle='#ecd3a0';x.beginPath();x.moveTo(-1200,470);
+  for(let dx=-1200;dx<=2400;dx+=150)x.quadraticCurveTo(dx+75,410+((dx/150)%2?18:-10),dx+150,430);x.lineTo(2400,470);x.closePath();x.fill();x.restore();
+  x.save();x.translate(W2-camx*.45,0);[[480,170],[760,240],[1050,150],[1400,210]].forEach(([px,h],i)=>egPyramid(px,450,h,i));x.restore();
+  x.save();x.translate(W2-camx*.7,0);[[300,150,0],[420,110,1],[900,130,1],[1020,170,0],[1500,140,1]].forEach(([px,h,b],i)=>egColumn(px,462,h,b,9411+i*7));
+  fbox(1700,250,30,212,9461,'#e9d6ad',4);x.fillStyle='#e9d6ad';x.beginPath();x.moveTo(1700,250);x.lineTo(1715,220);x.lineTo(1730,250);x.fill();stroke(4);x.stroke();
+  stroke(2.5,'rgba(43,43,43,.4)');for(let i=0;i<5;i++){x.beginPath();x.arc(1715,290+i*34,5,0,7);x.stroke();}x.restore();
+  x.save();x.translate(W2-camx,0);
+  x.fillStyle='#efd9a7';x.fillRect(-1200,EG.gy,EG.w+2400,400);stroke(5);rline(-1200,EG.gy,EG.w+1200,EG.gy,9421,2);
+  stroke(2.5,'rgba(160,120,60,.35)');for(let i=0;i<30;i++){const rx=i*110+(i%3)*30,ry=EG.gy+24+(i%4)*22;x.beginPath();x.moveTo(rx,ry);x.quadraticCurveTo(rx+20,ry-6,rx+40,ry);x.stroke();}
+  x.fillStyle='#8fc3d6';x.beginPath();x.ellipse(1560,EG.gy-6,120,12,0,0,7);x.fill();stroke(4);x.stroke();
+  stroke(3,'#5e8a52');[1450,1470,1660,1680].forEach((rx,i)=>rline(rx,EG.gy-6,rx+(i%2?4:-4),EG.gy-34,9431+i,1));
+  egPalm(1420,EG.gy,180,9441);egPalm(1700,EG.gy,150,9443);egPalm(320,EG.gy,160,9445);
+  egSphinx(EG.sphinx,EG.gy);
+  [2560,2780].forEach((cx,i)=>egColumn(cx,EG.gy,250,0,9451+i*7));fbox(2520,EG.gy-276,300,26,9465,'#e9d6ad',5);
+  stroke(2.5,'rgba(43,43,43,.45)');for(let i=0;i<8;i++){const gx=2540+i*34;x.beginPath();x.arc(gx,EG.gy-263,4,0,7);x.stroke();}
+  tripPlane(EG.plane,EG.gy-24,.95,0,0);
+  EGNAP.forEach((n,i)=>{egPillow(n.x,EG.gy,70,22,n.pc,'#e0b25e');egCat(n.x,EG.gy-20,n.col,9471+i*11,1);});
+  EGCATS.forEach((k,i)=>{egPillow(k.x,EG.gy,k.crown?96:76,k.crown?30:24,k.pc,'#e0b25e');egCat(k.x,EG.gy-(k.crown?28:22),k.col,9501+i*13,k.sleep,k.crown);});
+  egPillow(EG.big,EG.gy,230,56,'#b49ac7','#e0b25e');
+  if(people){
+    const pi=followers.findIndex(f=>f.kind==='cat');
+    followers.forEach((f,i)=>{if(i===pi&&T.nap>0){itemArt('cat',EG.big,EG.gy-54,9601,0,f);
+        x.fillStyle=INK;x.font='700 20px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
+        const z=(t*.6)%70;x.save();x.globalAlpha=1-z/70;x.fillText('z',EG.big+30+z*.3,EG.gy-110-z);x.restore();return;}
+      itemArt(f.kind,T.fol[i],EG.gy,9611+i*7,Math.abs(Math.sin(t*.18+i))*5,f);});
+    figure(T.gx,EG.gy,gabyO({face:T.face,walk:T.walk,turn:T.turnA,hat:P.hat}));}
+  x.restore();}
+function egCaption(txt){bubble(TW/2,58,txt,.95);}
+function egyptDraw(){
+  const T=TRIP,walk=T.ph==='walk',sc=walk?Math.min(innerWidth/640,innerHeight/TH):Math.min(innerWidth/TW,innerHeight/TH);
+  x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,innerWidth,innerHeight);
+  x.save();x.translate(innerWidth/2,innerHeight/2);x.scale(sc,sc);x.translate(-TW/2,-TH/2);
+  const ease=u=>{u=Math.max(0,Math.min(1,u));return u*u*(3-2*u);};
+  const vw=innerWidth/sc,camOf=gx=>Math.max(vw/2,Math.min(EG.w-vw/2,gx));
+  const clouds=(spd,alpha)=>{for(let i=0;i<9;i++){const cx=((i*170-T.t*spd)%1300+1300)%1300-200,cy=330+(i%3)*45;
+    x.save();x.globalAlpha=alpha;x.fillStyle=PAPER;[[0,0,46],[34,8,34],[-34,8,32]].forEach(([a,b,r])=>{x.beginPath();x.ellipse(cx+a,cy+b,r,r*.6,0,0,7);x.fill();});x.restore();
+    stroke(3);cloud(cx,cy,38,i*7);}};
+  if(T.ph==='out'){
+    if(T.t<170)tripTakeoff(T.t);
+    else if(T.t<430){                                   // over the clouds and the sea, while the sun comes up
+      const u=(T.t-170)/260;tripSky('#1b2340','#2d3657');x.save();x.globalAlpha=ease(u*1.4);
+      const g=x.createLinearGradient(0,0,0,TH);g.addColorStop(0,'#a9d4ea');g.addColorStop(1,'#fbe8c4');x.fillStyle=g;x.fillRect(-900,-400,TW+1800,TH+800);x.restore();
+      fcirc(760,520-ease(u)*400,40,9701,'#fdf0c4',4);
+      const bx=TW+100-Math.max(0,(u-.5)/.5)*(TW+400);
+      x.fillStyle='#7fb2cf';x.fillRect(-900,470,TW+1800,400);stroke(3,PAPER);
+      for(let i=0;i<14;i++){const wx=((i*90-T.t*3)%1300+1300)%1300-200;x.beginPath();x.moveTo(wx,500+(i%3)*20);x.quadraticCurveTo(wx+15,492+(i%3)*20,wx+30,500+(i%3)*20);x.stroke();}
+      x.fillStyle='#efd9a7';x.beginPath();x.moveTo(bx,470);x.quadraticCurveTo(bx-30,520,bx,900);x.lineTo(TW+900,900);x.lineTo(TW+900,470);x.closePath();x.fill();
+      stroke(4);x.beginPath();x.moveTo(bx,470);x.quadraticCurveTo(bx-30,520,bx,900);x.stroke();stroke(5);rline(-900,470,TW+900,470,9703,2);
+      clouds(4,.95);tripPlane(400,230+Math.sin(t*.06)*8,.85,0,1);
+      egCaption(u<.35?'over the clouds...':u<.7?'over the sea...':'is that... sand?');}
+    else{                                               // there they are: the pyramids
+      const u=(T.t-430)/220,e=ease(u);egScene(camOf(T.gx),false);
+      tripPlane(-120+(EG.plane-camOf(T.gx)+TW/2+120)*e,170+(EG.gy-24-170)*e,.95,.1*(1-e),1);
+      if(T.t<450){x.save();x.globalAlpha=1-(T.t-430)/20;x.fillStyle=PAPER;x.fillRect(-900,-400,TW+1800,TH+800);x.restore();}
+      egCaption('Egypt! look at the pyramids!');}}
+  else if(T.ph==='back'){
+    if(T.t<150){const e=ease(T.t/150),cx=camOf(EG.plane);egScene(cx,false);
+      tripPlane(EG.plane-cx+TW/2+e*700,EG.gy-24-e*380,.95,-.3*Math.min(1,T.t/30),1);egCaption('bye bye, Egypt!');}
+    else{const u=(T.t-150)/150;
+      const g=x.createLinearGradient(0,0,0,TH);g.addColorStop(0,'#a9d4ea');g.addColorStop(1,'#fbe8c4');x.fillStyle=g;x.fillRect(-900,-400,TW+1800,TH+800);
+      x.save();x.globalAlpha=ease(u);tripSky('#1b2340','#2d3657');tripStars(T.t*2);x.restore();
+      clouds(4,.9);tripPlane(400,230+Math.sin(t*.06)*8,.85,0,1);egCaption('home again!');}}
+  else{
+    const cx=camOf(T.gx),sx=wx=>wx-cx+TW/2;egScene(cx,true);
+    const pi=followers.findIndex(f=>f.kind==='cat');
+    T.says.forEach(s=>{let wx=T.gx,h=150;
+      if(s.who==='pickles'){wx=T.nap>0?EG.big:(pi>=0?T.fol[pi]:T.gx);h=T.nap>0?120:70;}
+      else if(s.who!=='gaby'){const k=EGCATS.find(q=>q.id===s.who);wx=k?k.x:T.gx;h=k&&k.crown?100:80;}
+      bubble(Math.max(150,Math.min(TW-150,sx(wx))),EG.gy-h,s.txt,Math.min(1,(190-s.t)/30),true);});
+    const pl=egPlan();if(pl)bubble(sx(T.gx),EG.gy-196+Math.sin(t*.12)*3,'★ '+pl.txt,.95,true);
+    if(T.t<360)egCaption('◀ ▶ walk around Egypt');}
   x.restore();}
 
 (function loop(){update();R?raceDraw():TRIP?tripDraw():draw();if(t%10===0){updatePals();updateBag();}requestAnimationFrame(loop);})();
