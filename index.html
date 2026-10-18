@@ -110,6 +110,8 @@
   #libgrid .bk{padding:6px;font-size:13px;position:relative;}
   #libgrid .bk canvas{width:100%;height:auto;display:block;}
   #libgrid .bk i{position:absolute;top:2px;right:4px;font-style:normal;font-size:18px;}
+  #libgrid .bk.myst{background:#ffe9a8;animation:wig 1.2s ease-in-out infinite;}
+  #libgrid .bk i.q{left:4px;right:auto;font-size:22px;}
   #read>div{max-width:620px;}
   #readpic{width:100%;max-width:500px;height:auto;aspect-ratio:8/5;display:block;margin:0 auto 6px;border:3px solid #2b2b2b;border-radius:16px;background:#fffdf4;}
   #readtxt{font-size:21px;line-height:1.4;min-height:88px;margin:6px 8px 10px;}
@@ -147,7 +149,7 @@
     <div data-x="700" data-y="900">The two houses</div>
     <div data-x="2040" data-y="900">The playhouse</div>
     <div data-x="4255" data-y="762">Inside the plane</div>
-    <div data-x="5655" data-y="1330">The secret lab</div>
+    <div data-x="10620" data-y="1330" id="maplab" style="display:none">The secret lab</div>
     <div data-x="6155" data-y="742">Bath &amp; games house</div>
     <div data-x="8115" data-y="790">The disco truck</div>
     <div data-x="11065" data-y="900">The shop &amp; the caf&eacute;</div>
@@ -336,7 +338,7 @@ const BR={x0:840,x1:1270,y:742};
 const PH={x0:1900,x1:2170,loft:790};
 const PLANE={x0:3605,x1:5435,top:470,bot:812,floor:762,ceil:520};
 const ROOMS=[3915,4055,4415,4755,5075];
-const LAB={x0:5315,x1:6055,floor:1330,ceil:1110,shaft:5605};
+const LAB={x0:10080,x1:11340,floor:1330,ceil:1080,shaft:10478};
 const BH={x0:5755,x1:6505,mid:742,top:582,bal:6695};
 const TR={x0:7655,x1:8815,floor:790,roof:520};
 const TRW=[7915,8215,8515];
@@ -400,8 +402,8 @@ const LADS=[
   {x:BOARD.lad,y0:BOARD.y,y1:GY,z:'pool',own:1}
 ];
 const SIGNS=[{x:1860,txt:'playhouse',a:1},{x:3565,txt:'plane',a:1},
-  {x:5535,txt:'lab',a:0},{x:5725,txt:'bath house',a:1},
-  {x:10452,txt:'town',a:1},{x:9825,txt:'playground',a:1},{x:2510,txt:'racing street',a:1},{x:6800,txt:'pool',a:1},{x:7350,txt:'disco truck',a:1}];
+  {x:5725,txt:'bath house',a:1},
+  {x:9825,txt:'playground',a:1},{x:2510,txt:'racing street',a:1},{x:6800,txt:'pool',a:1},{x:7350,txt:'disco truck',a:1}];
 
 const clouds=[],stars=[],blooms=[];
 for(let i=0;i<56;i++)clouds.push({x:rp(i*3)*10200-200,y:60+rp(i*3+1)*420,r:20+rp(i*3+2)*28,s:i*17});
@@ -418,14 +420,18 @@ const THINGS=[
   {id:'wave',x:1600,y:582,label:'wave back'},
   {id:'slide',x:1790,y:582,label:'take the slide'},
   {id:'night',x:7575,y:GY,label:'flip the lamp switch'},
-  {id:'fly',x:3755,y:PLANE.floor,label:'fly the plane',key:1,by:-120},
+  {id:'fly',x:3755,y:PLANE.floor,label:'fly the plane',key:1,by:-120,lbl:()=>flying?'land the plane':boltWith()?'fly Bolt home!':'fly the plane'},
   {id:'tea',x:4255,y:PLANE.floor,label:'sit down for tea'},
   {id:'nap',x:4585,y:PLANE.floor,label:'nap in the spotty room'},
   {id:'lamp',x:4805,y:PLANE.floor,label:'find the light switch'},
   {id:'balls',x:5255,y:PLANE.floor,label:'jump in the balls'},
   {id:'starfriend',x:5345,y:PLANE.floor,label:'wave at the star friend'},
-  {id:'goo',x:5485,y:LAB.floor,label:'stir the bubbly stuff'},
-  {id:'machine',x:5795,y:LAB.floor,label:'pull the big lever',key:1,by:-200},
+  {id:'goo',x:10650,y:LAB.floor,label:'stir the bubbly stuff'},
+  {id:'hatch',x:LAB.shaft,y:GY,label:'peek down the hole',key:1,by:-240,hidden:()=>!labOpen},
+  {id:'starmap',x:10895,y:LAB.floor,label:'look at the old map'},
+  {id:'rounddoor',x:11215,y:LAB.floor,label:'knock on the round door',key:1,by:-210,
+    lbl:()=>doorOpen?'look through the round door':boltWith()?'open the round door':'knock on the round door'},
+  {id:'machine',x:10300,y:LAB.floor,label:'pull the big lever',key:1,by:-200},
   {id:'fridge',x:5975,y:GY,label:'open the fridge'},
   {id:'bath',x:6055,y:BH.top,label:'get in the bath'},
   {id:'tv',x:6255,y:BH.mid,label:'play a game'},
@@ -470,7 +476,7 @@ const THINGS=[
   {id:'libdesk',x:20105,y:GY,label:'talk to Mrs. Hush',lbl:()=>BAG.some(o=>o.kind==='book')?'give my books back':'ask Mrs. Hush for a story'},
   {id:'readseat',x:READX,y:GY,label:'sit and read',key:1,by:-175}
 ];
-const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks'];
+const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots'];
 const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watered the plants',
   bridge:'crossed the bridge',wave:'waved hello',slide:'took the slide',night:'turned on the night',
   fly:'flew the plane',tea:'had a cup of tea',nap:'had a nap',lamp:'lit the dark room',
@@ -490,7 +496,8 @@ const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watere
   enterPool:'went to the pool',dive:'jumped off the diving board',hopin:'hopped in the pool',umbrella:'opened the umbrella',
   lounge:'lay on the lounge chair',icecream:'got a poolside ice cream',swim:'went swimming',sun:'tapped the sun',dressup:'changed my clothes',wardrobe:'opened my wardrobe',underwater:'swam under the water',
   enterLib:'went to the library',shelf:'looked at the books',libdesk:'talked to Mrs. Hush',readseat:'sat in the reading chair',
-  readbook:'read a whole book',checkout:'borrowed a book',returnbook:'gave my books back',allbooks:'read every library book'};
+  readbook:'read a whole book',hatch:'found a hole by the library',labfound:'found the secret lab',starmap:'looked at the old star map',
+  rounddoor:'opened the round door',space:'flew Bolt home to his planet',robots:'met every robot on the little planet',checkout:'borrowed a book',returnbook:'gave my books back',allbooks:'read every library book'};
 const FIND=THINGS.map(t=>t.id).filter(k=>k!=='exit'&&k!=='exitSchool'&&k!=='exitPool'&&k!=='exitLib').concat(EXTRA);
 const found={};FIND.forEach(k=>found[k]=false);
 
@@ -504,10 +511,10 @@ const MADE=['cake','apple','ice','pizza','ball','flower','balloon','starit','par
 const ITEMS=[
   {kind:'flower',x:980,y:GY},{kind:'flower',x:1160,y:GY},{kind:'flower',x:3595,y:GY},
   {kind:'cat',x:560,y:GY},{kind:'bunny',x:1695,y:582},{kind:'teddy',x:2110,y:PH.loft},
-  {kind:'robot',x:5655,y:LAB.floor},
+  {kind:'robot',x:11080,y:LAB.floor},
   {kind:'cap',x:3672,y:PLANE.floor},{kind:'cup',x:4380,y:PLANE.floor},
   {kind:'ball',x:5110,y:PLANE.floor},{kind:'ball',x:4700,y:PLANE.floor},
-  {kind:'beaker',x:5955,y:LAB.floor},{kind:'crown',x:5590,y:LAB.floor},
+  {kind:'beaker',x:10760,y:LAB.floor},{kind:'crown',x:10560,y:LAB.floor},
   {kind:'duck',x:6150,y:BH.top},{kind:'pad',x:6345,y:BH.mid},
   {kind:'party',x:8465,y:TR.floor},{kind:'apple',x:1330,y:GY},
   {kind:'balloon',x:11385,y:GY},{kind:'ball',x:9185,y:GY},
@@ -599,7 +606,7 @@ function itemArt(k,px,py,s,bob,it){
     case 'teddy':rcircPath(px,py-18-b,18,s,.95);x.fillStyle='#c9a07a';x.fill();x.stroke();
       rcircPath(px-13,py-35-b,9,s+5);x.fill();x.stroke();rcircPath(px+13,py-35-b,9,s+7);x.fill();x.stroke();
       fillCirc(px-6,py-20-b,3.4,s+9);fillCirc(px+6,py-20-b,3.4,s+11);rcirc(px,py-11-b,5,s+13);break;
-    case 'robot':x.fillStyle='#bcc8d0';x.beginPath();x.rect(px-21,py-50-b,42,50);x.fill();
+    case 'robot':x.fillStyle=(it&&it.col)||'#bcc8d0';x.beginPath();x.rect(px-21,py-50-b,42,50);x.fill();
       rrect(px-21,py-50-b,42,50,s,2);rline(px,py-50-b,px,py-68-b,s+7,2);fillCirc(px,py-74-b,7,s+9);
       fillCirc(px-9,py-35-b,4.4,s+11);fillCirc(px+9,py-35-b,4.4,s+13);
       rline(px-13,py-20-b,px+13,py-20-b,s+15,1.5);
@@ -666,7 +673,7 @@ NPC.push({id:'marina',name:'Marina',x:17820,y:POOL.surf,look:'bob',swimmer:1,hom
     story:'Pebble likes it best at the bottom of the pool. He says it is very quiet down there, apart from his own bubbles.'},
   {id:'hush',name:'Mrs. Hush',x:20235,y:GY-24,look:'bun',hair:'#d9d4cc',shirt:'#b49ac7',says:['shhh... hello!','books are a bit like magic','stamp, stamp!'],
     story:'Mrs. Hush knows where every single book lives. She says "shhh" a lot, but she laughs the loudest at the funny ones.'},
-  {id:'otto',name:'Otto',x:20625,y:GY,look:'spike',seat:1,desk:20625,reader:1,shirt:'#93b6c9',says:['shh, i am reading','this bit is so funny','have you read about Pickles?'],
+  {id:'otto',name:'Otto',x:20625,y:GY,look:'spike',seat:1,desk:20625,reader:1,shirt:'#93b6c9',says:['shh, i am reading','this bit is so funny','have you read How Our Town Grew? the end is so mysterious!'],
     story:'Otto reads one book every day. His favourite is about a cat who naps everywhere. He has read it eleven times.'});
 NPC.forEach((n,i)=>{n.shirt=n.shirt||SHIRTS[i%SHIRTS.length];n.skin=n.skin||SKINS[(i*3+1)%4];n.hair=n.hair||HAIRS[i%HAIRS.length];});
 /* friends you can meet who are not walking about */
@@ -677,7 +684,7 @@ const OTHERS=[
 const PETS={cat:{name:'Pickles',story:'Pickles naps in 47 different spots around town. She is still looking for spot number 48.'},
   bunny:{name:'Clover',story:'Clover hopped out of a clover patch one sunny morning. She still smells a little bit like grass.'},
   teddy:{name:'Mr. Button',story:'Mr. Button has one button eye and a very brave heart. He is not scared of the dark. Mostly.'},
-  robot:{name:'Bolt',story:'Bolt was built in the secret lab. He beeps twice when he is happy and three times when he wants a snack.'}};
+  robot:{name:'Bolt',story:'Bolt waited in the old lab for a very long time. He beeps twice when he is happy, and he misses his friends far, far away.'}};
 const SPROUT_NAMES=['Sprig','Bud','Pip','Leafy','Tulip','Bean','Fern','Poppy','Daisy','Clem','Tater','Petal'];
 const SPROUT_BITS=['It hums when the sun comes out.','It is scared of snails but loves ladybugs.',
   'It wants to be a tree when it grows up.','It sleeps standing up, like a flower does.','It thinks rain is the best thing ever.',
@@ -733,6 +740,7 @@ function beep(f,d,type,vol){tone(f,d||.1,type,vol);}
 function tune(list,gap,type){list.forEach((f,i)=>setTimeout(()=>tone(f,.13,type||'triangle',.05),i*(gap||110)));}
 /* ---- little 8-bit music loops (original chord patterns, nothing borrowed) ---- */
 const CHORDS={
+  space:[[262,330,392],[220,277,330],[175,220,262],[196,247,294]],
   race:[[262,330,392],[220,262,330],[175,220,262],[196,247,294]],
   disco:[[262,311,392],[233,294,349],[208,247,311],[196,247,294]]};
 let musTimer=null,musName=null,musStep=0;
@@ -740,7 +748,7 @@ function startMusic(name){
   if(musName===name)return;
   stopMusic();if(!CHORDS[name])return;
   musName=name;musStep=0;
-  const ch=CHORDS[name],iv=name==='race'?112:148,ARP=[0,1,2,1,0,2,1,2];
+  const ch=CHORDS[name],iv=name==='race'?112:name==='space'?230:148,ARP=[0,1,2,1,0,2,1,2];
   const step=()=>{
     const c=ch[((musStep/8)|0)%ch.length];
     tone(c[ARP[musStep%8]]*2,.085,'square',.022);
@@ -826,7 +834,7 @@ function bagGive(it,px,py){                     // something new arrives straigh
 let bagSig='',itmOpen=null;
 function updateBag(){
   const el=document.getElementById('bag');
-  el.style.display=(R||!started)?'none':'flex';
+  el.style.display=(R||TRIP||!started)?'none':'flex';
   const sig=BAG.map(o=>o.kind+(o.flavor||'')+(o.bk!=null?'#'+o.bk:'')).join(',')+'|'+wishKinds().join(',');if(sig===bagSig)return;bagSig=sig;
   el.innerHTML='<div class="lbl">🎒 '+BAG.length+'/'+BAGMAX+'</div>';
   const want=wishKinds();
@@ -876,7 +884,7 @@ function portrait(cv,who){                     // draw anyone into a little roun
   }finally{x=X0;}}
 function friendList(){
   const list=[];
-  NPC.concat(OTHERS).forEach(n=>list.push({id:n.id,name:n.name,story:n.story,who:n}));
+  NPC.concat(OTHERS).forEach(n=>list.push({id:n.id,name:n.name,story:n.story,who:n.robo?{item:{kind:'robot',col:n.robo}}:n}));
   Object.keys(PETS).forEach(k=>{const it=ITEMS.find(o=>o.kind===k)||{kind:k};
     list.push({id:k,name:PETS[k].name,story:PETS[k].story,who:{item:it}});});
   ITEMS.filter(o=>o.kind==='sprout').forEach(o=>list.push({id:o.sid,name:o.name,story:o.story,who:{item:o}}));
@@ -905,7 +913,7 @@ document.querySelectorAll('.tabs span').forEach(sp=>sp.addEventListener('click',
 let palSig='',palOpen=null;
 function updatePals(){
   const el=document.getElementById('pals');
-  el.style.display=(R||!started)?'none':'flex';document.getElementById('top').style.display=R?'none':'flex';
+  el.style.display=(R||TRIP||!started)?'none':'flex';document.getElementById('top').style.display=(R||TRIP)?'none':'flex';
   document.body.classList.toggle('playing',started);
   const sig=followers.map(f=>f.sid||f.kind).join(',');if(sig===palSig)return;palSig=sig;
   el.innerHTML='';
@@ -955,6 +963,7 @@ function nearThing(){
   for(const th of THINGS){
     if(!inScope(th.x))continue;
     if(!flying&&th.id==='starfriend')continue;
+    if(th.hidden&&th.hidden())continue;
     const d=reach(th.x,th.y);if(d<bd){bd=d;best=th;}}
   return best;}
 function nearItem(skipHeld){
@@ -1047,7 +1056,9 @@ function doAct(){
   if(plan.k==='pet'){const it=ITEMS[plan.i],j=followers.indexOf(it);
     if(j>=0){followers.splice(j,1);say(it.x,it.y-50,'ok, waiting');beep(380,.12,'sine');}
     else{followers.push(it);puff(it.x,it.y-30,6,'heart');meet(it.kind);
-      say(it.x,it.y-50,(it.kind==='robot'?'beep! ':'')+"i'm "+PETS[it.kind].name+'!');mark(it.kind);tune([540,700],90,'sine');
+      say(it.x,it.y-50,(it.kind==='robot'?'beep! ':'')+"i'm "+PETS[it.kind].name+'!');
+      if(it.kind==='robot'&&!boltAsked){boltAsked=true;tune([392,523],200,'sine');
+        setTimeout(()=>say(it.x,it.y-50,'do you know the way to the plane?'),1600);}mark(it.kind);tune([540,700],90,'sine');
       if(followers.length>=4)mark('parade');}
     return;}
   if(plan.k==='hello'){const n=plan.np;
@@ -1093,6 +1104,15 @@ function doThing(th){
       else{const all=BOOKS.map((b,i)=>i),un=all.filter(i=>!readDone[i]),pick=un.length?un:all,i=pick[(Math.random()*pick.length)|0];
         say(h.x,h.y-150,'ooh, try this one!');tone(660,.1,'sine',.04);setTimeout(()=>openReader(i),800);}
       break;}
+    case 'hatch':say(P.x,P.y-130,'it goes down, down, down... ▼ to climb!');puff(LAB.shaft,GY-20,10,'crumb');tone(300,.3,'sine',.03);break;
+    case 'starmap':say(P.x,P.y-130,'an old map of the stars! one little planet has a circle on it');tone(880,.1,'triangle',.04);
+      {const b=boltF();if(b)setTimeout(()=>say(b.x,b.y-70,'beep! that one is home!'),1500);}break;
+    case 'rounddoor':{const b=boltF();
+      if(doorOpen){say(P.x,P.y-130,"it's a picture of Bolt's home, way up in the sky");if(b)setTimeout(()=>say(b.x,b.y-70,'the plane knows the way!'),1400);return;}
+      if(!b){say(P.x,P.y-130,"it's locked. the keyhole is shaped like a little robot!");tone(200,.15,'square',.03);return;}
+      doorOpen=1;slide(200,500,1.2,'triangle',.04);say(b.x,b.y-70,'beep beep! my door!');
+      setTimeout(()=>say(b.x,b.y-70,'look, that is my home! the plane knows the way there.'),2200);
+      setTimeout(()=>say(P.x,P.y-130,'the plane? it is right by my house!'),4800);break;}
     case 'icecream':spawn('ice',P.x-70,GY);say(P.x,P.y-120,'one ice cream!');tune([660,880,990],90);break;
     case 'wardrobe':openWardrobe();say(P.x,P.y-120,'what shall i wear?');tune([523,659,784],90,'triangle');break;
     case 'fire':fire=!fire;say(P.x,P.y-110,fire?'cosy':'psss');beep(fire?300:160,.2,'sawtooth');break;
@@ -1103,7 +1123,8 @@ function doThing(th){
     case 'slide':P.slide=0;beep(700,.5,'sine');break;
     case 'night':night=!night;say(P.x,P.y-110,night?'good night':'good morning');
       puff(P.x,P.y-100,8);tune(night?[520,400,300]:[300,400,520],120,'sine');break;
-    case 'fly':flying=!flying;say(P.x,P.y-120,flying?'up we go':'landed');puff(P.x,P.y-70,10);
+    case 'fly':if(!flying&&boltWith()){startTrip();break;}
+      flying=!flying;say(P.x,P.y-120,flying?'up we go':'landed');puff(P.x,P.y-70,10);
       beep(flying?260:520,.35,'sawtooth');break;
     case 'tea':P.sit=260;say(P.x,P.y-130,'one cup of tea');beep(900,.1,'triangle');break;
     case 'nap':P.nap=190;beep(200,.4,'sine');break;
@@ -1229,6 +1250,8 @@ function stepNPCs(){
 function update(){
   t++;
   if(R){raceUpdate();return;}
+  labTick();
+  if(TRIP){tripUpdate();return;}
   if(disco&&Math.abs(P.x-8215)<1100&&!flying)startMusic('disco');
   else if(musName==='disco')stopMusic();
   if(P.water>0)P.water--;
@@ -1349,10 +1372,12 @@ function update(){
     if((key.left||key.right)&&P.ground&&t%13===0)tone(78+((t*7)%26),.035,'triangle',.014);
     if(flying)P.x=Math.max(PLANE.x0+50,Math.min(PLANE.x1-80,P.x));
     else if(inZone()){const z=curZone();P.x=Math.max(z.x0+40,Math.min(z.x1-40,P.x));}
+    else if(P.y>GY+60)P.x=Math.max(LAB.x0+40,Math.min(LAB.x1-40,P.x));
     else P.x=Math.max(20,Math.min(W.w-40,P.x));
     let climbed=false;
     for(const L of LADS){
       if(flying&&(L.z==='board'||L.z==='shaft'))continue;
+      if(L.z==='shaft'&&!labOpen)continue;
       if(!inScope(L.x))continue;
       if(Math.abs(P.x-L.x)>34)continue;
       if(upEdge&&Math.abs(P.y-L.y1)<12){P.climb=L;P.climbT=0;P.y=L.y1-1;climbed=true;break;}
@@ -1504,7 +1529,7 @@ function drawPlayhouse(){
   stroke(5.5);
   fbox(2080,GY-52,50,52,1341,'#c98a9b');flower(2105,GY-26,13,1351);
   wave(PH.x0+10,PH.x1-10,GY-176,1371);}
-function drawLab(cam){
+function drawLabOld(cam){
   if(cam.y+VH/2<GY)return;
   x.fillStyle='#e4e0ee';x.fillRect(LAB.shaft-36,GY,72,LAB.floor-GY+4);
   x.fillRect(LAB.x0,LAB.ceil,LAB.x1-LAB.x0,LAB.floor-LAB.ceil+4);
@@ -1790,7 +1815,7 @@ function drawCar(){
 function drawLadders(){
   stroke(7);
   for(const L of LADS){
-    if(L.z==='board')continue;
+    if(L.z==='board'||(L.z==='shaft'&&!labOpen))continue;
     rline(L.x-19,L.y0,L.x-19,L.y1,L.x+L.y0,2);rline(L.x+19,L.y0,L.x+19,L.y1,L.x+L.y0+5,2);
     for(let y=L.y0+16;y<L.y1;y+=26)rline(L.x-19,y,L.x+19,y,L.x+y,2);}}
 function drawPlane(){
@@ -2796,6 +2821,7 @@ function draw(){
   x.setTransform(DPR,0,0,DPR,0,0);x.fillStyle=dark()?'#1b2340':'#e3eef8';x.fillRect(0,0,innerWidth,innerHeight);
   x.save();
   x.translate(innerWidth/2,innerHeight/2);x.scale(scale,scale);x.rotate(tilt);x.translate(-cam.x,-cam.y);
+  if(labRumble>0)x.translate((Math.random()-.5)*Math.min(14,labRumble*.15),(Math.random()-.5)*Math.min(8,labRumble*.08));
 
   if(inZone()){const zid=curZone().id;zid==='burger'?drawBurgerInside(cam):zid==='pool'?drawPool(cam):zid==='library'?drawLibraryInside(cam):drawClassroom(cam);if(zid!=='pool')sunBehind();}
   else{
@@ -2856,7 +2882,7 @@ function draw(){
     else star(b.x,b.y,7,b.s);
     x.restore();}
   if(started&&!CAR.driving){const near=actPlan();
-    for(const th of THINGS){if(!th.key||found[th.id]||!inScope(th.x))continue;
+    for(const th of THINGS){if(!th.key||found[th.id]||!inScope(th.x)||(th.hidden&&th.hidden()))continue;
       if(flying&&th.id!=='fly')continue;
       if(th.x<cam.x-VW/2-60||th.x>cam.x+VW/2+60)continue;
       if(near&&near.th===th)continue;
@@ -3031,6 +3057,16 @@ const BOOKS=[
        [40,95,170,230,300,355,430].forEach((fx,i)=>{stroke(4);rline(fx,250,fx,224-(i%3)*8,fx,1);flower(fx,216-(i%3)*8,8,fx+3);});}},
     {txt:'Then somebody built a little house. Then another one, with a bridge in the middle so the neighbours could visit. And a playhouse, just for playing!',
      pic:()=>vig(110,2220,[drawHouse1,drawHouse2,drawBridge,drawPlayhouse,drawLadders])},
+    {txt:'When they dug a garden, they found a little round hatch. Under it was a lab that nobody had built. It hummed quietly, as if it had always been there. They tiptoed back up, closed the hatch, and planted flowers on top. Soon everybody forgot.',
+     pic:()=>{pgSky();pgSun(410,50);x.fillStyle='#c9b49a';x.fillRect(0,120,480,180);x.fillStyle='#cbdab4';x.fillRect(0,118,480,10);stroke(5);rline(0,120,480,120,201,2);
+       [[60,'#f2ddd2','#d49a86'],[150,'#dfe8d3','#9fb0c8']].forEach(([hx,w,r],i)=>{x.fillStyle=w;x.fillRect(hx,72,60,48);stroke(4);x.strokeRect(hx,72,60,48);
+         x.fillStyle=r;x.beginPath();x.moveTo(hx-8,72);x.lineTo(hx+30,44);x.lineTo(hx+68,72);x.closePath();x.fill();x.stroke();});
+       stroke(4);rline(270,120,282,82,203,1);x.fillStyle='#9fb0c8';x.fillRect(274,104,16,14);
+       for(let i=0;i<14;i++)fillCirc(rp(i*3+1)*480,140+rp(i*3+2)*150,3+rp(i)*3,210+i,'#a8957c');
+       x.fillStyle='#3d3a46';x.fillRect(300,120,30,80);
+       x.save();x.globalAlpha=.3;x.fillStyle='#f7d682';x.beginPath();x.ellipse(300,240,160,46,0,0,7);x.fill();x.restore();
+       x.fillStyle='#e4dcc8';x.beginPath();x.ellipse(300,240,140,36,0,0,7);x.fill();stroke(4);x.stroke();
+       roundDoor(400,236,18,0,221);pgWord('?',230,255,40);glyphs(250,212,5,223);}},
     {txt:'Then the airport came! A big plane landed in the field, and it liked it so much that it stayed. Now it is a house you can fly.',
      pic:()=>vig(3470,5530,[drawPlane])},
     {txt:'Next, the disco truck rolled into town with its lights and its music. Everybody started dancing!',
@@ -3044,8 +3080,14 @@ const BOOKS=[
      pic:()=>vig(2880,3660,[drawBurgerFacade])},
     {txt:'Then the pool, for splashing on hot sunny days.',
      pic:()=>vig(6700,7450,[drawPoolGate])},
-    {txt:'And last of all came the library, where this book lives. The town is still growing. What do you think will come next? The end.',
-     pic:()=>vig(10250,11320,[drawLibraryFacade,drawTown])}]},
+    {txt:'And then came the library, where this book lives. The town is still growing. What do you think will come next?',
+     pic:()=>vig(10250,11320,[drawLibraryFacade,drawTown])},
+    {txt:'But deep, deep under the ground, in the old lab nobody remembers, someone is still waiting for a visitor. The end.',
+     pic:()=>{x.fillStyle='#2a2836';x.fillRect(0,0,480,300);x.save();x.globalAlpha=.2;x.fillStyle='#f7d682';x.beginPath();x.moveTo(232,40);
+       x.lineTo(150,250);x.lineTo(330,250);x.lineTo(248,40);x.fill();x.restore();stroke(3,'#8a8478');rline(240,0,240,30,231,0);fcirc(240,38,8,233,'#fdf0c4',3);
+       x.fillStyle='#4a4658';x.fillRect(0,250,480,50);stroke(5);rline(0,250,480,250,235,2);
+       roundDoor(380,185,62,0,237);pgPet('robot',240,250,1.6);pgWord('beep...?',120,130,24,'#f3ecd8');
+       x.save();x.globalAlpha=.6;for(let i=0;i<10;i++)fillCirc(150+rp(i*7)*200,60+rp(i*7+2)*170,1.6,240+i,'#f3ecd8');x.restore();}}]},
   {title:'Pickles Naps Everywhere',col:'#e0c49a',pages:[
     {txt:'Pickles is a cat who loves naps. Big naps, little naps, and naps in between naps.',
      pic:()=>{pgSky();pgFloor();x.fillStyle=ROSE;x.beginPath();x.ellipse(240,250,96,16,0,0,7);x.fill();stroke(5);x.stroke();
@@ -3090,19 +3132,27 @@ const BOOKS=[
     {txt:'It was only Pickles! They laughed and laughed, and then they had a nap together. The end.',
      pic:()=>{pgSky(1);pgFloor('#b9ae99');pgPet('teddy',200,250,1.9);pgPet('cat',300,250,1.9);zzz(330,120,'#f3ecd8');}}]},
   {title:'Bolt Says Beep',col:'#bcc8d0',pages:[
-    {txt:'Deep under the ground, in the secret lab, somebody pulled the big lever.',
+    {txt:'Deep under the street there is an old lab that nobody remembers building. And in the lab, by a round door, sits a little robot.',
+     pic:()=>{x.fillStyle='#2a2836';x.fillRect(0,0,480,300);x.fillStyle='#4a4658';x.fillRect(0,250,480,50);stroke(5);rline(0,250,480,250,251,2);
+       roundDoor(370,180,64,0,253);pgPet('robot',230,250,1.7);stroke(3,'#8a8478');rline(230,0,230,30,255,0);fcirc(230,38,8,257,'#fdf0c4',3);}},
+    {txt:'His name is Bolt. He has been waiting there for a long, long time. Beep... beep... is anybody there?',
+     pic:()=>{x.fillStyle='#2a2836';x.fillRect(0,0,480,300);x.fillStyle='#4a4658';x.fillRect(0,250,480,50);stroke(5);rline(0,250,480,250,261,2);
+       pgPet('robot',240,250,2);pgWord('beep...',120,110,26,'#f3ecd8');pgWord('beep...?',370,80,22,'#f3ecd8');}},
+    {txt:'Somebody once pulled the big lever in that lab, and things came out: cakes, balloons, a crown! Bolt thinks it was built to give presents to visitors.',
      pic:()=>{x.fillStyle='#e4e0ee';x.fillRect(0,0,480,300);pgFloor('#c9c3d9');machine(220,250,0);
        stroke(6);rline(312,170,370,110,81,1);fcirc(374,104,14,83,TOMATO,5);stroke(4);
        x.beginPath();x.arc(340,140,48,-Math.PI*.7,-Math.PI*.25);x.stroke();pgWord('pull!',420,80,24);}},
-    {txt:'Something was happening inside the machine. BLOOP! FIZZ! CLANK!',
+    {txt:'BLOOP! FIZZ! CLANK! But no visitors ever came down the ladder. Until...',
      pic:()=>{x.fillStyle='#e4e0ee';x.fillRect(0,0,480,300);pgFloor('#c9c3d9');machine(240,250,1);
        stroke(4);for(let i=0;i<6;i++)rcirc(150+i*36,70+((i*29+t)%50),8+(i%3)*3,91+i);
        pgWord('BLOOP!',90,70,34,'#7f9fbf');pgWord('FIZZ!',390,60,34,'#5e8a52');pgWord('CLANK!',400,150,30,ACCENT);}},
-    {txt:'Out stepped a little robot! He beeped two times. Beep beep! That means: I am happy.',
+    {txt:'...one day, somebody did! Bolt beeped two times. Beep beep! That means: I am so happy.',
      pic:()=>{x.fillStyle='#e4e0ee';x.fillRect(0,0,480,300);pgFloor('#c9c3d9');pgPet('robot',240,250,2.2);
        pgWord('beep beep!',380,110,26);hearts([[110,110,12],[140,160,8]]);}},
-    {txt:'Then he beeped three times. Beep beep beep! That means: is there a snack? (There is always a snack.) The end.',
-     pic:()=>{pgSky();pgFloor();pgPet('robot',170,250,2);pgPet('pizza',320,250,1.6);pgPet('apple',400,250,1.6);pgWord('beep beep beep?',250,60,26);}}]},
+    {txt:'Then he beeped three times. Beep beep beep! That means: is there a snack? (There is always a snack.)',
+     pic:()=>{pgSky();pgFloor();pgPet('robot',170,250,2);pgPet('pizza',320,250,1.6);pgPet('apple',400,250,1.6);pgWord('beep beep beep?',250,60,26);}},
+    {txt:'Bolt has a secret. Far, far away, past the moon, there is a little planet full of robots just like him. The end... for now.',
+     pic:()=>{pgSky(1);moon(80,70,26);twinkleStar(400,60,14);robotPlanet(240,400,190,1);}}]},
   {title:'Where Sprout Friends Come From',col:'#8fb3a0',pages:[
     {txt:'If you water a flower very, very kindly...',
      pic:()=>{pgSky();pgFloor('#cbdab4');stroke(5);rline(280,250,280,170,101,2);flower(280,150,20,103);
@@ -3144,6 +3194,7 @@ function openShelf(){
   const g=document.getElementById('libgrid');g.innerHTML='';
   BOOKS.forEach((b,i)=>{const d=document.createElement('div');d.className='bk';
     const cv=document.createElement('canvas');cv.width=240;cv.height=300;drawCover(cv,i);d.appendChild(cv);
+    if(i===0&&!labOpen){d.classList.add('myst');const q=document.createElement('i');q.className='q';q.textContent='❓';d.appendChild(q);}
     if(readDone[i]||hasBook(i)){const m=document.createElement('i');m.textContent=(readDone[i]?'⭐':'')+(hasBook(i)?'🎒':'');d.appendChild(m);}
     d.addEventListener('click',e=>{e.stopPropagation();shut('lib');openReader(i);});g.appendChild(d);});
   document.getElementById('lib').style.display='flex';started=true;}
@@ -3158,6 +3209,7 @@ function showPage(){
   document.getElementById('readnum').textContent=(RD.pg+1)+' / '+b.pages.length;
   document.getElementById('readprev').classList.toggle('off',RD.pg===0);
   document.getElementById('readnext').classList.toggle('off',last);
+  if(last&&RD.bk===0&&!labOpen)pendingUnlock=true;
   if(last&&!readDone[RD.bk]){readDone[RD.bk]=true;mark('readbook');tune([523,659,784],90,'triangle');
     if(BOOKS.every((q,k)=>readDone[k]))mark('allbooks');}
   const row=document.getElementById('readbtns'),note=document.getElementById('readnote');row.innerHTML='';note.textContent='';
@@ -3173,5 +3225,299 @@ function borrow(i){
 document.getElementById('readprev').addEventListener('click',e=>{e.stopPropagation();turnPage(-1);});
 document.getElementById('readnext').addEventListener('click',e=>{e.stopPropagation();turnPage(1);});
 
-(function loop(){update();R?raceDraw():draw();if(t%10===0){updatePals();updateBag();}requestAnimationFrame(loop);})();
+/* ======================= the secret lab ======================= */
+/* it was always there. the first people to build houses found it, closed the hatch and forgot.
+   reading "How Our Town Grew" to the end wakes it up again. */
+let labOpen=false,pendingUnlock=false,labRumble=0,doorOpen=0,doorA=0,boltAsked=false,boltPlaneSaid=false;
+const LAMPS=[10240,10620,10940,11240],labLit=[0,0,0,0],labDark=[1,1,1,1];
+const boltWith=()=>followers.some(f=>f.kind==='robot');
+const boltF=()=>followers.find(f=>f.kind==='robot');
+function unlockLab(){
+  labOpen=true;labRumble=150;
+  [0,300,650,1000].forEach((d,i)=>setTimeout(()=>{tone(55+i*6,.5,'sawtooth',.035);crunch(.4,.05);},d));
+  say(P.x,P.y-130,'whoa! what was that rumble?');
+  const h=NPC.find(n=>n.id==='hush');
+  setTimeout(()=>{if(inLib()&&h){h.waveT=90;say(h.x,h.y-150,'goodness! it came from outside...');}
+    else say(P.x,P.y-130,'it came from over by the library!');},1700);
+  setTimeout(()=>{if(inLib())say(P.x,P.y-130,"let's go and look outside!");},3400);}
+function labTick(){
+  if(labRumble>0){labRumble--;if(inLib()&&t%4===0)bits.push({x:P.x+(Math.random()-.5)*700,y:ZL.ceil+8,vx:0,vy:0,t:0,kind:'crumb',s:(Math.random()*999)|0});}
+  if(pendingUnlock&&document.getElementById('read').style.display!=='flex'){pendingUnlock=false;unlockLab();}
+  if(!labOpen)return;
+  if(!found.hatch&&t%24===0)puff(LAB.shaft+(Math.random()-.5)*50,GY-6,1,'crumb');
+  doorA+=(doorOpen-doorA)*.05;
+  LAMPS.forEach((lx,i)=>{if(!labLit[i]&&P.y>GY+60&&Math.abs(P.x-lx)<260){labLit[i]=1;tone(620+i*90,.12,'sine',.03);tone(930+i*90,.1,'sine',.02,.08);}
+    labDark[i]+=((labLit[i]?0:1)-labDark[i])*.04;});
+  if(!found.labfound&&P.y>=LAB.floor-3&&!P.climb){mark('labfound');document.getElementById('maplab').style.display='';
+    say(P.x,P.y-130,'a secret lab! who made all this?');tune([392,494,587,784],150,'sine');}
+  const b=boltF();
+  if(b&&!boltPlaneSaid&&!flying&&Math.abs(P.y-PLANE.floor)<3&&P.x>PLANE.x0&&P.x<PLANE.x1){boltPlaneSaid=true;
+    say(b.x,b.y-70,'the plane! now i can finally visit home!');tune([523,659,784,1046],110,'sine');
+    setTimeout(()=>say(P.x,P.y-150,"let's go to the front and fly it!"),2200);}}
+function glyphs(gx,gy,n,seed){stroke(2.5,'rgba(43,43,43,.55)');       // robot writing nobody can read
+  for(let i=0;i<n;i++){const k=(rp(seed+i)*4)|0,cx=gx+i*14;
+    if(k===0){x.beginPath();x.arc(cx,gy,4,0,7);x.stroke();}
+    else if(k===1){rline(cx-4,gy-5,cx+4,gy+5,seed+i,0);rline(cx-4,gy+5,cx+4,gy-5,seed+i+1,0);}
+    else if(k===2){rline(cx,gy-6,cx,gy+6,seed+i,0);fillCirc(cx+4,gy-4,1.8,seed,'rgba(43,43,43,.55)');}
+    else{x.beginPath();x.arc(cx,gy+2,5,Math.PI,0);x.stroke();}}}
+function roundDoor(cx,cy,r,a,seed){             // a = how far it has rolled open
+  x.fillStyle='#2d3657';x.beginPath();x.arc(cx,cy,r,0,7);x.fill();
+  if(a>.05){x.save();x.beginPath();x.arc(cx,cy,r-2,0,7);x.clip();             // the picture behind it
+    x.fillStyle='#2d3657';x.fillRect(cx-r,cy-r,r*2,r*2);stroke(2.5,'#f3ecd8');
+    for(let i=0;i<8;i++)fillCirc(cx-r+10+rp(seed+i)*(r*2-20),cy-r+10+rp(seed+i+9)*(r*2-20),1.6,seed+i,'#f3ecd8');
+    homePlanet(cx-r*.55,cy+r*.35,r*.3);robotPlanet(cx+r*.5,cy-r*.3,r*.28,0);
+    x.setLineDash([5,6]);stroke(2.5,'#f3d36b');x.beginPath();x.moveTo(cx-r*.4,cy+r*.1);
+    x.quadraticCurveTo(cx,cy-r*.75,cx+r*.3,cy-r*.3);x.stroke();x.setLineDash([]);
+    tripPlane(cx-r*.05,cy-r*.32,.2,-.4,0);x.restore();}
+  x.save();x.translate(cx-a*r*2.05,cy);x.rotate(-a*Math.PI*2);
+  x.fillStyle='#9fb0c8';x.beginPath();x.arc(0,0,r,0,7);x.fill();stroke(6);x.stroke();
+  stroke(3);x.beginPath();x.arc(0,0,r*.72,0,7);x.stroke();
+  for(let i=0;i<8;i++){const q=i/8*Math.PI*2;fcirc(Math.cos(q)*r*.86,Math.sin(q)*r*.86,4,seed+i,'#d9d4cc',2.5);}
+  x.fillStyle='#2b2b2b';x.fillRect(-7,-14,14,12);x.fillRect(-9,-1,18,17);         // a robot-shaped keyhole
+  x.restore();
+  stroke(7);x.beginPath();x.arc(cx,cy,r+3,0,7);x.stroke();}
+function drawLab(cam){
+  const L=LAB,S=L.shaft;
+  if(!labOpen){stroke(3,'rgba(43,43,43,.35)');rline(S-30,GY+12,S-6,GY+20,7001,1);rline(S-6,GY+20,S+20,GY+14,7003,1);return;}  // just a crack
+  /* the hole on the street: rocks, a damp old sign with a question mark */
+  x.fillStyle='#3d3a46';x.fillRect(S-36,GY+2,72,L.ceil-GY);
+  stroke(5);rline(S-36,GY+2,S-36,L.ceil,7005,2);rline(S+36,GY+2,S+36,L.ceil,7007,2);
+  [-46,-30,30,46].forEach((o,i)=>fcirc(S+o,GY+2,9+(i%2)*3,7011+i,'#a9a294',4));
+  stroke(6,'#7a5f44');rline(S-72,GY,S-80,GY-118,7015,2);
+  x.save();x.translate(S-82,GY-142);x.rotate(-.13);
+  fbox(-46,-30,92,58,7017,'#b89b74',5);x.fillStyle='#7fa06a';
+  [[-40,-28,9],[-30,-30,7],[34,22,8],[40,14,6]].forEach(([a,b2,r])=>{x.beginPath();x.arc(a,b2,r,0,7);x.fill();});
+  x.fillStyle=INK;x.textAlign='center';x.font='700 40px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
+  x.fillText('?',-12,16);stroke(5);rline(20,-16,20,12,7019,1);rline(10,2,20,14,7021,0);rline(30,2,20,14,7023,0);
+  x.restore();
+  x.fillStyle='#d9a27a';x.beginPath();x.ellipse(S-104,GY-6,8,6,0,0,7);x.fill();stroke(3);x.stroke();
+  stroke(3);rline(S-104,GY-6,S-104,GY,7025,0);
+  if(cam.y+VH/2<GY+40)return;
+  /* the old room */
+  x.fillStyle='#d6d0c0';x.fillRect(L.x0,L.ceil,L.x1-L.x0,L.floor-L.ceil+4);
+  stroke(2.5,'rgba(43,43,43,.12)');
+  for(let r=0,yy=L.ceil+40;yy<L.floor;yy+=40,r++){rline(L.x0,yy,L.x1,yy,7031+r,1);
+    for(let bx=L.x0+(r%2)*60;bx<L.x1;bx+=120)rline(bx,yy-40,bx,yy,7033+bx+r,0);}
+  x.save();x.globalAlpha=.14;[[10200,1150,60],[10560,1300,80],[10860,1140,50],[11160,1290,70],[10380,1260,40]].forEach(([a,b2,r],i)=>{
+    x.fillStyle=i%2?'#5e8a52':'#6a5a4a';x.beginPath();x.ellipse(a,b2,r,r*.6,0,0,7);x.fill();});x.restore();
+  x.fillStyle='#3d3a46';x.fillRect(S-36,L.ceil-2,72,8);
+  /* roots hanging from the ceiling, and drips */
+  stroke(4,'#8a6a4a');[10130,10330,10700,11010,11300].forEach((rx,i)=>{x.beginPath();x.moveTo(rx,L.ceil);
+    x.quadraticCurveTo(rx+12,L.ceil+30,rx-4,L.ceil+50+i%3*14);x.stroke();});
+  [10300,10760,11120].forEach((dx,i)=>{const yy=L.ceil+((t*2.2+i*90)%(L.floor-L.ceil));
+    fillCirc(dx,yy,3.5,7041+i,'#7fb8d6');x.save();x.globalAlpha=.5;x.fillStyle='#9fc3d3';
+    x.beginPath();x.ellipse(dx,L.floor+2,26,4,0,0,7);x.fill();x.restore();});
+  /* the dispensing machine, a bit rusty */
+  fbox(10140,L.floor-170,180,170,7051,'#bcc8d0');
+  for(let i=0;i<4;i++)fcirc(10168+i*42,L.floor-134,13,7053+i,[TOMATO,MUSTARD,SAGE,SKY][i]);
+  fbox(10160,L.floor-98,140,60,7057,'#e4f0ea');stroke(5,'#5e8a52');
+  for(let i=0;i<9;i++)rline(10172+i*15,L.floor-46-Math.abs(Math.sin(t*.06+i))*30,10172+i*15,L.floor-44,7059+i,2);
+  x.save();x.globalAlpha=.35;x.fillStyle='#c97a4a';x.beginPath();x.ellipse(10300,L.floor-150,12,8,0,0,7);x.ellipse(10150,L.floor-30,10,7,0,0,7);x.fill();x.restore();
+  stroke(5.5);rline(10322,L.floor-80,10352,L.floor-112,7061,2);fcirc(10354,L.floor-116,10,7063,TOMATO);
+  glyphs(10170,L.floor-186,9,7065);
+  fbox(10090,L.floor-50,44,50,7067,'#c49a74',4);
+  /* bubbling beakers */
+  for(let i=0;i<3;i++){const bx=10600+i*44;stroke(5);
+    rline(bx-12,L.floor-46,bx-9,L.floor,7071+i*7,2);rline(bx+12,L.floor-46,bx+9,L.floor,7073+i*7,2);rline(bx-9,L.floor,bx+9,L.floor,7075+i*7,2);
+    x.fillStyle=['#8fbf72','#c98a9b','#93b6c9'][i];x.fillRect(bx-10,L.floor-22,20,22);
+    rcirc(bx+(i-1)*4,L.floor-58-((t*1.6+i*30)%40),6,7077+i*13);}
+  glyphs(10590,L.floor-100,7,7081);
+  /* the old star map: one little planet has a circle round it */
+  fbox(10810,L.ceil+44,170,118,7091,'#2d3657',6);
+  for(let i=0;i<16;i++)fillCirc(10822+rp(7093+i)*146,L.ceil+56+rp(7095+i)*94,1.8,7097+i,'#f3ecd8');
+  homePlanet(10840,L.ceil+136,12);x.setLineDash([5,6]);stroke(2.5,'#f3d36b');x.beginPath();x.moveTo(10852,L.ceil+128);
+  x.quadraticCurveTo(10900,L.ceil+70,10944,L.ceil+90);x.stroke();x.setLineDash([]);
+  fcirc(10950,L.ceil+92,9,7099,'#c9b8e0',2.5);stroke(3,ACCENT);x.beginPath();x.arc(10950,L.ceil+92,17+Math.sin(t*.08)*2,0,7);x.stroke();
+  glyphs(10830,L.ceil+182,8,7101);
+  /* Bolt's little waiting mat, and the round door */
+  x.fillStyle='#c98a9b';x.beginPath();x.ellipse(11080,L.floor+2,40,6,0,0,7);x.fill();stroke(3);x.stroke();
+  roundDoor(11240,L.floor-90,70,doorA,7111);
+  glyphs(11190,L.floor-182,7,7121);
+  /* walls */
+  stroke(8);rline(L.x0,L.ceil,S-36,L.ceil,7131,3);rline(S+36,L.ceil,L.x1,L.ceil,7133,3);rline(L.x0,L.floor,L.x1,L.floor,7135,3);
+  rline(L.x0,L.ceil,L.x0,L.floor,7137,3);rline(L.x1,L.ceil,L.x1,L.floor,7139,3);
+  /* lamps: each one flickers on as you come near; until then it is dim */
+  const edge=[L.x0];for(let i=1;i<LAMPS.length;i++)edge.push((LAMPS[i-1]+LAMPS[i])/2);edge.push(L.x1);
+  LAMPS.forEach((lx,i)=>{const d=labDark[i],flick=labLit[i]&&d>.05&&Math.random()<.4;
+    if(d>.01){x.save();x.globalAlpha=(flick?.2:.5)*d;x.fillStyle='#1d1b26';x.fillRect(edge[i],L.ceil,edge[i+1]-edge[i],L.floor-L.ceil+4);x.restore();}
+    stroke(3.5);rline(lx,L.ceil,lx,L.ceil+34,7141+i,0);
+    fcirc(lx,L.ceil+44,10,7143+i,labLit[i]?'#fdf0c4':'#8a8478',3.5);
+    if(labLit[i]&&!flick){x.save();x.globalAlpha=.16*(1-d*.8);x.fillStyle='#f7d682';x.beginPath();x.moveTo(lx-8,L.ceil+50);
+      x.lineTo(lx-110,L.floor);x.lineTo(lx+110,L.floor);x.lineTo(lx+8,L.ceil+50);x.fill();x.restore();}});}
+
+/* ======================= planets, robots and the plane from outside ======================= */
+function homePlanet(cx,cy,r){
+  x.save();x.beginPath();x.arc(cx,cy,r,0,7);x.fillStyle='#93b6c9';x.fill();x.save();x.clip();x.fillStyle='#8fbf72';
+  [[-.4,-.45,.55],[.4,.1,.45],[-.15,.6,.4]].forEach(([a,b,c])=>{x.beginPath();x.ellipse(cx+a*r,cy+b*r,c*r,c*r*.7,a,0,7);x.fill();});x.restore();
+  if(r>30)[-.22,0,.2].forEach((k,i)=>{const q=-Math.PI/2+k;x.save();x.translate(cx+Math.cos(q)*r,cy+Math.sin(q)*r);x.rotate(q+Math.PI/2);
+    const h=r*.09;x.fillStyle=['#f2ddd2','#dfe8d3','#ece0cb'][i];x.fillRect(-h*.6,-h,h*1.2,h);x.fillStyle=['#d49a86','#9fb0c8','#c9a07a'][i];
+    x.beginPath();x.moveTo(-h*.8,-h);x.lineTo(0,-h*1.8);x.lineTo(h*.8,-h);x.fill();x.restore();});
+  stroke(Math.max(2,r*.025));x.beginPath();x.arc(cx,cy,r,0,7);x.stroke();x.restore();}
+function robotPlanet(cx,cy,r,bots){
+  x.save();x.beginPath();x.arc(cx,cy,r,0,7);x.fillStyle='#c9b8e0';x.fill();x.save();x.clip();x.fillStyle='rgba(140,110,170,.35)';
+  [[-.4,-.3,.18],[.3,-.5,.12],[.45,.25,.2],[-.2,.45,.15],[.05,-.05,.1]].forEach(([a,b,c])=>{x.beginPath();x.ellipse(cx+a*r,cy+b*r,c*r,c*r*.8,0,0,7);x.fill();});x.restore();
+  if(bots)for(let k=-3;k<=3;k++){const q=-Math.PI/2+k*.32;x.save();x.translate(cx+Math.cos(q)*r,cy+Math.sin(q)*r);x.rotate(q+Math.PI/2);
+    const h=r*.08;x.fillStyle=['#e0b25e','#93b6c9','#c98a9b','#b49ac7','#8fb3a0','#d9786a','#bcc8d0'][k+3];x.fillRect(-h*.5,-h*1.2,h,h*1.2);
+    stroke(Math.max(1.5,h*.15));x.strokeRect(-h*.5,-h*1.2,h,h*1.2);rline(0,-h*1.2,0,-h*1.8,k,0);
+    fillCirc(0,-h*1.9,h*.25,k,(t/20|0)%2===(k&1)?'#f3d36b':'#e3a0a0');x.restore();}
+  stroke(Math.max(2,r*.025));x.beginPath();x.arc(cx,cy,r,0,7);x.stroke();x.restore();}
+function moon(cx,cy,r){x.save();x.beginPath();x.rect(cx-r*2,cy-r*2,r*4,r*4);x.arc(cx+r*.6,cy-r*.3,r*.85,0,Math.PI*2,true);x.clip();
+  fcirc(cx,cy,r,4807,'#f3ecd8',3.5);x.restore();}
+function ringed(cx,cy,r){x.fillStyle='#e0b25e';x.beginPath();x.arc(cx,cy,r,0,7);x.fill();stroke(3);x.stroke();
+  stroke(4,'#f3ecd8');x.beginPath();x.ellipse(cx,cy,r*1.9,r*.45,-.3,Math.PI*.92,Math.PI*2.08);x.stroke();}
+function twinkleStar(cx,cy,r){const p=1+Math.sin(t*.12)*.12;x.save();x.globalAlpha=.25;x.fillStyle='#f3d36b';x.beginPath();x.arc(cx,cy,r*1.8*p,0,7);x.fill();x.restore();
+  starShape(cx,cy,r*p);x.fillStyle='#f3d36b';x.fill();stroke(3);x.stroke();fillCirc(cx-r*.22,cy-r*.05,2.2,1);fillCirc(cx+r*.22,cy-r*.05,2.2,2);}
+function tripPlane(px,py,s,rot,faces){
+  x.save();x.translate(px,py);x.rotate(rot||0);x.scale(s,s);
+  x.fillStyle='#c9d3d6';x.beginPath();x.ellipse(-8,-6,36,8,-.25,0,7);x.fill();stroke(4);x.stroke();
+  x.fillStyle='#f7f2e6';x.beginPath();x.moveTo(-90,-14);x.lineTo(60,-20);x.quadraticCurveTo(102,-18,106,0);x.quadraticCurveTo(102,18,60,20);
+  x.lineTo(-80,16);x.quadraticCurveTo(-98,10,-90,-14);x.closePath();x.fill();stroke(5);x.stroke();
+  x.fillStyle=TOMATO;x.beginPath();x.moveTo(-84,-12);x.lineTo(-100,-50);x.lineTo(-72,-48);x.lineTo(-56,-16);x.closePath();x.fill();stroke(4);x.stroke();
+  [-44,-18,8,36].forEach((wx,i)=>{fcirc(wx,-5,9,600+i,'#cfe3ea',3);
+    if(faces&&i===3){fillCirc(wx,-3,5,610,SKIN);x.fillStyle=GHAIR;x.beginPath();x.arc(wx,-4,6,Math.PI,0);x.fill();}
+    if(faces&&i===2){x.fillStyle='#bcc8d0';x.fillRect(wx-4,-8,8,8);fillCirc(wx-2,-5,1,611);fillCirc(wx+2,-5,1,612);}});
+  x.fillStyle='#c9d3d6';x.beginPath();x.ellipse(-4,10,44,9,.25,0,7);x.fill();stroke(4);x.stroke();
+  x.restore();}
+const ROBOS=[
+  {id:'zip',name:'Zip',col:'#e0b25e',v:1,a:.8,says:'beep bop!',tr:'Zip says: welcome home, Bolt!',
+    story:'Zip is the welcome robot of the little planet. She has said "beep bop" to every visitor. So far there have been two.'},
+  {id:'cog',name:'Cog',col:'#93b6c9',v:2,a:1.6,says:'clank clank!',tr:'Cog says he kept my charging spot warm!',
+    story:'Cog fixes everything on the planet, even things that are not broken yet.'},
+  {id:'nib',name:'Nib',col:'#c98a9b',v:0,a:2.35,says:'boop? boop boop?',tr:'Nib wants to know if your hair is an antenna.',
+    story:'Nib had never seen a person before Gaby. She still thinks hair is a kind of antenna.'},
+  {id:'volt',name:'Granny Volt',col:'#b49ac7',v:1,a:3.4,glasses:1,says:'beeeeep!',tr:"Granny Volt! she says she knew i'd come home one day.",
+    story:'Granny Volt is the oldest robot on the planet. She looked up at the sky every night, waiting for Bolt to come home.'},
+  {id:'pim',name:'Pim',col:'#8fb3a0',v:2,a:4.3,move:1,says:'zoom zoom!',tr:'Pim says: race you round the planet!',
+    story:'Pim rolls round and round the little planet all day long. One lap takes him about a minute.'},
+  {id:'tock',name:'Tock',col:'#d9786a',v:0,a:5.5,says:'tick tock, beep!',tr:"Tock says it is beep o'clock. it is always beep o'clock.",
+    story:"Tock keeps the time on the little planet. It is always beep o'clock."}];
+const DOME_A=2.95;
+ROBOS.forEach(r=>OTHERS.push({id:r.id,name:r.name,robo:r.col,story:r.story}));
+function robo(v,col,lit,b,glasses){
+  b=b||0;stroke(4.5);x.fillStyle=col;
+  if(v===0){x.fillRect(-20,-50-b,40,50);rrect(-20,-50-b,40,50,7,1.5);fillCirc(-8,-34-b,4,1);fillCirc(8,-34-b,4,2);
+    rline(-10,-18-b,10,-18-b,3,1);rline(0,-50-b,0,-64-b,4,1);fcirc(0,-69-b,6,5,lit?'#f3d36b':'#e3a0a0',3);}
+  else if(v===1){x.fillRect(-18,-32-b,36,32);rrect(-18,-32-b,36,32,8,1.5);x.beginPath();x.arc(0,-32-b,18,Math.PI,0);x.closePath();x.fill();x.stroke();
+    fillCirc(-7,-40-b,3.6,1);fillCirc(7,-40-b,3.6,2);stroke(3.5);rline(-10,-46-b,-17,-62-b,9,0);rline(10,-46-b,17,-62-b,10,0);
+    fcirc(-17,-64-b,4,11,lit?'#f3d36b':'#e3a0a0',2.5);fcirc(17,-64-b,4,12,lit?'#e3a0a0':'#f3d36b',2.5);
+    if(glasses){stroke(2.5);x.beginPath();x.arc(-7,-40-b,6,0,7);x.moveTo(13,-40-b);x.arc(7,-40-b,6,0,7);x.stroke();}
+    stroke(3);rline(-6,-22-b,6,-22-b,13,0);}
+  else{fcirc(0,-9,9,14,'#55606b',4);x.fillStyle=col;x.fillRect(-14,-60-b,28,44);rrect(-14,-60-b,28,44,15,1.5);
+    x.fillRect(-18,-84-b,36,24);rrect(-18,-84-b,36,24,16,1.5);fcirc(0,-72-b,7,17,PAPER,3);fillCirc(0,-72-b,3,18);
+    stroke(3.5);rline(0,-84-b,0,-96-b,19,0);fcirc(0,-99-b,4,20,lit?'#f3d36b':'#e3a0a0',2.5);}}
+
+/* ======================= flying Bolt home ======================= */
+let TRIP=null;
+const TW=900,TH=560,PCX=450,PCY=760,PR=320;
+const TSTARS=[];for(let i=0;i<130;i++)TSTARS.push({x:rp(i*3+1)*1300-200,y:rp(i*3+5)*TH,r:1.2+rp(i*3+7)*2.4,d:.3+rp(i*3+2)*.9});
+const wrapA=d=>((d+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+function startTrip(){
+  TRIP={ph:'out',t:0,ang:.32,face:1,walk:0,turnA:0,says:[],fol:followers.map((f,i)=>.32-.2*(i+1))};
+  ROBOS.forEach(r=>r.a0=r.a0==null?r.a:r.a0);
+  stopMusic();startMusic('space');slide(150,700,1.6,'sawtooth',.03);meet('twinkle');}
+function tripSay(who,txt){TRIP.says=TRIP.says.filter(s=>s.who!==who);TRIP.says.push({who,txt,t:0});}
+function tripPos(a,h){const d=a-TRIP.ang;return{x:PCX+Math.sin(d)*(PR+h),y:PCY-Math.cos(d)*(PR+h)};}
+function tripPlan(){
+  const T=TRIP,c=[];
+  c.push({d:Math.abs(wrapA(0-T.ang)),lim:.17,txt:'fly home',fn:()=>{T.ph='back';T.t=0;slide(200,800,1.2,'sawtooth',.03);
+    tripSay('bolt','bye bye! i will come back soon!');}});
+  c.push({d:Math.abs(wrapA(DOME_A-T.ang)),lim:.14,txt:"knock on Bolt's old house",fn:()=>{tone(300,.08,'square',.03);tone(300,.08,'square',.03,.15);
+    tripSay('gaby',"it has a round door, just like the one in the lab!");setTimeout(()=>TRIP&&tripSay('bolt','this is where i lived before i got lost!'),1500);}});
+  ROBOS.forEach(r=>c.push({d:Math.abs(wrapA(r.a-T.ang)),lim:.15,txt:'say hello to '+(met[r.id]?r.name:'the robot'),fn:()=>{
+    const first=meet(r.id);tripSay(r.id,first?r.says+" i'm "+r.name+'!':r.says);tune([660,880,660],90,'square');
+    setTimeout(()=>{if(!TRIP)return;tripSay('bolt',r.tr);if(r.id==='volt'){TRIP.hearts=90;tune([523,659,784,1046],120,'sine');}},1500);
+    if(first&&ROBOS.every(q=>met[q.id])){mark('robots');setTimeout(()=>{if(!TRIP)return;bagGive({kind:'starit'},P.x,P.y);
+      tripSay('volt','for you, Gaby: a star from our sky!');tune([784,988,1175,1568],100,'triangle');},3400);}}}));
+  const best=c.filter(q=>q.d<q.lim).sort((a,b)=>a.d-b.d)[0];return best||null;}
+function tripUpdate(){
+  const T=TRIP;T.t++;
+  T.says.forEach(s=>s.t++);T.says=T.says.filter(s=>s.t<190);if(T.hearts>0)T.hearts--;
+  if(T.ph==='out'){
+    if(actEdge)T.t=Math.max(T.t,T.t<170?170:T.t<480?480:780);
+    if(T.t===40)tune([392,523,659],160,'sine');
+    if(T.t>=780){T.ph='planet';T.t=0;tone(160,.3,'triangle',.05);crunch(.2,.04);
+      tripSay('bolt',"i'm home! beep beep!");setTimeout(()=>TRIP&&tripSay('zip','beep bop?!'),700);setTimeout(()=>TRIP&&tripSay('tock','BEEP!'),1200);}}
+  else if(T.ph==='planet'){
+    let mv=0;if(key.left){T.ang-=.0115;T.face=-1;mv=1;}if(key.right){T.ang+=.0115;T.face=1;mv=1;}
+    T.walk=mv?T.walk+.2:T.walk*.86;T.turnA+=((mv?1:0)-T.turnA)*.2;
+    if(mv&&t%13===0)tone(90+((t*7)%26),.035,'triangle',.014);
+    T.fol.forEach((a,i)=>{const goal=T.ang-T.face*.19*(i+1);T.fol[i]+=wrapA(goal-a)*.08;});
+    ROBOS.forEach(r=>{if(r.move)r.a+=.0035;});
+    if(actEdge){const p=tripPlan();if(p)p.fn();}}
+  else if(T.ph==='back'){if(actEdge)T.t=Math.max(T.t,400);if(T.t>=400)endTrip();}
+  actEdge=upEdge=downEdge=grabEdge=false;}
+function endTrip(){
+  TRIP=null;stopMusic();flying=false;P.x=4255;P.y=PLANE.floor;P.vy=0;P.climb=null;P.ground=true;P.face=1;trail.length=0;
+  followers.forEach((f,i)=>{f.x=P.x-70*(i+1);f.y=P.y;f.pm=null;});fadeT=16;mark('space');
+  const b=boltF();tune([659,784,1046],120,'triangle');
+  if(b)setTimeout(()=>say(b.x,b.y-70,'thank you, Gaby! now i can visit my friends any time!'),600);}
+function tripSky(top,bot){const g=x.createLinearGradient(0,0,0,TH);g.addColorStop(0,top);g.addColorStop(1,bot);
+  x.fillStyle=g;x.fillRect(-600,-400,TW+1200,TH+800);}
+function tripStars(drift){for(const s of TSTARS){const sx=((s.x-drift*s.d)%1300+1300)%1300-200;
+  x.save();x.globalAlpha=.55+.45*Math.sin(t*.05+s.x);fillCirc(sx,s.y,s.r,s.x|0,'#f3ecd8');x.restore();}}
+function caption(txt){bubble(TW/2,58,txt,.95);}
+function tripDraw(){
+  const T=TRIP,sc=T.ph==='planet'?Math.min(innerWidth/640,innerHeight/TH):Math.min(innerWidth/TW,innerHeight/TH);
+  x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,innerWidth,innerHeight);
+  x.save();x.translate(innerWidth/2,innerHeight/2);x.scale(sc,sc);x.translate(-TW/2,-TH/2);
+  const ease=u=>{u=Math.max(0,Math.min(1,u));return u*u*(3-2*u);};
+  if(T.ph==='out'||T.ph==='back'){
+    const back=T.ph==='back',tt=back?T.t:T.t;
+    if(!back&&tt<170){                                    // taking off over the sleeping town
+      const u=ease(tt/170);tripSky('#1b2340','#2d3657');tripStars(0);twinkleStar(780,90,16);
+      x.fillStyle='#4a5a48';x.fillRect(-600,470,TW+1200,400);stroke(5);rline(-600,470,TW+600,470,3,2);
+      [[60,90,'#d49a86'],[170,70,'#9fb0c8'],[520,80,'#c9a07a'],[640,70,'#b9a0c9'],[760,60,'#8fb3a0']].forEach(([hx,hw,rc],i)=>{
+        x.fillStyle='#2b3350';x.fillRect(hx,470-hw*.8,hw,hw*.8);x.fillStyle=rc;x.beginPath();x.moveTo(hx-8,470-hw*.8);
+        x.lineTo(hx+hw/2,470-hw*1.3);x.lineTo(hx+hw+8,470-hw*.8);x.fill();x.fillStyle='#f3dca0';x.fillRect(hx+hw*.35,470-hw*.55,hw*.3,hw*.25);});
+      tripPlane(120+u*620,440-u*330,.9,-.32*Math.min(1,tt/40),1);caption('up, up and away!');}
+    else{
+      const u=back?T.t/400:(tt<480?(tt-170)/310:(tt-480)/300);
+      tripSky('#141b31','#2a2350');tripStars(T.t*2.4*(back?-1:1));
+      if(!back&&tt<480){                                  // out past the moon, following Twinkle
+        homePlanet(200-u*330,640-u*150,300-u*210);moon(1000-u*1250,190,40);ringed(760-u*90,420,30);
+        twinkleStar(700+Math.sin(t*.04)*14,150,15);
+        x.setLineDash([6,12]);stroke(3,'rgba(243,236,216,.6)');x.beginPath();x.moveTo(140,330);x.quadraticCurveTo(260,300,380,290+Math.sin(t*.06)*8);x.stroke();x.setLineDash([]);
+        tripPlane(390,290+Math.sin(t*.06)*8,.8,-.05,1);caption(u<.5?'past the moon...':'Twinkle shows the way!');}
+      else if(!back){                                      // there it is
+        const e=ease(u),cx=760+(PCX-760)*e,cy=240+(PCY-240)*e,r=40+(PR-40)*e;
+        ringed(170,130,26);twinkleStar(820-e*100,90,13);robotPlanet(cx,cy,r,1);
+        const px=390+(PCX-390)*e,py=(290)+((PCY-PR-24)-290)*e;tripPlane(px,py,.8+e*.15,-.05+e*.05,1);
+        caption("there it is: Bolt's planet!");}
+      else{                                                // going home again
+        const e=ease(u);robotPlanet(PCX+e*700,PCY-e*300,PR-e*260,1);homePlanet(-200+e*520,900-e*360,60+e*260);
+        moon(900-e*700,160,34);tripPlane(450-e*60,280+e*40,.85,.08,1);caption(u<.5?'bye bye, robot planet!':'home again!');}}}
+  else{                                                   // walking round the little planet
+    tripSky('#241f45','#4a3f6b');
+    for(const s of TSTARS)if(s.y<420){x.save();x.globalAlpha=.5+.5*Math.sin(t*.04+s.x);fillCirc((s.x+300)%TW,s.y,s.r,s.x|0,'#f3ecd8');x.restore();}
+    ringed(210,170,30);homePlanet(690,92,28);
+    x.fillStyle='#f3ecd8';x.font='700 15px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';x.fillText('home',690,146);
+    x.save();x.translate(PCX,PCY);x.rotate(-T.ang);
+    x.fillStyle='#c9b8e0';x.beginPath();x.arc(0,0,PR,0,7);x.fill();
+    x.save();x.clip();x.fillStyle='rgba(140,110,170,.35)';
+    for(let i=0;i<14;i++){const q=i/14*Math.PI*2+.2,rr=PR-30-rp(i)*70;x.beginPath();x.ellipse(Math.cos(q)*rr,Math.sin(q)*rr,16+rp(i+3)*22,9+rp(i+5)*8,q,0,7);x.fill();}
+    x.restore();stroke(7);x.beginPath();x.arc(0,0,PR,0,7);x.stroke();
+    const at=(a,fn)=>{x.save();x.rotate(a);x.translate(0,-PR);fn();x.restore();};
+    [1.15,2.05,3.9,4.85,5.95].forEach((a,i)=>at(a,()=>{stroke(5,'#7d8b94');rline(0,0,0,-90,7201+i,1);rline(-14,0,0,-40,7203+i,1);rline(14,0,0,-40,7205+i,1);
+      fcirc(0,-96,7,7207+i,(t/24|0)%2===i%2?'#f3d36b':'#e3a0a0',3);}));
+    [.45,1.95,2.7,3.75,5.2].forEach((a,i)=>at(a,()=>{x.fillStyle=['#93b6c9','#c98a9b','#e0b25e'][i%3];x.beginPath();x.moveTo(-8,0);x.lineTo(0,-24);x.lineTo(8,0);x.fill();stroke(3);x.stroke();}));
+    at(0,()=>tripPlane(0,-24,.95,0,0));
+    at(DOME_A,()=>{x.fillStyle='#bcc8d0';x.beginPath();x.arc(0,0,80,Math.PI,0);x.closePath();x.fill();stroke(6);x.stroke();
+      fcirc(0,-30,26,7221,'#9fb0c8',4);x.fillStyle=INK;x.fillRect(-4,-38,8,7);x.fillRect(-5,-30,10,10);
+      fcirc(-50,-34,9,7223,'#fdf0c4',3);fcirc(50,-34,9,7225,'#fdf0c4',3);});
+    ROBOS.forEach((r,i)=>at(r.a,()=>robo(r.v,r.col,(t/18|0)%2===i%2,Math.abs(Math.sin(t*.1+i))*(TRIP.hearts>0||T.t<180?8:2),r.glasses)));
+    followers.forEach((f,i)=>{const a=T.fol[i]!=null?T.fol[i]:T.ang-.2*(i+1);at(a,()=>itemArt(f.kind,0,0,331+i*7,Math.abs(Math.sin(t*.18+i))*5,Object.assign({},f,{oy:-10})));});
+    at(T.ang,()=>figure(0,0,gabyO({face:T.face,walk:T.walk,turn:T.turnA,shadow:false,hat:P.hat})));
+    x.restore();
+    if(T.hearts>0){const i=followers.findIndex(f=>f.kind==='robot');if(i>=0){const p=tripPos(T.fol[i],90);x.save();x.globalAlpha=Math.min(1,T.hearts/30);
+      x.fillStyle=TOMATO;heart(p.x-14,p.y-20-(90-T.hearts)*.4,9);heart(p.x+16,p.y-34-(90-T.hearts)*.5,7);x.restore();}}
+    T.says.forEach(s=>{let a=T.ang,h=175;
+      if(s.who==='bolt'){bubble(PCX,112,'Bolt: '+s.txt,Math.min(1,(190-s.t)/30));return;}
+      else if(s.who!=='gaby'){const r=ROBOS.find(q=>q.id===s.who);a=r?r.a:T.ang;h=r&&r.v===2?150:128;}
+      const d=wrapA(a-T.ang);if(Math.abs(d)>1.1)return;const p=tripPos(a,h);
+      bubble(Math.max(230,Math.min(TW-230,p.x)),p.y,s.txt,Math.min(1,(190-s.t)/30),true);});
+    const pl=tripPlan();if(pl)bubble(PCX,PCY-PR-205+Math.sin(t*.12)*3,'★ '+pl.txt,.95,true);
+    if(T.t<360)caption('◀ ▶ walk round the little planet');}
+  x.restore();}
+
+(function loop(){update();R?raceDraw():TRIP?tripDraw():draw();if(t%10===0){updatePals();updateBag();}requestAnimationFrame(loop);})();
 </script>
