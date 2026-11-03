@@ -12,6 +12,9 @@
        resume mid-story). the old photo in the chest (Gaby's drawing of baby her and Mommy, as a sepia memory), the café's grand
        re-opening (Gaby's café drawing, a door on each side), Gaby's house as its own indoor place (her drawing: Bob the fish, the
        copy machine 1 D 2 and the wonky bolted-on wing), Bolty, and hats for friends
+  v38: the zoo (Gaby's drawing): a coming soon board, sleeping through to morning, the eight parrots, and a calendar by her bed that starts a special day again
+  v37: "me" in the wardrobe: your name, girl or boy, baby / toddler / kid / teen, skin, hair, hairstyle and eyes.
+       friends can visit Gaby's world as themselves: people use their name, while the world, the title and the signs stay Gaby's
   v35: reading How Our Town Grew wakes up the lab (Bolt Says Beep is retired), Bolt fixes the food machine, and Captain Finn tells the story of his dad, Captain Cidrum (a sepia flashback from long, long ago)
 
   The code is released under the MIT License (below).
@@ -114,6 +117,10 @@
     max-width:560px;width:100%;max-height:88%;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable both-edges;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;text-align:center;box-sizing:border-box;}
   .sheet h2{font-size:23px;margin:2px 0 12px;}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .calgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .calday{border:4px solid #2b2b2b;border-radius:14px;background:#ece4cf;color:#a39b89;padding:6px;font-weight:700;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:96px;}
+  .calday b{font-size:34px;}.calday canvas{width:100%;height:auto;border-radius:8px;display:block;}.calday span{margin-top:4px;}
+  .calday.on{background:#fffbe9;color:#2b2b2b;cursor:pointer;}.calday.fresh{background:#ffe9a8;}
   .grid div{border:3px solid #2b2b2b;border-radius:14px;padding:13px 8px;background:#fffdf4;
     font-weight:700;font-size:16px;line-height:1.25;}
   .grid div:active{background:#ffe9a8;}
@@ -128,6 +135,11 @@
   .wopt canvas{width:60px;height:75px;display:block;}
   .wopt canvas.face{height:60px;}
   .wopt.on{background:#ffe9a8;box-shadow:0 0 0 3px #c96a2e;}
+  .wopt span{display:block;text-align:center;font-weight:700;font-size:12px;line-height:1.1;padding:1px 0 2px;}
+  .wgrp.full{grid-column:1/-1;}
+  #wardtabs{margin:0;}#ward h2{margin-bottom:8px;}
+  #namebox{font-family:inherit;font-weight:700;font-size:20px;border:3px solid #2b2b2b;border-radius:14px;padding:6px 12px;background:#fffdf4;color:#2b2b2b;
+    width:100%;max-width:280px;box-sizing:border-box;-webkit-user-select:text;user-select:text;}
   #ward .row{display:flex;gap:10px;justify-content:center;margin-top:10px;}
   #libgrid{grid-template-columns:repeat(3,1fr);}
   #libgrid .bk{padding:6px;font-size:13px;position:relative;}
@@ -245,6 +257,7 @@
     <div data-x="8115" data-y="790">The disco truck</div>
     <div data-x="11065" data-y="900">The shop &amp; the caf&eacute;</div>
     <div data-x="2376" data-y="900">The library</div>
+    <div data-x="5590" data-y="900" id="mapzoo" style="display:none">🦜 The zoo</div>
     <div data-x="12160" data-y="900">Gaby&#39;s Burgers &amp; play area</div>
     <div data-x="15120" data-y="900">School</div>
     <div data-x="10035" data-y="900">The playground</div>
@@ -287,6 +300,12 @@
   </div>
   <div class="close" data-close="1">close</div>
 </div></div>
+<div id="cal" class="sheet"><div>
+  <h2 id="caltitle"></h2>
+  <div class="calgrid" id="calgrid"></div>
+  <p id="calnote"></p>
+  <div class="close" data-close="1">close</div>
+</div></div>
 <div id="pals"></div>
 <div id="bag"></div>
 <div id="itm" class="sheet"><div>
@@ -296,7 +315,7 @@
   <div class="close" data-close="1">close</div>
 </div></div>
 <div id="ward" class="sheet"><div>
-  <h2>Gaby's clothes</h2>
+  <h2><div class="tabs" id="wardtabs"><span data-wt="me">🙂 me</span><span data-wt="clothes" class="on">👗 clothes</span></div></h2>
   <canvas id="wardpic" width="260" height="300"></canvas>
   <div id="wardrows"></div>
   <div class="row" id="wardbtns"><div class="btn wide" id="wardrand">🎲 surprise me</div><div class="btn wide" data-close="1">✔ all done</div></div>
@@ -409,7 +428,12 @@ function blush(px,hy,H,s){x.save();x.globalAlpha=.45;x.fillStyle='#e8908a';
 function head(px,hy,H,s,sd,o){
   stroke((o.look==='gaby'?3.6:5.5)*s);rcircPath(px,hy,H,sd);x.fillStyle=o.fill||SKIN;x.fill();x.stroke();
   const tu=o.turn||0,ex=(o.face||1)*H*.17*tu,es=H*(.34-.06*tu);
-  fillCirc(px+ex-es,hy-H*.06,2.7*s,sd+7);fillCirc(px+ex+es,hy-H*.06,2.7*s,sd+9);blush(px+ex*.8,hy,H,s);drawLook.ex=ex*.6;
+  const ec=o.look==='gaby'&&o.eye&&EYES[o.eye];
+  if(ec)[-1,1].forEach((d,i)=>{const cx=px+ex+d*es,cy=hy-H*.06;fillCirc(cx,cy,3.3*s,sd+7+i*2,ec);fillCirc(cx,cy,1.6*s,sd+21+i,INK);fillCirc(cx-.9*s,cy-1*s,.8*s,sd+23+i,PAPER);});
+  else{fillCirc(px+ex-es,hy-H*.06,2.7*s,sd+7);fillCirc(px+ex+es,hy-H*.06,2.7*s,sd+9);}
+  blush(px+ex*.8,hy,H,s);drawLook.ex=ex*.6;
+  if(o.paci){const qx=px+ex*.9,qy=hy+H*.42;x.fillStyle='#93b6c9';x.beginPath();x.ellipse(qx,qy,H*.27,H*.16,0,0,7);x.fill();stroke(1.4*s);x.stroke();
+    fillCirc(qx,qy+H*.02,H*.08,sd+25,'#e3a0b8');}
   if(o.look){drawLook.sd=o.shadesT;drawLook.sty=o.outfit&&o.outfit.shades;
     drawLook(px,hy,o.look,sd+100,H,o.hair);drawLook.sd=drawLook.sty=null;}
   drawLook.ex=0;
@@ -434,7 +458,7 @@ function figure(px,py,o){
   else rline(px-15*s,sh+5*s+sw*.3,px+15*s,sh+5*s-sw*.3,sd+9,2);
   head(px,hy,H,s,sd,o);}
 function seated(px,py,o){                      // sitting on a chair, facing right
-  o=o||{};const s=o.s||1,hy=py-72*s,sd=o.seed||1,H=HR*s;
+  o=o||{};const s=o.s||1,hk=o.hk||1,hy=py-72*s-(hk-1)*HR*s*.8,sd=o.seed||1,H=HR*s*hk;
   if(o.shadow!==false)shadow(px,py,20*s);
   const of=o.outfit,bot=of&&(of.dress?'dress':of.bottom),cov=!of||bot==='pants'||bot==='leggings';
   if(cov){stroke(6*s,of?of.bcol:o.pants||'#55606b');rline(px,py-34*s,px+20*s,py-34*s,sd+13,2);rline(px+20*s,py-34*s,px+20*s,py,sd+15,2);}
@@ -445,7 +469,7 @@ function seated(px,py,o){                      // sitting on a chair, facing rig
   shirt(px,hy+H*.85,py-31*s,s,o.shirt,of?2.6:4);
   if(of){dressTop(px,hy+H*.85,py-31*s,s,sd,of);
     if(o.hand)gabyArm(px+5*s,py-60*s,px+8*s,py-92*s,s,sd,o);else gabyArm(px+4*s,py-60*s,px+20*s,py-42*s,s,sd,o);
-    head(px,hy,H,s,sd,o);return;}
+    head(px,hy,H,s*hk,sd,o);return;}
   stroke(6*s);
   if(o.hand)rline(px,py-58*s,px+4*s,py-92*s,sd+11,2);
   else rline(px-12*s,py-52*s,px+16*s,py-56*s,sd+11,2);
@@ -489,7 +513,9 @@ const BCX={sign:22480,school:22750,stumps:[22990,23100,23210],hill0:23420,hillT0
   river0:24220,river1:24400,fish:24310,den:24680,blanket:24990,cave:25300,wall:26880,hive:27050};
 const ZCF={x0:28000,x1:29300,ceil:360};
 const ZH={x0:30000,x1:31400,ceil:300},HM=740,HA=580,HDX=29968;   // inside Gaby's house: ground floor, middle floor (the lab), and under the roof                // the new café, inside
-const ZONES=[{id:'home',x0:ZH.x0,x1:ZH.x1,ceil:ZH.ceil},{id:'cafe',x0:ZCF.x0,x1:ZCF.x1,ceil:ZCF.ceil},{id:'library',x0:ZL.x0,x1:ZL.x1,ceil:ZL.ceil},{id:'burger',x0:ZB.x0,x1:ZB.x1,ceil:ZB.ceil},{id:'school',x0:SZ.x0,x1:SZ.x1,ceil:SZ.ceil},{id:'bears',x0:ZBC.x0,x1:ZBC.x1,ceil:ZBC.ceil},{id:'bearcave',x0:ZCV.x0,x1:ZCV.x1,ceil:ZCV.ceil},{id:'pool',x0:ZP.x0,x1:ZP.x1,ceil:ZP.ceil}];
+const ZAV_DOOR=32290;
+const ZZ={x0:32000,x1:34560,ceil:420};                 // the zoo, through its gate
+const ZONES=[{id:'zoo',x0:ZZ.x0,x1:ZZ.x1,ceil:ZZ.ceil},{id:'home',x0:ZH.x0,x1:ZH.x1,ceil:ZH.ceil},{id:'cafe',x0:ZCF.x0,x1:ZCF.x1,ceil:ZCF.ceil},{id:'library',x0:ZL.x0,x1:ZL.x1,ceil:ZL.ceil},{id:'burger',x0:ZB.x0,x1:ZB.x1,ceil:ZB.ceil},{id:'school',x0:SZ.x0,x1:SZ.x1,ceil:SZ.ceil},{id:'bears',x0:ZBC.x0,x1:ZBC.x1,ceil:ZBC.ceil},{id:'bearcave',x0:ZCV.x0,x1:ZCV.x1,ceil:ZCV.ceil},{id:'pool',x0:ZP.x0,x1:ZP.x1,ceil:ZP.ceil}];
 const zoneAt=px=>ZONES.find(z=>px>=z.x0-30&&px<=z.x1+30)||null;
 const curZone=()=>zoneAt(P.x),inZone=()=>!!curZone(),inBurger=()=>{const z=curZone();return !!z&&z.id==='burger';},
   inPool=()=>{const z=curZone();return !!z&&z.id==='pool';},inLib=()=>{const z=curZone();return !!z&&z.id==='library';};
@@ -515,7 +541,7 @@ const PLATS=[
   {x0:ZP.x0,x1:POOL.x0,y:GY,z:'pool'},{x0:POOL.x1,x1:ZP.x1,y:GY,z:'pool'},{x0:BOARD.x0,x1:BOARD.tip,y:BOARD.y,z:'pool'},
   {x0:ZL.x0,x1:ZL.x1,y:GY,z:'library'},
   {x0:ZBC.x0,x1:ZBC.x1,y:GY,z:'bears'},{x0:BCX.hillT0-10,x1:BCX.hillT1,y:GY-150,z:'bears'},{x0:ZCV.x0,x1:ZCV.x1,y:GY,z:'bearcave'},{x0:ZCF.x0,x1:ZCF.x1,y:GY,z:'cafe'},
-  {x0:ZH.x0,x1:ZH.x1,y:GY,z:'home'},{x0:ZH.x0+10,x1:ZH.x1-10,y:HM,z:'home'},{x0:ZH.x0+250,x1:ZH.x1-250,y:HA,z:'home'}
+  {x0:ZZ.x0,x1:ZZ.x1,y:GY,z:'zoo'},{x0:ZH.x0,x1:ZH.x1,y:GY,z:'home'},{x0:ZH.x0+10,x1:ZH.x1-10,y:HM,z:'home'},{x0:ZH.x0+250,x1:ZH.x1-250,y:HA,z:'home'}
 ];
 const LADS=[
   {x:31220,y0:HM,y1:GY,z:'home',own:1},{x:30360,y0:HA,y1:HM,z:'home',own:1},
@@ -564,8 +590,18 @@ const THINGS=[
   {id:'fire',x:31060,y:HM,label:'light the fire'},
   {id:'wardrobe',x:30223,y:GY,label:'change my clothes'},
   {id:'mementos',x:30468,y:GY,label:'look at my special shelf'},
-  {id:'mybed',x:30568,y:GY,label:'snuggle into my bed',lbl:()=>hwReady()?'go to sleep... tomorrow is Saturday!':'snuggle into my bed'},
-  {id:'toybox',x:30699,y:GY,label:'open my toy box'},
+  {id:'mybed',x:30568,y:GY,label:'snuggle into my bed',lbl:()=>hwReady()?'go to sleep... tomorrow is Saturday!':VER.zoo==='soon'?'go to sleep... what will be there tomorrow?':'go to sleep'},
+  {id:'toybox',x:31310,y:GY,label:'open my toy box'},
+  {id:'calendar',x:30690,y:GY,label:'look at my calendar'},
+  {id:'zooboard',x:5545,y:GY,label:'read the board',key:1,by:-250,hidden:()=>VER.zoo==='open'},
+  {id:'enterZoo',x:5590,y:GY,label:'go into the zoo',key:1,by:-300,hidden:()=>VER.zoo!=='open'},
+  {id:'exitZoo',x:ZZ.x0+70,y:GY,label:'go back outside'},
+  {id:'zooparrot',x:32560,y:GY,label:'listen to the parrots'},
+  {id:'zoodoor',x:ZAV_DOOR,y:GY,label:'open the cage!',hidden:()=>!(SCRIPT.want&&SCRIPT.want.id==='zoodoor')},
+  {id:'zoopeng',x:33345,y:GY,label:'wave at the penguins'},
+  {id:'zootell',x:33760,y:GY,label:'tell the zoo manager!',key:1,by:-200,hidden:()=>!(SCRIPT.want&&SCRIPT.want.id==='zootell')},
+  {id:'zooowl',x:33884,y:GY,label:'say hoo to the owl'},
+  {id:'zooflam',x:34340,y:GY,label:'stand on one leg like a flamingo'},
   {id:'teatable',x:1475,y:GY,label:'pour a cup of tea'},
   {id:'pinkbox',x:1669,y:GY,label:'peek in the pink box'},
   {id:'playbox',x:2105,y:GY,label:'open the playhouse box'},
@@ -647,7 +683,7 @@ const THINGS=[
   {id:'board',x:-1630,y:GY,label:'climb aboard the ship',key:1,by:-250,bx:-60,hidden:()=>BEACH.st!=='waitBoard'},
   {id:'sail',x:-1630,y:GY,label:'sail away with Finn',key:1,by:-250,bx:-60,hidden:()=>!(BEACH.done&&BEACH.st==='picnic'&&BEACH.ship.here)}
 ];
-const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots','egypt','napspot','egyptcats','cloverisland','cloverfamily','cloverhome','bunnywheel','bunnydisco','bunnyice','bunnies','ducks','finn','finnfed','duckvillage','duckcannon','giraffe','jetpack','treasure','duckcrew','showtell','bearcity','beartalk','bearshow','bearbrave','grotto','bearhug','bearhugs','bearhome','saturday','burgerday','spookybook','trickortreat','allcandy','wisp','itsy','halloween','beach','booster','dolphins','atlantic','whale','wavejump','bearsea','beesmoke','nannyend','labfix','cidrum','pastlab','duckfeast','sillyducks','memory','grandopen','ghostcidrum','cidrumcake','bolty','copied','copy3','olivephoto','hatfriend','robotduet'];
+const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots','egypt','napspot','egyptcats','cloverisland','cloverfamily','cloverhome','bunnywheel','bunnydisco','bunnyice','bunnies','ducks','finn','finnfed','duckvillage','duckcannon','giraffe','jetpack','treasure','duckcrew','showtell','bearcity','beartalk','bearshow','bearbrave','grotto','bearhug','bearhugs','bearhome','saturday','burgerday','spookybook','trickortreat','allcandy','wisp','itsy','halloween','beach','booster','dolphins','atlantic','whale','wavejump','bearsea','beesmoke','nannyend','labfix','cidrum','pastlab','duckfeast','sillyducks','memory','grandopen','ghostcidrum','cidrumcake','bolty','copied','copy3','olivephoto','hatfriend','robotduet','pawot','parrotsout','parrotcatch','bobhappy','parrotparade','zoofeather','sleptday'];
 const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watered the plants',
   bridge:'crossed the bridge',wave:'waved hello',slide:'took the slide',night:'turned on the night',
   fly:'flew the plane',tea:'had a cup of tea',nap:'had a nap',lamp:'lit the dark room',
@@ -683,7 +719,7 @@ Object.assign(LABELS,{chest:'found an old photo in the chest',memory:'remembered
   enterCafe:'went into the new caf\u00e9',oldphoto:'saw the old caf\u00e9 photo',cafeOrder:'got a cake shaped like me',photowall:'looked at the photo wall',
   cafeSit:'sat in the new caf\u00e9',grandopen:'opened the new caf\u00e9',ghostcidrum:'turned Captain Cidrum into a ghost',cidrumcake:'saw Captain Cidrum eat his own beard',
   bolty:'met Bolty',copied:'copied something',copy3:'got a bonus copy',olivephoto:'gave Olive a copy of my photo',hatfriend:'gave a friend a hat',robotduet:'heard Bolt and Bolty sing'});
-const FIND=THINGS.map(t=>t.id).filter(k=>['exitCafe','exitCafe2','enterCafe2','exitHome','exitBridge','enterHomeUp','lablever'].indexOf(k)<0&&k!=='exit'&&k!=='exitSchool'&&k!=='exitPool'&&k!=='exitLib'&&k!=='busHome'&&k!=='caveout').concat(EXTRA);
+const FIND=THINGS.map(t=>t.id).filter(k=>['exitZoo','zoodoor','zootell','exitCafe','exitCafe2','enterCafe2','exitHome','exitBridge','enterHomeUp','lablever'].indexOf(k)<0&&k!=='exit'&&k!=='exitSchool'&&k!=='exitPool'&&k!=='exitLib'&&k!=='busHome'&&k!=='caveout').concat(EXTRA);
 const found={};FIND.forEach(k=>found[k]=false);
 
 /* ================= carryable stuff ================= */
@@ -965,7 +1001,7 @@ function say(px,py,txt,o){
    in order, like a comic). a dotted line points back to whoever is talking when a bubble had to move. */
 const BFONT='"Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
 let BUBW=1e9;                                      // on a narrow phone, long lines wrap instead of running off the screen
-function wrapLines(txt,small){x.font='700 '+(small?16:19)+'px '+BFONT;if(x.measureText(txt).width<=BUBW)return[txt];
+function wrapLines(txt,small){txt=nm(txt);x.font='700 '+(small?16:19)+'px '+BFONT;if(x.measureText(txt).width<=BUBW)return[txt];
   const out=[];let cur='';for(const w of txt.split(' ')){const tr=cur?cur+' '+w:w;if(cur&&x.measureText(tr).width>BUBW){out.push(cur);cur=w;}else cur=tr;}
   if(cur)out.push(cur);return out;}
 function bubbleSize(txt,small){const L=wrapLines(txt,small);let mw=0;L.forEach(l=>mw=Math.max(mw,x.measureText(l).width));
@@ -1100,8 +1136,8 @@ addEventListener('keydown',e=>{
     if(['ArrowLeft','a','A'].indexOf(e.key)>=0){e.preventDefault();turnPage(-1);return;}}
   if(e.key==='m'||e.key==='M'){toggle('map');return;}
   if(e.key==='b'||e.key==='B'){toggle('book');return;}
-  if((e.key==='n'||e.key==='N')&&started&&!R&&!RIDE){if(TRIP){if(TRIP.dest==='clover'&&TRIP.ph==='walk')ciToggleNight();}else toggleSky();return;}
-  if(e.key==='Escape'){shut('map');shut('book');shut('pal');shut('itm');shut('ward');shut('lib');shut('read');shut('fly');return;}
+  if((e.key==='n'||e.key==='N')&&started&&!R&&!RIDE){if(SCENE)return;if(TRIP){if(TRIP.dest==='clover'&&TRIP.ph==='walk')ciToggleNight();}else toggleSky();return;}
+  if(e.key==='Escape'){shut('map');shut('book');shut('pal');shut('itm');shut('ward');shut('lib');shut('read');shut('fly');shut('cal');return;}
   const k=KM[e.key];if(!k)return;e.preventDefault();
   if(!key[k]){if(k==='act')actEdge=true;if(k==='up')upEdge=true;if(k==='down')downEdge=true;if(k==='grab')grabEdge=true;}
   key[k]=1;started=true;});
@@ -1119,7 +1155,7 @@ function sunPos(){const tb=document.getElementById('top').getBoundingClientRect(
   return{x:innerWidth/2,y:tb.bottom+r+24,r};}
 function onSun(e){const s=sunPos();return Math.hypot(e.clientX-s.x,e.clientY-s.y)<s.r+24;}
 c.addEventListener('pointerdown',e=>{if(STORY.wait&&started){STORY.tap=1;return;}if(TRIP){if(TRIP.dest==='clover'&&TRIP.ph==='walk'){const s=ciSunPos();if(Math.hypot(e.clientX-s.x,e.clientY-s.y)<s.r+26)ciToggleNight();}return;}
-  if(started&&!R&&!RIDE&&onSun(e)){toggleSky();return;}started=true;});
+  if(started&&!R&&!RIDE&&onSun(e)){if(!SCENE)toggleSky();return;}started=true;});
 c.addEventListener('pointermove',e=>{c.style.cursor=started&&!R&&onSun(e)?'pointer':'default';});
 function toggleSky(){mark('sun');
   if(flying){say(P.x,P.y-120,'the plane only flies at night!');beep(300,.12,'sine');return;}
@@ -1240,13 +1276,13 @@ function fillFriends(){
     d.appendChild(tx);g.appendChild(d);});
   for(let i=0;i<left;i++){const d=document.createElement('div');d.className='fr unmet';
     d.innerHTML='<b style="font-size:26px;width:64px;text-align:center">?</b><div><b>someone new</b>say hello to find out who!</div>';g.appendChild(d);}}
-document.querySelectorAll('.tabs span').forEach(sp=>sp.addEventListener('click',e=>{e.stopPropagation();
-  document.querySelectorAll('.tabs span').forEach(o=>o.classList.toggle('on',o===sp));
+document.querySelectorAll('#book .tabs span').forEach(sp=>sp.addEventListener('click',e=>{e.stopPropagation();
+  document.querySelectorAll('#book .tabs span').forEach(o=>o.classList.toggle('on',o===sp));
   const tab=sp.dataset.tab,met=tab==='met';
   document.getElementById('bookgrid').style.display=tab==='did'?'grid':'none';
   document.getElementById('friendgrid').style.display=met?'grid':'none';
   document.getElementById('about').style.display=tab==='about'?'block':'none';
-  if(tab==='about')drawGabyInto(document.getElementById('aboutpic'),OUTFIT);
+  if(tab==='about')withLook(LOOK0,()=>drawGabyInto(document.getElementById('aboutpic'),OUTFIT));
   if(met)fillFriends();}));
 let palSig='',palOpen=null;
 function updatePals(){
@@ -1277,6 +1313,7 @@ document.getElementById('soundbtn').addEventListener('click',e=>{e.stopPropagati
 setSound(soundOn);
 document.getElementById('wardbtn').addEventListener('click',()=>openWardrobe());
 document.getElementById('wardrand').addEventListener('click',e=>{e.stopPropagation();const pick=a=>a[(Math.random()*a.length)|0];
+  if(wardTab==='me'){setLook({skin:pick(SKINC),hair:pick(HAIRC),style:pick(STYLES),eyes:pick(Object.keys(EYES))});tune([523,784,1046],70,'triangle');fillWardrobe();return;}
   if(Math.random()<.3)OUTFIT.dress=pick(DRESSES);else Object.assign(OUTFIT,{dress:null},pick(TOPS),pick(BOTTOMS));
   Object.assign(OUTFIT,pick(SHOES));OUTFIT.shades=pick(SHADES);saveOutfit();mark('dressup');tune([523,784,1046],70,'triangle');fillWardrobe();});
 document.getElementById('bookbtn').addEventListener('click',()=>openSheet('book'));
@@ -1359,7 +1396,7 @@ function actPlan(){
       d:reach(item.x,item.y)+(on?40:-12)});}
   const np=nearNPC();
   if(np)cands.push({k:'hello',np,x:np.x,y:np.y-60,txt:'say hello',d:reach(np.x,np.y)+12});
-  townDuckPlan(cands);bearPlan(cands);hwPlan(cands);beachPlan(cands);
+  townDuckPlan(cands);bearPlan(cands);hwPlan(cands);beachPlan(cands);zooPlan(cands);
   if(!cands.length)return null;
   cands.sort((a,b)=>a.d-b.d);
   return cands[0];}
@@ -1432,6 +1469,7 @@ function climbOut(side){trail.length=0;P.swim=false;P.dive=null;P.x=side<0?POOL.
   puff(P.x,P.y-60,8,'drop');say(P.x,P.y-120,'drip drip');tune([523,659],90,'sine');}
 function doThing(th){
   if(SCRIPT.want&&SCRIPT.want.id===th.id){SCRIPT.want=null;SCRIPT.got=th.id;mark(th.id);return;}
+  if(zooDo(th))return;
   if(cafeDo(th))return;
   if(beachDo(th))return;
   switch(th.id){
@@ -1487,7 +1525,7 @@ function doThing(th){
     case 'mybed':if(hwReady()){hwStart();break;}P.x=590;P.y=GY-28;P.vy=0;P.nap=260;say(P.x,P.y-110,'my own cosy bed');tune([523,440,392],160,'sine');break;
     case 'socks':{const n=NPC.find(q=>q.id==='pip');if(n){meet('pip');n.waveT=90;say(n.x,n.y-110,'tiny socks, so the bridge never gets cold feet!');babble('tiny socks',520);}break;}
     case 'drawings':say(P.x,P.y-120,['a sun!','that one is our house','a bunny. or a cloud?'][(Math.random()*3)|0]);tone(660,.08,'triangle',.04);break;
-    case 'wardrobe':openWardrobe();say(P.x,P.y-120,'what shall i wear?');tune([523,659,784],90,'triangle');break;
+    case 'wardrobe':openWardrobe('clothes');say(P.x,P.y-120,'what shall i wear?');tune([523,659,784],90,'triangle');break;
     case 'fire':fire=!fire;say(P.x,P.y-110,fire?'cosy':'psss');beep(fire?300:160,.2,'sawtooth');break;
     case 'picture':say(P.x,P.y-110,'it is a sun');beep(700,.1,'triangle');break;
     case 'plants':P.water=90;say(P.x,P.y-110,'glug glug');beep(520,.12,'sine');break;
@@ -1635,7 +1673,7 @@ function stepNPCs(){
     if(Math.random()<.004)n.pause=50+Math.random()*90;
     if(Math.random()<.003)n.dir*=-1;});}
 function update(){
-  t++;storyTick();waitsTick();castTick();chTick();
+  t++;storyTick();waitsTick();castTick();chTick();zooTick();
   if(SCRIPT.lock){key.left=key.right=key.up=key.down=0;actEdge=grabEdge=upEdge=downEdge=false;}
   if((flying&&!R&&!TRIP)||(TRIP&&!TRIP.spooky&&(TRIP.ph==='out'||TRIP.ph==='back'))){humOn();humTick();}else humOff();
   musVol=1;
@@ -1873,7 +1911,7 @@ function drawGround(cam){
 function drawSigns(cam){
   x.font='700 20px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
   for(const s of SIGNS){
-    if(s.x<cam.x-VW/2-90||s.x>cam.x+VW/2+90)continue;
+    if(s.x<cam.x-VW/2-90||s.x>cam.x+VW/2+90||(s.x===5725&&VER.zoo==='open'))continue;
     stroke(6);rline(s.x,GY,s.x,GY-92,s.x,2);
     const txt=s.l?'←  '+s.txt:s.txt+(s.a?'  →':'  ▼'),w=x.measureText(txt).width+40;
     x.fillStyle=PAPER;x.fillRect(s.x-w/2,GY-134,w,40);
@@ -1889,7 +1927,7 @@ function roof(x0,x1,base,apex,s,col){
   if(col){x.fillStyle=col;x.beginPath();x.moveTo(x0,base);x.lineTo((x0+x1)/2,apex);x.lineTo(x1,base);x.closePath();x.fill();}
  stroke(8);rline(x0,base,(x0+x1)/2,apex,s,4);rline((x0+x1)/2,apex,x1,base,s+13,4);}
 /* the toy boxes: something new springs out every time */
-const JACKS={toybox:{x:30699,top:GY-68,w:62,t:0,n:-1},pinkbox:{x:1669,top:GY-64,w:58,t:0,n:-1},playbox:{x:2105,top:GY-52,w:50,t:0,n:-1}};
+const JACKS={toybox:{x:31310,top:GY-68,w:62,t:0,n:-1},pinkbox:{x:1669,top:GY-64,w:58,t:0,n:-1},playbox:{x:2105,top:GY-52,w:50,t:0,n:-1}};
 const JACKPOP=['boing! a jack-in-the-box!','surprise!','hee hee! again!','it made me jump!'];
 function drawJack(id){const j=JACKS[id];if(j.t<=0)return;j.t--;
   const u=Math.min(1,(150-j.t)/10)*Math.min(1,j.t/20),wob=Math.sin(t*.3)*6*u,h=70*u,cols=[TOMATO,SKY,MUSTARD,SAGE];
@@ -2291,6 +2329,7 @@ function drawPlane(){
     const L=LADS[5];
     rline(L.x-20,L.y0,L.x-20,L.y1,1041,2);rline(L.x+20,L.y0,L.x+20,L.y1,1051,2);
     for(let y=L.y0+18;y<L.y1;y+=28)rline(L.x-20,y,L.x+20,y,1061+y,2);}}
+function aged(px,py,fn){const S=AGES[LOOK.age].s;x.save();x.translate(px,py);x.scale(S,S);x.translate(-px,-py);try{fn();}finally{x.restore();}}
 function drawPlayer(){
   if(CAR.driving||P.onBus||BEACH.ride)return;
   const px=P.x,py=P.y,o=gabyO();
@@ -2298,37 +2337,37 @@ function drawPlayer(){
     figure(px,py,Object.assign({},o,{arms:'up',shadow:false}));x.restore();return;}
   if(P.dive){x.save();x.translate(px,py-46);x.rotate((P.dive.spin||0)*(P.face||1));x.translate(-px,-(py-46));
     figure(px,py,Object.assign({},o,{arms:'up',shadow:false}));x.restore();return;}
-  if(P.swim){drawSwimmer(px,py,o,P.face,P.walk*1.4,P.y>POOL.surf+20);return;}
-  if(P.lounge>0){lounger(px,py,o);return;}
-  if(P.nap>0){shadow(px,py,26);stroke(6);
-    rcircPath(px+30,py-24,HR,1211);x.fillStyle=SKIN;x.fill();x.stroke();
+  if(P.swim){aged(px,py,()=>drawSwimmer(px,py,o,P.face,P.walk*1.4,P.y>POOL.surf+20));return;}
+  if(P.lounge>0){aged(px,py,()=>lounger(px,py,o));return;}
+  if(P.nap>0){aged(px,py,()=>{shadow(px,py,26);stroke(6);
+    rcircPath(px+30,py-24,HR,1211);x.fillStyle=LOOK.skin;x.fill();x.stroke();
     fillCirc(px+25,py-27,2.8,1218);fillCirc(px+36,py-27,2.8,1219);
-    drawLook(px+30,py-24,'gaby',1400,HR,GHAIR);if(P.hat)drawLook(px+30,py-24,P.hat,1500,HR);
+    drawLook(px+30,py-24,'gaby',1400,HR,LOOK.hair);if(P.hat)drawLook(px+30,py-24,P.hat,1500,HR);
     stroke(7,ACCENT);rline(px+16,py-20,px-26,py-18,1221,2);stroke(6);
-    rline(px-26,py-18,px-34,py-4,1231,2);return;}
+    rline(px-26,py-18,px-34,py-4,1231,2);});return;}
   if(P.sit>0){seated(px,py,gabyO({seed:1241,hand:P.x>SCH.x0&&P.x<SCH.x1?1:0}));
     if(inBurger())icon('fries',px+56,py-66,.75,1251);else if(inLib())openBook(px+25,py-40,RD.bk!=null?BOOKS[RD.bk].col:ACCENT);
     else if(P.x<SCH.x0)fillCirc(px+22,py-58,8,1251);return;}
-  if(P.bath>0){stroke(6);
-    rcircPath(px,py-104,HR,1211);x.fillStyle=SKIN;x.fill();x.stroke();
+  if(P.bath>0){aged(px,py,()=>{stroke(6);
+    rcircPath(px,py-104,HR,1211);x.fillStyle=LOOK.skin;x.fill();x.stroke();
     fillCirc(px-5,py-107,2.8,1218);fillCirc(px+5,py-107,2.8,1219);
-    drawLook(px,py-104,'gaby',1400,HR,GHAIR);if(P.hat)drawLook(px,py-104,P.hat,1500,HR);
-    rline(px-16,py-84,px+16,py-88,1201,2);return;}
+    drawLook(px,py-104,'gaby',1400,HR,LOOK.hair);if(P.hat)drawLook(px,py-104,P.hat,1500,HR);
+    rline(px-16,py-84,px+16,py-88,1201,2);});return;}
   if(P.tube!==null)return;
   if(P.swing>0){const q=swingSeat(-1);seated(q.x-10,q.y+34,Object.assign({},o,{shadow:false,hand:1}));return;}
   if(P.ride>0){const b=-Math.abs(Math.sin(t*.2))*14;drawSpring(SPRING.x,b);
     seated(px-16,py-44+b,Object.assign({},o,{shadow:false,hand:0}));return;}
-  if(P.seesaw){figure(px,py,Object.assign({},o,{arms:'up',s:1}));return;}
-  if(P.slide!==null){figure(px,py,Object.assign({},o,{arms:'up',s:1}));return;}
-  if(P.climb){figure(px,py,Object.assign({},o,{arms:'up',walk:P.walk,s:1}));return;}
-  if(P.balls>0){stroke(6);
-    rcircPath(px,py-56,HR,1211);x.fillStyle=SKIN;x.fill();x.stroke();
+  if(P.seesaw){figure(px,py,Object.assign({},o,{arms:'up'}));return;}
+  if(P.slide!==null){figure(px,py,Object.assign({},o,{arms:'up'}));return;}
+  if(P.climb){figure(px,py,Object.assign({},o,{arms:'up',walk:P.walk}));return;}
+  if(P.balls>0){aged(px,py,()=>{stroke(6);
+    rcircPath(px,py-56,HR,1211);x.fillStyle=LOOK.skin;x.fill();x.stroke();
     fillCirc(px-5,py-59,2.8,1218);fillCirc(px+5,py-59,2.8,1219);
-    drawLook(px,py-56,'gaby',1400,HR,GHAIR);if(P.hat)drawLook(px,py-56,P.hat,1500,HR);
-    rline(px-20,py-38,px+20,py-42,1291,2);return;}
+    drawLook(px,py-56,'gaby',1400,HR,LOOK.hair);if(P.hat)drawLook(px,py-56,P.hat,1500,HR);
+    rline(px-20,py-38,px+20,py-42,1291,2);});return;}
   if(P.dance>0){const hop=Math.abs(Math.sin(t*.15))*14;
-    figure(px,py-hop,Object.assign({},o,{arms:'up',s:1}));return;}
-  figure(px,py,Object.assign({},o,{walk:P.walk,turn:P.turnA||0,arms:(P.held!==null||P.fishT>0)?'carry':P.hugT>0?'up':'down',s:1}));}
+    figure(px,py-hop,Object.assign({},o,{arms:'up'}));return;}
+  figure(px,py,Object.assign({},o,{walk:P.walk,turn:P.turnA||0,arms:(P.held!==null||P.fishT>0)?'carry':P.hugT>0?'up':'down'}));}
 function bubble(bx,by,txt,alpha,small){
   x.save();x.globalAlpha=alpha;
   const {L,w,h}=bubbleSize(txt,small);
@@ -2719,6 +2758,23 @@ function drawPoolGate(){                         // on main street: the pool hou
 /* ======================= Gaby herself ======================= */
 /* shoulder-length brown hair, sunglasses always up on her head, and a wardrobe of clothes */
 const GHAIR='#7a4b32';
+/* who you are: Gaby, or a friend visiting her world. the world, the title and the signs always stay Gaby's */
+const LOOK0={name:'Gaby',sex:'girl',age:'kid',skin:'#f8e3cf',hair:'#7a4b32',style:'shoulder',eyes:'dark'};
+let LOOK=Object.assign({},LOOK0);
+try{const lv=JSON.parse(localStorage.getItem('gabys-world-look')||'null');if(lv)Object.assign(LOOK,lv);}catch(e){}
+function saveLook(){try{localStorage.setItem('gabys-world-look',JSON.stringify(LOOK));}catch(e){}}
+/* the teen is the old full size; a kid is a touch shorter, with a bigger head the younger you go */
+const AGES={baby:{s:.56,hk:1.34},toddler:{s:.68,hk:1.24},kid:{s:.86,hk:1.1},teen:{s:1,hk:1}};
+const EYES={dark:null,brown:'#7a5233',blue:'#5b8fc9',green:'#5e9a5a',hazel:'#a8834a',grey:'#8d98a3'};
+const SKINC=['#f8e3cf','#eac39f','#c99a72','#a2735a','#7a5440'];
+const HAIRC=['#7a4b32','#3b2f2a','#2b2b2b','#c47f45','#e3c27a','#c4572e','#d9d4cc','#e3a0b8','#7f9fbf'];
+const STYLES=['shoulder','long','short','curly','spiky','bun','pigtails'];
+if(!AGES[LOOK.age])LOOK.age='kid';if(STYLES.indexOf(LOOK.style)<0)LOOK.style='shoulder';
+function withLook(lk,fn){const keep=LOOK;LOOK=Object.assign({},keep,lk);try{fn();}finally{LOOK=keep;}}
+/* friends' names go into everything people say; "Gaby's World", the town and the signs stay Gaby's */
+function nm(s){s=String(s);if(LOOK.sex==='boy')s=s.replace(/young lady/g,'young man').replace(/a girl called/g,'a boy called');
+  const n=LOOK.name||'Gaby';if(n==='Gaby')return s;
+  return s.replace(/\bGaby\b(?!['’]s (World|Burgers|Pool|town))/g,n).replace(/\bGABY\b/g,n.toUpperCase());}
 const TOPS=[{top:'tee',tcol:'#d9654b'},{top:'tee',tcol:'#e0b25e'},{top:'stripes',tcol:'#7f9fbf'},
   {top:'heart',tcol:'#e3a0b8'},{top:'star',tcol:'#8fb3a0'},{top:'stripes',tcol:'#b49ac7'}];
 const BOTTOMS=[{bottom:'skirt',bcol:'#7f9fbf'},{bottom:'skirt',bcol:'#d9654b'},{bottom:'tutu',bcol:'#f2c4cf'},
@@ -2731,7 +2787,8 @@ try{const sv=JSON.parse(localStorage.getItem('gabys-world-outfit')||'null');if(s
 if(OUTFIT.shades==='patch'&&SHADES.indexOf('patch')<0)SHADES.push('patch');
 function saveOutfit(){try{localStorage.setItem('gabys-world-outfit',JSON.stringify(OUTFIT));}catch(e){}}
 function gabyO(extra,of){of=of||OUTFIT;
-  return Object.assign({look:'gaby',hat:P.hat,hair:GHAIR,fill:SKIN,outfit:of,
+  const A=AGES[LOOK.age]||AGES.kid;
+  return Object.assign({look:'gaby',hat:P.hat,hair:LOOK.hair,fill:LOOK.skin,outfit:of,s:A.s,hk:A.hk,eye:LOOK.eyes,paci:LOOK.age==='baby',
     shirt:of.dress?of.dress.col:of.tcol,pants:of.bcol,seed:1211,face:P.face},extra||{});}
 let shadesNow=0;                                   // 0 = up on her head, 1 = down over her eyes
 function drawShades(px,py,r,down,style){
@@ -2747,14 +2804,25 @@ function drawShades(px,py,r,down,style){
       stroke(Math.max(1.5,r*.08));x.stroke();
       x.save();x.globalAlpha=.6;stroke(Math.max(1.2,r*.06),PAPER);x.beginPath();x.arc(cx-w*.2,y-h*.1,w*.45,Math.PI*1.1,Math.PI*1.5);x.stroke();x.restore();}});}
 function gabyHair(px,py,r,col){
-  x.fillStyle=col||GHAIR;
-  [-1,1].forEach(sd=>{x.beginPath();x.moveTo(px+sd*r*.72,py-r*.4);x.lineTo(px+sd*r*1.12,py-r*.42);   // down to her shoulders, flicking out
-    x.quadraticCurveTo(px+sd*r*1.22,py+r*.8,px+sd*r*1.55,py+r*1.42);x.lineTo(px+sd*r*.98,py+r*1.32);
-    x.quadraticCurveTo(px+sd*r*.86,py+r*.55,px+sd*r*.78,py+r*.1);x.closePath();x.fill();
-    stroke(Math.max(1.6,r*.07));x.stroke();x.fillStyle=col||GHAIR;});
-  x.beginPath();x.arc(px,py,r*1.1,Math.PI,Math.PI*2);x.lineTo(px+r*1.1,py-r*.12);                    // the top, with a fringe
-  x.quadraticCurveTo(px+r*.55,py-r*.62,px+r*.05,py-r*.42);x.quadraticCurveTo(px-r*.5,py-r*.66,px-r*1.1,py-r*.12);x.closePath();
-  x.fill();stroke(Math.max(1.6,r*.07));x.stroke();}
+  const c=col||LOOK.hair,st=LOOK.style,lw=Math.max(1.6,r*.07);
+  const blob=(cx,cy,rr,sd)=>{rcircPath(cx,cy,rr,sd);x.fillStyle=c;x.fill();stroke(lw);x.stroke();};
+  const sides=(len,flick)=>[-1,1].forEach(sd=>{x.fillStyle=c;x.beginPath();x.moveTo(px+sd*r*.72,py-r*.4);x.lineTo(px+sd*r*1.12,py-r*.42);
+    x.quadraticCurveTo(px+sd*r*1.22,py+r*len*.56,px+sd*r*(1.12+flick),py+r*len);x.lineTo(px+sd*r*.98,py+r*(len-.1));
+    x.quadraticCurveTo(px+sd*r*.86,py+r*.55,px+sd*r*.78,py+r*.1);x.closePath();x.fill();stroke(lw);x.stroke();});
+  const top=()=>{x.fillStyle=c;x.beginPath();x.arc(px,py,r*1.1,Math.PI,Math.PI*2);x.lineTo(px+r*1.1,py-r*.12);                    // the top, with a fringe
+    x.quadraticCurveTo(px+r*.55,py-r*.62,px+r*.05,py-r*.42);x.quadraticCurveTo(px-r*.5,py-r*.66,px-r*1.1,py-r*.12);x.closePath();
+    x.fill();stroke(lw);x.stroke();};
+  if(st==='shoulder')sides(1.42,.43);                                  // down to her shoulders, flicking out
+  else if(st==='long')sides(2.6,.12);
+  else if(st==='curly'){for(let i=0;i<=8;i++){const a=Math.PI*(1+i/8);blob(px+Math.cos(a)*r*1.08,py+Math.sin(a)*r*1.02,r*.34,51+i);}
+    [-1,1].forEach((d,i)=>{blob(px+d*r*1.08,py+r*.12,r*.3,61+i);blob(px+d*r*1.0,py+r*.52,r*.26,63+i);});}
+  else if(st==='spiky'){x.fillStyle=c;for(let i=-2;i<=2;i++){const a=-Math.PI/2+i*.42,bx=px+Math.cos(a)*r*.9,by=py+Math.sin(a)*r*.9;
+    x.beginPath();x.moveTo(bx-Math.sin(a)*r*.3,by+Math.cos(a)*r*.3);x.lineTo(px+Math.cos(a)*r*1.6,py+Math.sin(a)*r*1.6);x.lineTo(bx+Math.sin(a)*r*.3,by-Math.cos(a)*r*.3);x.closePath();x.fill();stroke(lw);x.stroke();}}
+  else if(st==='bun')blob(px,py-r*1.28,r*.48,71);
+  top();
+  if(st==='pigtails')[-1,1].forEach((d,i)=>{x.fillStyle=c;x.beginPath();x.ellipse(px+d*r*1.42,py+r*.35,r*.34,r*.62,d*.35,0,7);x.fill();stroke(lw);x.stroke();
+    const bx=px+d*r*1.18,by=py-r*.18;x.fillStyle=TOMATO;x.beginPath();x.moveTo(bx,by);x.lineTo(bx-r*.28,by-r*.2);x.lineTo(bx-r*.28,by+r*.2);x.closePath();
+    x.moveTo(bx,by);x.lineTo(bx+r*.28,by-r*.2);x.lineTo(bx+r*.28,by+r*.2);x.closePath();x.fill();stroke(lw*.8);x.stroke();});}
 function bareLeg(x1,y1,x2,y2,s,sd,skin){stroke(6.2*s);rline(x1,y1,x2,y2,sd,2);stroke(3.8*s,skin||SKIN);rline(x1,y1,x2,y2,sd,2);}
 function gabyArm(x1,y1,x2,y2,s,sd,o){                 // a short sleeve, a bare arm and a little hand
   const mx=x1+(x2-x1)*.3,my=y1+(y2-y1)*.3;
@@ -2762,7 +2830,7 @@ function gabyArm(x1,y1,x2,y2,s,sd,o){                 // a short sleeve, a bare 
   stroke(6.6*s);rline(x1,y1,mx,my,sd+3,0);stroke(4.4*s,o.shirt);rline(x1,y1,mx,my,sd+3,0);
   rcircPath(x2,y2,2.9*s,sd+5);x.fillStyle=o.fill||SKIN;x.fill();stroke(1.6*s);x.stroke();}
 function gabyFigure(px,py,o){
-  const s=o.s||1,H=HR*s,hy=py-84*s,sh=py-70*s,hip=py-40*s,sd=o.seed||1,of=o.outfit;
+  const s=o.s||1,hk=o.hk||1,H=HR*s*hk,hy=py-84*s-(hk-1)*HR*s*.8,sh=py-70*s,hip=py-40*s,sd=o.seed||1,of=o.outfit;
   const u=Math.max(0,Math.min(1,o.turn||0)),f=o.face||1,sn=Math.sin(o.walk||0);
   /* legs: front-on they stand apart; walking, one steps forward while the other goes back (and lifts a little) */
   const step=f*sn*13*s*u,spread=(1-u*.75)*9*s;
@@ -2778,7 +2846,7 @@ function gabyFigure(px,py,o){
   if(walkArms){if(u<=.3){const h=hand(0);gabyArm(px-shx,sy,h[0],h[1],s,sd,o);}
     const h=hand(1);gabyArm(px+shx,sy,h[0],h[1],s,sd+7,o);}
   else gabyArms(px,sh,s,sd,o,0);
-  head(px+f*2*s*u,hy,H,s,sd,Object.assign({},o,{turn:u}));}
+  head(px+f*2*s*u,hy,H,s*hk,sd,Object.assign({},o,{turn:u}));}
 function gabyArms(px,sh,s,sd,o,sw){const L=[px-8*s,sh+3*s],R=[px+8*s,sh+3*s],f=o.face||1;
   if(o.arms==='up'){gabyArm(L[0],L[1],px-19*s,sh-17*s,s,sd,o);gabyArm(R[0],R[1],px+19*s,sh-17*s,s,sd+7,o);}
   else if(o.arms==='wave'){gabyArm(L[0],L[1],px-17*s,sh+25*s,s,sd,o);gabyArm(R[0],R[1],px+19*s,sh-15*s+Math.sin(t*.15)*6*s,s,sd+7,o);}
@@ -2827,26 +2895,47 @@ function dressTop(px,top,bot,s,sd,of){
 function drawGabyInto(cv,of,mode){
   const ctx=cv.getContext('2d'),sc=cv.width/100;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);
   x=ctx;try{ctx.setTransform(sc,0,0,sc,0,0);
-    if(mode==='face'){head(50,62,30,2,1211,gabyO({hat:null},of));}
-    else figure(50,cv.height/sc-3,gabyO({s:(cv.height/sc-6)/104,arms:'down',shadow:false,hat:null},of));}
+    if(mode==='face'){head(50,64,26,2,1211,gabyO({hat:null},of));}
+    else{const hh=cv.height/sc,A=AGES[LOOK.age]||AGES.kid,fit=(hh-8)/(99+(A.hk-1)*27+12),k=mode==='sized'?A.s/AGES.teen.s:1;
+      figure(50,hh-3,gabyO({s:fit*k,arms:'down',shadow:false,hat:null},of));}}
   finally{x=X0;}}
 const WROWS=[['tops',TOPS,o=>({dress:null,top:o.top,tcol:o.tcol})],['skirts & trousers',BOTTOMS,o=>({dress:null,bottom:o.bottom,bcol:o.bcol})],
   ['dresses',DRESSES,o=>({dress:o})],['shoes',SHOES,o=>({shoes:o.shoes,boots:o.boots})],['sunglasses',SHADES,o=>({shades:o})]];
 function same(a,b){return JSON.stringify(a)===JSON.stringify(b);}
+let wardTab='clothes';
+function wardTile(row,on,draw,label,face,click){const b=document.createElement('div');b.className='wopt'+(on?' on':'');
+  const cv=document.createElement('canvas');cv.width=120;cv.height=face?120:150;if(face)cv.className='face';draw(cv);b.appendChild(cv);
+  if(label){const sp=document.createElement('span');sp.textContent=label;b.appendChild(sp);}
+  b.addEventListener('click',e=>{e.stopPropagation();click();tune([660,880,1046],70,'triangle');fillWardrobe();});row.appendChild(b);}
+function wardGroup(box,label,full){const grp=document.createElement('div');grp.className='wgrp'+(full?' full':'');
+  const lb=document.createElement('div');lb.className='wlbl';lb.textContent=label;grp.appendChild(lb);box.appendChild(grp);
+  const row=document.createElement('div');row.className='wrow';grp.appendChild(row);return row;}
+function setLook(ch){Object.assign(LOOK,ch);saveLook();bagSig='';palSig='';}
 function fillWardrobe(){
-  drawGabyInto(document.getElementById('wardpic'),OUTFIT);
+  document.querySelectorAll('#wardtabs span').forEach(o=>o.classList.toggle('on',o.dataset.wt===wardTab));
+  drawGabyInto(document.getElementById('wardpic'),OUTFIT,wardTab==='me'?'sized':'');
   const box=document.getElementById('wardrows');box.innerHTML='';
-  WROWS.forEach(([label,opts,fn])=>{const row=document.createElement('div');row.className='wrow';
-    const grp=document.createElement('div');grp.className='wgrp';const lb=document.createElement('div');lb.className='wlbl';lb.textContent=label;grp.appendChild(lb);box.appendChild(grp);
-    opts.forEach(o=>{const ch=fn(o),of=Object.assign({},OUTFIT,ch),on=Object.keys(ch).every(k=>same(OUTFIT[k],ch[k]));
-      const b=document.createElement('div');b.className='wopt'+(on?' on':'');
-      const cv=document.createElement('canvas');cv.width=120;cv.height=label==='sunglasses'?120:150;
-      if(label==='sunglasses')cv.className='face';drawGabyInto(cv,of,label==='sunglasses'?'face':'');b.appendChild(cv);
-      b.addEventListener('click',e=>{e.stopPropagation();Object.assign(OUTFIT,ch);saveOutfit();mark('dressup');
-        tune([660,880,1046],70,'triangle');fillWardrobe();});
-      row.appendChild(b);});
-    grp.appendChild(row);});}
-function openWardrobe(){fillWardrobe();document.getElementById('ward').style.display='flex';started=true;}
+  if(wardTab==='me'){fillMe(box);return;}
+  WROWS.forEach(([label,opts,fn])=>{const row=wardGroup(box,label);
+    opts.forEach(o=>{const ch=fn(o),of=Object.assign({},OUTFIT,ch),on=Object.keys(ch).every(k=>same(OUTFIT[k],ch[k])),sg=label==='sunglasses';
+      wardTile(row,on,cv=>drawGabyInto(cv,of,sg?'face':''),null,sg,()=>{Object.assign(OUTFIT,ch);saveOutfit();mark('dressup');});});});}
+function fillMe(box){
+  const nrow=wardGroup(box,'my name',1),inp=document.createElement('input');inp.id='namebox';inp.maxLength=12;inp.autocomplete='off';inp.spellcheck=false;
+  inp.value=LOOK.name;inp.placeholder='Gaby';
+  inp.addEventListener('input',()=>{setLook({name:inp.value.replace(/\s+/g,' ').trim().slice(0,12)||'Gaby'});});
+  inp.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')inp.blur();});
+  inp.addEventListener('click',e=>e.stopPropagation());nrow.appendChild(inp);
+  const lrow=(label,opts,ch,face,lab)=>{const row=wardGroup(box,label);
+    opts.forEach(v=>{const c=ch(v),on=Object.keys(c).every(k=>LOOK[k]===c[k]);
+      wardTile(row,on,cv=>withLook(c,()=>drawGabyInto(cv,OUTFIT,face?'face':'sized')),lab?lab(v):null,face,()=>setLook(c));});};
+  lrow('I am a',['girl','boy'],v=>{const c={sex:v};if(v==='boy'&&LOOK.style==='shoulder')c.style='short';if(v==='girl'&&LOOK.style==='short')c.style='shoulder';return c;},1,v=>v);
+  lrow('how big?',['baby','toddler','kid','teen'],v=>({age:v}),0,v=>v);
+  lrow('skin',SKINC,v=>({skin:v}),1);
+  lrow('hair colour',HAIRC,v=>({hair:v}),1);
+  lrow('hair',STYLES,v=>({style:v}),1);
+  lrow('eyes',Object.keys(EYES),v=>({eyes:v}),1,v=>v);}
+function openWardrobe(tab){if(tab)wardTab=tab;fillWardrobe();document.getElementById('ward').style.display='flex';started=true;}
+document.querySelectorAll('#wardtabs span').forEach(sp=>sp.addEventListener('click',e=>{e.stopPropagation();wardTab=sp.dataset.wt;fillWardrobe();tone(700,.06,'triangle',.03);}));
 
 /* ======================= the pets in the pool ======================= */
 /* each one takes its own turn: up the ladder, along the board, boing boing, splash. or a hop in off the side */
@@ -3261,7 +3350,7 @@ function draw(){
       if(innerWidth>innerHeight)touchPad=innerHeight*.16/scale;}    // on its side the buttons sit at the edges, so the ground can go low
     const lim=below+touchPad-VH/2;               // on touch screens the ground always sits just above the buttons
     camY=matchMedia('(pointer:coarse)').matches?Math.min(P.y-below+lim,lim):Math.min(P.y-VH*.24,lim);
-    if(inZone()){const z=curZone(),top=z.ceil-46+VH/2,sky=top-((z.id==='pool'||z.id==='bears')?260:0);   // the pool is outside: the sky goes up and up
+    if(inZone()){const z=curZone(),top=z.ceil-46+VH/2,sky=top-((z.id==='pool'||z.id==='bears'||z.id==='zoo')?260:0);   // the pool is outside: the sky goes up and up
       if(matchMedia('(pointer:coarse)').matches){
         const floor=(inPool()?POOL.bot+14:GY)+touchPad-VH/2;      // normally: the floor just above the buttons...
         camY=floor<=top?floor:Math.max(sky,Math.min(floor,P.y-60));}   // ...but follow her up to the loft, the diving board and high dives
@@ -3277,13 +3366,13 @@ function draw(){
   x.translate(innerWidth/2,innerHeight/2);x.scale(scale,scale);x.rotate(tilt);x.translate(-cam.x,-cam.y);
   if(labRumble>0)x.translate((Math.random()-.5)*Math.min(14,labRumble*.15),(Math.random()-.5)*Math.min(8,labRumble*.08));
 
-  if(inZone()){const zid=curZone().id;zid==='bears'?drawBearCity(cam):zid==='bearcave'?drawCaveRoom(cam):zid==='burger'?drawBurgerInside(cam):zid==='pool'?drawPool(cam):zid==='library'?drawLibraryInside(cam):zid==='cafe'?drawCafeInside(cam):zid==='home'?drawHomeInside(cam):drawClassroom(cam);if(zid!=='pool'&&zid!=='bears'&&zid!=='bearcave'&&zid!=='home')sunBehind();}
+  if(inZone()){const zid=curZone().id;zid==='bears'?drawBearCity(cam):zid==='bearcave'?drawCaveRoom(cam):zid==='burger'?drawBurgerInside(cam):zid==='pool'?drawPool(cam):zid==='library'?drawLibraryInside(cam):zid==='cafe'?drawCafeInside(cam):zid==='home'?drawHomeInside(cam):zid==='zoo'?drawZooInside(cam):drawClassroom(cam);if(zid!=='pool'&&zid!=='bears'&&zid!=='bearcave'&&zid!=='home'&&zid!=='zoo')sunBehind();}
   else{
   drawSky(cam);
   if(!flying){
     drawGround(cam);drawBeach(cam);drawLab(cam);drawOldGarden();
     drawHouse1();drawHouse2();drawBridge();drawPlayhouse();
-    drawBathHouse();drawTruck();drawTown();drawBurgerFacade();drawSchoolFacade();drawPlayground();drawRaceGate();drawPoolGate();drawLibraryFacade();drawBusStop();drawMailbox();drawLadders();drawLamppost();if(halloNow())drawHalloweenTown(cam);}
+    drawZooLot();drawBathHouse();drawTruck();drawTown();drawBurgerFacade();drawSchoolFacade();drawPlayground();drawRaceGate();drawPoolGate();drawLibraryFacade();drawBusStop();drawMailbox();drawLadders();drawLamppost();if(halloNow())drawHalloweenTown(cam);}
   drawPlane();
   if(!flying)drawSigns(cam);}
   NPC.forEach((n,i)=>{
@@ -3334,8 +3423,8 @@ function draw(){
   if(started&&!BC.arrived&&!flying&&!P.onBus&&!BC.busy){const td=ITEMS.find(o=>o.kind==='teddy');      // Mr. Button has a quest for Gaby
     if(td&&followers.indexOf(td)<0&&inScope(td.x)&&Math.abs(td.x-cam.x)<VW/2+60)qCloud(td.x,td.y-92);
     const bec=bearN('bec');if(!bearQuest&&!BC.busy&&td&&followers.indexOf(td)>=0&&curZone()&&curZone().id==='school')qCloud(bec.x,bec.y-150);}
-  if(started&&hwReady()&&!flying){if(zid()==='home')qCloud(30568,GY-130);else if(!inZone()&&Math.abs(505-cam.x)<VW/2+80)qCloud(505,GY-240);}
-  hwBeacons(cam);chBeacons(cam);
+  if(started&&(hwReady()||VER.zoo==='soon')&&!flying&&!CH.step){if(zid()==='home')qCloud(30568,GY-130);else if(!inZone()&&Math.abs(505-cam.x)<VW/2+80)qCloud(505,GY-240);}
+  hwBeacons(cam);chBeacons(cam);zooBeacons(cam);
   drawPlayer();if(SOOT>0&&!CAR.driving&&P.tube===null)sootOn(P.x,P.y-(P.sit>0?96:110));
   if(inBurger())drawBurgerTop();
   if(inPool())drawPoolTop();
@@ -3385,6 +3474,7 @@ function draw(){
 
   x.save();x.setTransform(DPR,0,0,DPR,0,0);
   if(sunPop>0)sunPop--;
+  zooHud();
   if(fadeT>0){x.fillStyle='rgba(246,239,220,'+(fadeT/16)+')';x.fillRect(0,0,innerWidth,innerHeight);}
   if(BC.flash>0){x.fillStyle='rgba(255,250,230,'+Math.min(1,BC.flash/24)+')';x.fillRect(0,0,innerWidth,innerHeight);}
   if(partyT>0){x.textAlign='center';x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
@@ -3704,6 +3794,7 @@ function drawMementos(){                         // two little shelves over Gaby
     else if(m.k==='clover'){fbox(cx-10,by-12,20,12,7825,'#d49a86',3);clover(cx,by-26,7);}
     else if(m.k==='books')['#d9786a','#7f9fbf','#8fb3a0'].forEach((c,j)=>fbox(cx-14+j*2,by-9-j*9,26,9,7827+j,c,2.5));
     else if(m.k==='duck'){drawDuck(cx,by,{s:.45,hat:'pirate',patch:1});}
+    else if(m.k==='feather'){x.save();x.translate(cx,by-2);x.rotate(.35);x.fillStyle=PCOLS[7][0];x.beginPath();x.moveTo(0,0);x.quadraticCurveTo(-11,-14,0,-29);x.quadraticCurveTo(11,-14,0,0);x.fill();stroke(2.5);x.stroke();rline(0,3,0,-22,5,0);x.restore();}
     else if(m.k==='honey'){x.save();x.translate(cx,by);x.scale(.75,.75);itemArt('honey',0,0,7,0);x.restore();}
     else if(m.k==='ship'){x.fillStyle='rgba(207,227,234,.8)';x.beginPath();x.ellipse(cx,by-11,15,10,0,0,7);x.fill();x.fillRect(cx+13,by-15,7,8);stroke(3);x.stroke();
       x.beginPath();x.ellipse(cx,by-11,15,10,0,0,7);x.stroke();x.fillStyle='#b0805a';x.beginPath();x.moveTo(cx-9,by-11);x.lineTo(cx+9,by-11);x.quadraticCurveTo(cx+8,by-5,cx,by-5);x.quadraticCurveTo(cx-8,by-5,cx-9,by-11);x.fill();
@@ -3741,7 +3832,7 @@ function showPage(){
   const b=BOOKS[RD.bk],p=b.pages[RD.pg],last=RD.pg===b.pages.length-1;
   document.getElementById('readtitle').textContent=b.title;
   drawPage(document.getElementById('readpic'),p.pic);
-  document.getElementById('readtxt').textContent=typeof p.txt==='function'?p.txt():p.txt;
+  document.getElementById('readtxt').textContent=nm(typeof p.txt==='function'?p.txt():p.txt);
   document.getElementById('readnum').textContent=(RD.pg+1)+' / '+b.pages.length;
   document.getElementById('readprev').classList.toggle('off',RD.pg===0);
   document.getElementById('readnext').classList.toggle('off',last);
@@ -5042,10 +5133,10 @@ function stayersCome(){let i=0;
     if(Math.abs(d.x-P.x)>VW/2+150){d.x=P.x-DUCK.side*(VW/2+80);d.y=GY;}
     d.st='come';d.tx=Math.max(WL+120,Math.min(W.w-120,(inZone()?DUCK.fx:P.x)+side*95));d.ty=GY;});}
 function duckDone(){
-  DUCK.st='done';DUCK.flag=null;document.getElementById('mapfinn').style.display='none';
+  DUCK.st='done';DUCK.replay=0;DUCK.flag=null;document.getElementById('mapfinn').style.display='none';
   DUCK.list.forEach(d=>{if(STAYERS.indexOf(d.id)>=0)addStayer(d.id,d.x);});addNanny();
   DUCK.list=[];}
-function addStayer(id,px){const k=DK[id];if(NPC.some(n=>n.id===id))return;
+function addStayer(id,px){const k=DK[id],ex=NPC.find(n=>n.id===id);if(ex){ex.x=px;ex.away=0;return;}
   const j=OTHERS.findIndex(o=>o.id===id);if(j>=0)OTHERS.splice(j,1);
   NPC.push({id,name:k.name,x:px,y:GY,duck:1,duckart:k,home:id==='wobble'?1000:1150,range:id==='wobble'?110:90,spd:1.5,dir:1,
     says:k.says,story:k.story,shirt:PAPER,skin:SKIN,hair:INK,wants:WANTS[id]||[],wantI:0,hearts:0,wish:null});}
@@ -6250,7 +6341,7 @@ const NANNY={id:'nanny',name:'Nanny Plum',col:'#f3eee6',glasses:1,s:1.05,
 OTHERS.push({id:'nanny',name:NANNY.name,duckart:NANNY,story:NANNY.story},
   {id:'wisp',name:'Wisp',ghost:1,story:"Wisp is a friendly ghost who lives in Captain Finn's treehouse. He says BOO! to everybody, and then he giggles, because Halloween is his birthday."},
   {id:'itsy',name:'Itsy',spider:1,story:'Itsy the spider spins every cobweb in Duck Village. She knits them, a bit like Nana Pip knits socks.'});
-function addNanny(){if(NPC.some(n=>n.id==='nanny'))return;const j=OTHERS.findIndex(o=>o.id==='nanny');if(j>=0)OTHERS.splice(j,1);
+function addNanny(){const ex=NPC.find(n=>n.id==='nanny');if(ex){ex.away=0;return;}const j=OTHERS.findIndex(o=>o.id==='nanny');if(j>=0)OTHERS.splice(j,1);
   NPC.push({id:'nanny',name:NANNY.name,x:1075,y:GY,duck:1,duckart:NANNY,nanny:1,home:1075,range:70,spd:1.1,dir:1,says:NANNY.says,story:NANNY.story,
     shirt:PAPER,skin:SKIN,hair:INK,wants:[{k:'cup',why:'a cup of tea. those two are a LOT of work!'},{k:'flower',why:'a flower for my hat'}],wantI:0,hearts:0,wish:null});}
 const halloNow=()=>hallow&&night&&!flying&&!inZone();
@@ -6363,7 +6454,7 @@ function hwPlan(c){if(SCENE||HW.busy)return;const z=inZone()?curZone().id:'town'
     c.push({k:'duck',x:e.x,y:e.y-70,d:d+6,txt:k==='nugget'?'give Nugget a hug':'say hello to '+nm,fn:()=>{meet(k);
       const L=HWLINES[k];hsay(k,L[(Math.random()*L.length)|0]);if(k==='nugget'){puff(e.x,e.y-50,8,'heart');mark('hello');}}});}}
 function hwStart(){
-  HW.st='morning';HW.busy=1;if(zid()!=='home')goTo(30558,GY);P.x=30558;P.y=GY-28;P.vy=0;P.nap=1e6;P.face=1;
+  HW.e={};HW.spots=null;HW.st='morning';HW.busy=1;if(zid()!=='home')goTo(30558,GY);P.x=30558;P.y=GY-28;P.vy=0;P.nap=1e6;P.face=1;
   seq([[0,()=>{night=true;hallow=false;hsay('gaby','i wonder who will come and play tomorrow... zzz');tune([523,440,392],160,'sine');}],
     [160,()=>{P.nap=0;P.x=680;P.y=GY;P.face=1;night=false;fadeT=16;sunPop=14;lineUp(600,GY);hwKids();tune([392,523,659,784],110,'sine');
       hsay('gaby',"good morning! it's SATURDAY!");}],
@@ -6602,7 +6693,7 @@ function beachCancel(){const B=BEACH;if(B.st==='picnic'&&!B.ride)return;
 function beachTick(){
   if(TRIP)return;
   const B=BEACH,E=bPup(),onBeach=!inZone()&&!flying&&P.x<DUNE+60;
-  if((HW.st==='none'||HW.st==='done')&&!CH.step)['nanny','wobble','nugget'].forEach(id=>{const n=NPC.find(q=>q.id===id);if(n)n.away=onBeach?1:0;});   // they're at the beach while Gaby is
+  if((HW.st==='none'||HW.st==='done')&&!CH.step&&DUCK.st==='done')['nanny','wobble','nugget'].forEach(id=>{const n=NPC.find(q=>q.id===id);if(n)n.away=onBeach?1:0;});   // they're at the beach while Gaby is
   B.t++;if(B.boo>0)B.boo--;if(B.wave>0)B.wave--;
   if(onBeach){if(!found.beach){mark('beach');say(P.x,P.y-130,'the BEACH! i can hear the waves!');}
     if(t%120===0)crunch(1.1,.007);}
@@ -7383,6 +7474,7 @@ const PETOF={pickles:'cat',clover:'bunny',button:'teddy',bolt:'robot',bolty:'bol
 function speaker(id){
   if(id==='gaby')return{x:P.x,y:P.y,h:P.sit>0?150:132};
   const a=CAST[id];if(a&&!a.hide)return{x:a.x,y:a.y-(a.hy||0),h:castH(a),a};
+  if(id==='parrot')return{x:ZPERCH[7][0],y:ZPERCH[7][1],h:70,a:{type:'parrot'}};
   const k=PETOF[id];if(k){const it=ITEMS.find(o=>o.kind===k);if(it)return{x:it.x,y:it.y,h:k==='robot'||k==='bolty'?96:64,pet:k};}
   if(id.slice(0,6)==='sprout'){const it=ITEMS.find(o=>o.sid===id);if(it)return{x:it.x,y:it.y,h:64,pet:'sprout'};}
   const n=NPC.find(q=>q.id===id&&!q.away);if(n)return{x:n.x,y:n.y,h:n.seat?130:150};
@@ -7392,6 +7484,7 @@ function voiceOf(id,txt,s){
   if(id==='baby'){slide(820,1250,.18,'sine',.02);setTimeout(()=>slide(900,1300,.2,'sine',.018),220);return;}
   if(id==='mommy'){babble(txt,340);return;}
   if(s&&s.pet){petVoice(s.pet);return;}
+  if(s&&s.a&&s.a.type==='parrot'){squawk();return;}
   const a=s&&s.a;if(a&&(a.type==='duck'||a.type==='chair')){quack(a.pitch||560,2);return;}
   babble(txt,(a&&a.pitch)||480);}
 function speak(id,txt){
@@ -7433,6 +7526,8 @@ function castArt(a){const hy=a.hy||0;
   else if(a.type==='person'){const o={look:a.look,shirt:a.shirt,hair:a.hair,fill:a.fill,seed:a.seed||7,walk:a.walk,arms:a.arms||'down',face:a.face};
     if(a.seat){x.save();if(a.face<0){x.translate(a.x,0);x.scale(-1,1);x.translate(-a.x,0);}seated(a.x,a.y,o);x.restore();}
     else figure(a.x,a.y-hy,o);}
+  else if(a.type==='parrot')drawParrot(a.x,a.y,{s:a.s,col:a.col,wing:a.wing,face:a.face,air:!!a.arc,sq:a.sq});
+  else if(a.type==='cage')drawCage(a);
   else if(a.type==='cloth')drawFlyCloth(a);
   else if(a.type==='cake')drawCake2(a.x,a.y,a.kind);
   else if(a.type==='boom')drawBoomBurst(a);}
@@ -7441,13 +7536,13 @@ function sootOn(px,py){x.save();x.globalAlpha=.5;x.fillStyle='#3a3530';
   stroke(2.5);[-1,1].forEach(d=>{x.beginPath();x.moveTo(px+d*12,py-14);x.lineTo(px+d*22,py-28);x.stroke();});}
 
 /* ---- buildings that change, and the chapter you're in ---- */
-const VER={cafe:'old',attic:'plain',wall:0};
-const CH={step:null,done:0,pend:0,resume:null,beacon:null,away:[],fol:null};
+const VER={cafe:'old',attic:'plain',wall:0,zoo:'none'};
+const CH={step:null,done:0,pend:0,resume:null,beacon:null,away:[],fol:null,replay:0};
 function setVer(k,v){VER[k]=v;bagSig='';}
 function placeOlive(){const o=NPC.find(n=>n.id==='olive');if(!o)return;if(VER.cafe==='new'){o.x=28955;o.y=GY;}else{o.x=11760;o.y=GY;}}
 function awayNPCs(ids){ids.forEach(id=>{const n=NPC.find(q=>q.id===id);if(n&&!n.away){n.away=1;CH.away.push(id);}});}
 function awayRestore(){CH.away.forEach(id=>{const n=NPC.find(q=>q.id===id);if(n)n.away=0;});CH.away=[];}
-function chFree(){return started&&!TRIP&&!R&&!RIDE&&!BUS.st&&!duckActive()&&!HW.busy&&!BEACH.ride&&BEACH.st==='picnic'&&!BC.busy&&!STORY.wait&&!TQ.length&&!CAR.driving&&!P.onBus;}
+function chFree(){return started&&!CH.step&&!TRIP&&!R&&!RIDE&&!BUS.st&&!duckActive()&&!HW.busy&&!BEACH.ride&&BEACH.st==='picnic'&&!BC.busy&&!STORY.wait&&!TQ.length&&!CAR.driving&&!P.onBus;}
 const CHSTEPS={news:()=>chNews(),queue:()=>chQueue(),cafe:()=>chCafe(),surprise:()=>chSurprise(),lab:()=>chLab()};
 function chGo(step){SCRIPT.gen++;SCRIPT.want=null;cine(0);CH.step=step;CH.beacon=null;
   for(const k in CAST)uncast(k);awayRestore();writeSave();runScript(CHSTEPS[step]);}
@@ -7746,11 +7841,11 @@ function drawBob(){                               // Bob the fish, in his tank i
   fbox(x0-6,bot,x1-x0+12,60,7721,'#a8774f',5);fbox(x0+30,bot+18,60,22,7723,PAPER,3);x.fillStyle=INK;x.textAlign='center';x.font='700 14px '+BFONT;x.fillText('Bob',x0+60,bot+34);
   x.fillStyle='rgba(127,184,214,.55)';x.fillRect(x0,top+16,x1-x0,bot-top-16);x.fillStyle='#e3c48a';x.fillRect(x0,bot-12,x1-x0,12);
   stroke(4,'#5e8a52');[x0+20,x0+96].forEach((px,i)=>{x.beginPath();x.moveTo(px,bot-10);x.quadraticCurveTo(px+10*Math.sin(t*.03+i),bot-40,px+4,bot-62);x.stroke();});
-  const bx=x0+60+Math.sin(t*.018)*36,by=top+60+Math.sin(t*.05)*10,f=Math.cos(t*.018)>0?1:-1;
+  const zb=ZOO.bob,sp=zb===2?.06:.018,bx=zb===1?x0+22+Math.sin(t*1.2)*2:x0+60+Math.sin(t*sp)*36,by=zb===1?top+70+Math.sin(t*.9)*2:top+60+Math.sin(t*.05)*(zb===2?20:10),f=zb===1?1:Math.cos(t*sp)>0?1:-1;
   x.save();x.translate(bx,by);x.scale(f,1);x.fillStyle='#e39a5b';x.beginPath();x.ellipse(0,0,16,11,0,0,7);x.fill();stroke(3.5);x.stroke();
   x.beginPath();x.moveTo(-14,0);x.lineTo(-27,-10);x.lineTo(-27,10);x.closePath();x.fill();x.stroke();fillCirc(8,-3,2.5,7725);
   stroke(2);x.beginPath();x.arc(14,3,3,-.5,1.5);x.stroke();x.restore();
-  for(let i=0;i<3;i++){const u=((t+i*30)%90)/90;rcirc(bx+12*f+Math.sin(u*9)*3,by-8-u*60,2.5+u*2,7727+i);}
+  for(let i=0;i<(zb===1?7:3);i++){const u=((t*(zb===1?3:1)+i*(zb===1?13:30))%90)/90;rcirc(bx+12*f+Math.sin(u*9)*3,Math.max(top+20,by-8-u*60),2.5+u*2,7727+i);}
   stroke(5);x.strokeRect(x0,top,x1-x0,bot-top);stroke(3,'rgba(255,255,255,.6)');rline(x0+8,top+24,x0+8,bot-20,7729,0);}
 function drawHomeInside(cam){
   const L=cam.x-VW/2-60,R=cam.x+VW/2+60,T=cam.y-VH/2-60,Bt=cam.y+VH/2+60,Z=ZH,nt=dark(),lab=VER.attic!=='plain',cx=(Z.x0+Z.x1)/2,TF=BFONT;
@@ -7776,7 +7871,7 @@ function drawHomeInside(cam){
   x.fillStyle=PAPER;heart(580,GY-26,8);
   drawMementos();
   x.restore();
-  fbox(30668,GY-68,62,68,351,'#8fb3a0');flower(30699,GY-34,15,361);drawJack('toybox');
+  fbox(31279,GY-68,62,68,351,'#8fb3a0');flower(31310,GY-34,15,361);drawJack('toybox');drawCalendar();
   fbox(30762,GY-150,84,60,7757,'#fdf0c4',5);x.fillStyle=INK;x.font='700 22px '+TF;x.fillText('X',30780,GY-111);x.fillText('X',30828,GY-111);x.fillStyle=TOMATO;heart(30804,GY-122,10);
   drawBob();
   bookcase(31040,120,9671,GY,170);
@@ -7985,14 +8080,15 @@ async function chCafe(){
   await line('olive','and one for Gaby!');
   bagGive({kind:'cake'},P.x+40,P.y);tune([660,880,990],90);
   await line('gaby','a cake shaped like... ME! with my sunglasses on!');
-  await line('olive','now, look at my brand new photo wall: old photos of our town, then and now.');
-  await line('gaby','I have an old photo too! me and Mommy, when I was a baby!');
-  await line('olive',"oh, I would LOVE a copy for my wall. but it is your only one, dear... keep it safe at home.");
-  await line('gaby','a copy... hmm.');
+  if(!CH.replay){await line('olive','now, look at my brand new photo wall: old photos of our town, then and now.');
+    await line('gaby','I have an old photo too! me and Mommy, when I was a baby!');
+    await line('olive',"oh, I would LOVE a copy for my wall. but it is your only one, dear... keep it safe at home.");
+    await line('gaby','a copy... hmm.');}
   await line('finn','ARR! the best cake on the seven seas!');
   await line('olive','thank you all for coming! come back any time!');
   cine(0);CH.beacon={x:ZCF.x0+70,y:GY-260,zone:'cafe'};
   await until(()=>zid()!=='cafe');
+  if(CH.replay){CH.replay=0;for(const k in CAST)uncast(k);chEnd();return;}         // a picked day from the calendar ends with the cake: the lab is already built
   chGo('surprise');}
 function pickFriend(){for(const k of ['teddy','bunny','cat','robot']){const it=followers.find(o=>o.kind===k);if(it)return it;}
   return ITEMS.find(o=>o.kind==='teddy')||ITEMS.find(o=>DEF[o.kind]&&DEF[o.kind].pet&&PETID[o.kind]);}
@@ -8114,9 +8210,9 @@ function cafeDo(th){
     case 'enterHomeUp':goTo(31290,HM);P.face=-1;say(P.x,P.y-120,'home sweet home!');tune([523,659,784],110,'sine');return true;
     case 'exitHome':goTo(505,GY);P.face=1;tune([784,659,523],110,'sine');return true;
     case 'exitBridge':goTo(880,742);P.face=1;tune([784,659,523],110,'sine');return true;
-    case 'mybed':if(hwReady()){hwStart();break;}P.x=30558;P.y=GY-28;P.vy=0;P.nap=260;say(P.x,P.y-110,'my own cosy bed');tune([523,440,392],160,'sine');break;
+    case 'mybed':if(hwReady()){DAY.n++;hwStart();break;}if(dayFree()){goSleep(null);mark('sleptday');break;}P.x=30558;P.y=GY-28;P.vy=0;P.nap=260;say(P.x,P.y-110,'my own cosy bed');tune([523,440,392],160,'sine');break;
     case 'picture':say(P.x,P.y-130,'X O X... that means hugs and kisses!');puff(30804,GY-130,6,'heart');tone(700,.1,'triangle',.04);break;
-    case 'bob':say(30940,GY-200,['blub blub!','Bob says hello!','*swims in a circle*','blub? (that means more food please)'][(Math.random()*4)|0]);
+    case 'bob':if(ZOO.bob===1){say(30940,GY-200,'blub blub blub blub!');break;}say(30940,GY-200,['blub blub!','Bob says hello!','*swims in a circle*','blub? (that means more food please)'][(Math.random()*4)|0]);
       puff(30960,GY-110,5,'bub');slide(500,900,.2,'sine',.025);break;
     case 'homebooks':say(P.x,P.y-130,['so many stories!','a book about pirates!','this one has a bunny in it'][(Math.random()*3)|0]);tone(500,.12,'triangle',.04);break;
     case 'deskart':say(P.x,P.y-120,['a sun!','that one is our house','a bunny. or a cloud?'][(Math.random()*3)|0]);tone(660,.08,'triangle',.04);break;
@@ -8131,6 +8227,353 @@ function cafeDo(th){
     default:return false;}
   mark(th.id);return true;}
 
+/* ======================= the calendar: sleeping, and picking a special day ======================= */
+/* a calendar hangs on the wall by Gaby's bed, with a sticker for every special day she has had. tap a sticker and she goes
+   to sleep and wakes up with that day starting, for real, in the real town. a world that has changed stays changed: each day
+   just puts back what it needs for one more go (the ducks hide, the café wraps up again) and tidies up after itself.
+   to add a day: one line in DAYS, one sticker in dayArt(), one case in sleepNow(). */
+const DAY={n:1,seen:{}};
+const DAYS=[{id:'ducks',name:'the pirate ducks',got:()=>DUCK.st==='done'},{id:'saturday',name:'Saturday with Finn',got:()=>!!HW.done},
+  {id:'cafe',name:'the grand re-opening',got:()=>!!CH.done},{id:'zoo',name:'the zoo',got:()=>VER.zoo==='soon'||!!ZOO.done}];
+const dayNew=()=>DAYS.some(d=>d.got()&&!DAY.seen[d.id]);
+function dayFree(){return chFree()&&!SCRIPT.busy&&!CH.step&&!CH.pend&&!CH.resume&&(HW.st==='none'||HW.st==='done')&&(DUCK.st==='none'||DUCK.st==='done')&&!pendingDucks&&!COPY.kind;}
+function dayArt(cv,id){const ctx=cv.getContext('2d'),sc=cv.width/160;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);x=ctx;
+  try{ctx.setTransform(sc,0,0,sc,0,0);
+    x.fillStyle={ducks:'#cfe3ea',saturday:'#f7e3a6',cafe:'#f2c4cf',zoo:'#cfe6c4'}[id]||'#ece4cf';x.fillRect(0,0,160,120);
+    x.fillStyle='rgba(43,43,43,.1)';x.fillRect(0,100,160,20);
+    if(id==='ducks'){duckFlag(30,104,1);drawDuck(96,106,Object.assign({},DK.finn,{s:1.45,face:-1}));}
+    else if(id==='saturday'){drawDuck(52,106,Object.assign({},DK.finn,{s:1.15,face:1}));drawDuck(112,106,Object.assign({},DK.nugget,{s:.95,face:-1}));icon('burger',82,42,1.1,77);}
+    else if(id==='cafe'){drawCake2(80,102,'cidrum');x.save();x.translate(80,60);x.scale(.9,.9);x.restore();
+      stroke(3);for(let i=0;i<6;i++){const bx=18+i*25;x.fillStyle=DISCO[i%5];x.beginPath();x.moveTo(bx-9,14);x.lineTo(bx+9,14);x.lineTo(bx,32);x.closePath();x.fill();x.stroke();}}
+    else if(id==='zoo')drawParrot(80,108,{s:1.5,col:PCOLS[7][0],wing:PCOLS[7][1],face:1});
+  }finally{x=X0;}}
+function fillCal(){const g=document.getElementById('calgrid');g.innerHTML='';
+  document.getElementById('caltitle').textContent='My calendar';
+  document.getElementById('calnote').textContent='pick a day! then off to bed, and when I wake up it starts.';
+  DAYS.forEach(d=>{const on=d.got(),b=document.createElement('div');b.className='calday'+(on?' on':'')+(on&&!DAY.seen[d.id]?' fresh':'');
+    if(on){const cv=document.createElement('canvas');cv.width=320;cv.height=240;dayArt(cv,d.id);b.appendChild(cv);
+      const s=document.createElement('span');s.textContent=d.name;b.appendChild(s);
+      b.addEventListener('click',e=>{e.stopPropagation();shut('cal');tone(700,.08,'triangle',.04);goSleep(d.id);});}
+    else b.innerHTML='<b>?</b><span>?</span>';
+    g.appendChild(b);});
+  DAYS.forEach(d=>{if(d.got())DAY.seen[d.id]=1;});}
+function goSleep(id){runScript(()=>sleepNow(id));}
+async function sleepNow(id){
+  if(id==='saturday'){freeGaby();DAY.n++;hwStart();return;}          // Saturday has always started with a good night's sleep
+  cine(1);freeGaby();if(zid()!=='home')goTo(30558,GY);
+  P.x=30558;P.y=GY-28;P.vy=0;P.nap=1e6;P.face=1;night=true;hallow=false;
+  say(P.x,P.y-110,'good night, Bob... zzz');tune([523,440,392],160,'sine');
+  await frames(170);
+  P.nap=0;DAY.n++;night=false;fadeT=16;sunPop=14;tune([392,523,659,784],110,'sine');
+  if(VER.zoo==='soon'){setVer('zoo','open');if(!id)id='zoo';}
+  if(!id){P.x=30640;P.y=GY;P.face=1;say(P.x,P.y-120,['good morning!','what a lovely sleep!','good morning, Bob!'][(Math.random()*3)|0]);cine(0);writeSave();return;}
+  goTo(680,GY);P.face=1;lineUp(600,GY);
+  if(id==='ducks'){cine(0);duckReplay();return;}
+  if(id==='cafe'){CH.replay=1;chGo('news');return;}
+  chGo('z_morning');}
+function duckReplay(){                            // the pirate ducks hop out of the book again. Wobble, Nugget and Nanny Plum hide until it's over
+  ['wobble','nugget','nanny'].forEach(id=>{const n=NPC.find(q=>q.id===id);if(n){n.away=1;n.wish=null;}});
+  Object.assign(DUCK,{st:'coming',wait:100,t:0,list:[],q:[],finn:null,gir:null,quest:false,fed:false,flag:null,busy:0,replay:1});
+  gabySay('what is that noise? it sounds like... quacking!');quack(700,3);}
+function drawCalendar(){                          // on the wall, between her bed and the toy box
+  const cx=30690,top=GY-148,fresh=dayNew();
+  if(fresh){x.save();x.globalAlpha=.35+Math.sin(t*.08)*.2;x.fillStyle='#f7d682';x.fillRect(cx-54,top-8,108,122);x.restore();}
+  fbox(cx-44,top,88,104,7971,PAPER,4.5);x.fillStyle=TOMATO;x.fillRect(cx-42,top+2,84,20);stroke(3);rline(cx-44,top+22,cx+44,top+22,7973,1);
+  stroke(3);[-1,1].forEach(d=>rline(cx+d*22,top-6,cx+d*22,top+7,7975+d,0));
+  for(let r=0;r<3;r++)for(let c2=0;c2<4;c2++){const on=DAYS[(r*4+c2)%DAYS.length].got()&&r===0;
+    x.fillStyle=on?MUSTARD:'rgba(43,43,43,.14)';x.fillRect(cx-37+c2*19,top+30+r*23,14,17);}}
+
+/* ======================= the zoo ======================= */
+/* from Gaby's drawing: a ZOO sign on a post, the zig-zag grass, a big striped cage with a bird on a tall stand, her round parrot
+   with its crest and dark tail, two smaller birds, and the zoo manager with his dark hair. a bird zoo, so nobody who is
+   already a friend of hers ends up in a cage. the board on the empty lot says "coming soon", and the zoo is there the next morning. */
+const ZOO={done:0,out:0,bob:0,caught:0,catching:0};
+const ZSH=[220,500,780];                           // how far along the zoo path the penguins, the owl and the flamingos sit
+const ZAV={x0:32240,x1:32880,top:GY-340,door:32290};
+const ZPERCH=[[32350,GY-205],[32430,GY-105],[32500,GY-255],[32655,GY-155],[32710,GY-250],[32780,GY-105],[32830,GY-205],[32570,GY-292]];
+const PCOLS=[['#d9654b','#7f9fbf'],['#6fae74','#e0b25e'],['#7f9fbf','#d9654b'],['#e0b25e','#6fae74'],['#b49ac7','#f3d36b'],['#e3a0b8','#7f9fbf'],['#5fb6b0','#e39a5b'],['#d9403a','#3f7fbf']];
+const PSAY=['ARR!','SUS!','beep beep!','shhh!','boing boing!','CAKE! CAKE!','MWAH!','PAWOT!'];
+const PRING=[[30846,GY],[30884,GY-60],[30915,GY-60],[30972,GY-60],[31000,GY-60],[31034,GY],[30806,GY],[30944,GY-60]];
+const PSPOT=[[30330,GY],[30836,GY],[31110,GY],[30480,HM],[31060,HM],[30520,HA],[30860,HA],[30944,GY-60]];
+const CAGEX=30720,ZGATE=5590,ZCAGEX=32150;
+NPC.push({id:'manager',name:'the Zoo Manager',x:5500,y:GY,look:'bob',shirt:'#6f9a63',hair:'#3b2f2a',skin:SKIN,home:5500,range:40,spd:1.1,dir:1,away:1,
+  says:['it is a surprise!','no peeking!','come back tomorrow!'],story:'The Zoo Manager built a whole bird zoo in one night. He knows the name of every parrot, and they all know how to say his... loudly.',
+  wants:[{k:'apple',why:'an apple for the parrots'},{k:'cup',why:'a cup of tea. eight parrots is a LOT'}],wantI:0,hearts:0,wish:null});
+Object.assign(LABELS,{calendar:'looked at my calendar',zooboard:'read the coming soon board',enterZoo:'went to the zoo',zooparrot:'listened to the parrots',zoopeng:'waved at the penguins',
+  zooowl:'said hoo to the owl',zooflam:'stood on one leg with the flamingos',pawot:'heard Nugget say PAWOT!',parrotsout:'the parrots got on the loose!',parrotcatch:'caught seven parrots with crackers',
+  bobhappy:'made Bob the fish happy again',parrotparade:'marched the parrots back to the zoo',zoofeather:'got a feather from the Zoo Manager',sleptday:'slept all the way to morning'});
+MEMS.push({k:'feather',name:'a parrot feather',got:()=>!!found.zoofeather});
+function zooTick(){const m=NPC.find(n=>n.id==='manager'),op=VER.zoo==='open',hx=op?32985:5500;
+  if(m){if(CH.away.indexOf('manager')<0)m.away=0;
+    if(m.home!==hx){m.home=hx;m.x=hx;m.says=op?['welcome to the zoo!','count them with me: eight parrots!','please do not say anything to the parrots. they WILL say it back.']:['it is a surprise!','no peeking!','come back tomorrow!'];}}
+  const el=document.getElementById('mapzoo');if(el){const v=op?'':'none';if(el.style.display!==v)el.style.display=v;}}
+function drawParrot(px,py,o){o=o||{};const s=o.s||1,f=o.face||1,R=19*s,cy=-R*1.28,fl=o.air?Math.sin(t*.7)*.7:0;
+  x.save();x.translate(px,py);x.scale(f,1);if(o.sq)x.scale(1+o.sq*.14,1-o.sq*.16);
+  x.fillStyle='#3b3a3f';x.beginPath();x.moveTo(-R*.6,cy+R*.5);x.quadraticCurveTo(-R*1.5,cy+R*1.1,-R*1.75,cy+R*2);x.lineTo(-R*1.05,cy+R*1.9);x.quadraticCurveTo(-R*.8,cy+R*1.1,-R*.1,cy+R*.95);x.closePath();x.fill();stroke(2.5*s);x.stroke();  // her dark tail
+  stroke(3*s);[-.28,.28].forEach(d=>{x.beginPath();x.moveTo(R*d,cy+R*1.05);x.lineTo(R*d,0);x.lineTo(R*d+5*s,0);x.stroke();});
+  [[-.45,-1.2,-.5],[0,-1.38,0],[.42,-1.2,.5]].forEach(([a,b,q])=>{x.save();x.translate(R*a*.6,cy+R*b*.74);x.rotate(q);x.fillStyle=o.wing||MUSTARD;x.beginPath();x.ellipse(0,-R*.3,R*.2,R*.46,0,0,7);x.fill();stroke(2.2*s);x.stroke();x.restore();});
+  x.fillStyle=o.col||TOMATO;x.beginPath();x.ellipse(0,cy,R*.98,R*1.24,0,0,7);x.fill();stroke(3.6*s);x.stroke();
+  x.save();x.translate(-R*.22,cy+R*.22);x.rotate(.35+fl);x.fillStyle=o.wing||MUSTARD;x.beginPath();x.ellipse(0,0,R*.42,R*.72,0,0,7);x.fill();stroke(2.6*s);x.stroke();x.restore();
+  x.fillStyle=PAPER;x.beginPath();x.arc(R*.42,cy-R*.5,R*.28,0,7);x.fill();stroke(2*s);x.stroke();fillCirc(R*.47,cy-R*.5,2.7*s,7);
+  x.fillStyle='#f3d36b';x.beginPath();x.moveTo(R*.74,cy-R*.32);x.quadraticCurveTo(R*1.5,cy-R*.3,R*1.14,cy+R*.3);x.quadraticCurveTo(R*1,cy-R*.02,R*.72,cy+R*.06);x.closePath();x.fill();stroke(2.6*s);x.stroke();
+  x.restore();}
+function drawCage(a){const px=a.x,py=a.y,w=74,h=128,gold='#c9a03a';shadow(px,py,w);
+  for(let i=0;i<Math.min(8,a.n||0);i++){const c=PCOLS[i],col=i%4,row=i>>2;x.save();x.beginPath();x.rect(px-w,py-h-40,w*2,h+40);x.clip();drawParrot(px-48+col*32,py-20-row*50-Math.abs(Math.sin(t*.1+i))*3,{s:.62,col:c[0],wing:c[1],face:i%2?1:-1});x.restore();}
+  stroke(3.5,gold);for(let i=0;i<=8;i++){const bx=px-w+i*w/4;rline(bx,py-20,bx,py-h,9900+i,1);}
+  x.beginPath();x.moveTo(px-w,py-h);x.quadraticCurveTo(px,py-h-46,px+w,py-h);x.stroke();
+  fbox(px-w-6,py-26,w*2+12,12,9921,'#a8774f',4);stroke(4);[-1,1].forEach(d=>{x.fillStyle='#55606b';x.beginPath();x.arc(px+d*(w-14),py-9,9,0,7);x.fill();x.stroke();});
+  fcirc(px,py-h-30,7,9923,gold,3.5);}
+function drawZooLot(){
+  if(VER.zoo==='open'){drawZooGate();return;}
+  const cx=5545,soon=VER.zoo==='soon';
+  stroke(5,'#8a6a4a');[5470,5640].forEach((px,i)=>rline(px,GY,px,GY-40,9931+i,1));x.save();x.setLineDash([9,7]);stroke(3,'#c96a2e');rline(5470,GY-36,5640,GY-36,9933,1);x.setLineDash([]);x.restore();   // string and stakes: he's measuring
+  stroke(6,'#8a6a4a');rline(cx-52,GY,cx-52,GY-110,9935,1);rline(cx+52,GY,cx+52,GY-110,9936,1);
+  fbox(cx-82,GY-214,164,112,9937,'#fdf0c4',5);x.fillStyle=INK;x.textAlign='center';x.font='700 25px '+BFONT;x.fillText('COMING',cx,GY-178);x.fillText('SOON!',cx,GY-148);
+  x.font='700 15px '+BFONT;x.fillStyle=TOMATO;x.fillText(soon?'see you tomorrow!':'a big surprise',cx,GY-122);}
+function drawZooGate(){const dx=ZGATE,sx=5498,nt=dark();
+  stroke(5,'#7a8a5e');for(let i=0;i<14;i++){const gx=5455+i*19;rline(gx,GY,gx+9,GY-24,9941+i,1);rline(gx+9,GY-24,gx+19,GY,9956+i,1);}   // her zig-zag grass
+  stroke(7,'#8a6a4a');rline(sx,GY,sx,GY-262,9971,2);fbox(sx-58,GY-342,116,82,9972,PAPER,6);x.fillStyle=INK;x.textAlign='center';x.font='700 48px '+BFONT;x.fillText('ZOO',sx,GY-284);
+  fbox(dx-46,GY-190,92,190,9973,nt?'#f3dca0':'#3d3230',6);x.fillStyle='#8fb3a0';x.beginPath();x.moveTo(dx-62,GY-190);x.quadraticCurveTo(dx,GY-262,dx+62,GY-190);x.closePath();x.fill();stroke(6);x.stroke();
+  const cx=5678;stroke(6,'#a8774f');rline(cx,GY,cx,GY-40,9975,1);stroke(5);for(let i=0;i<7;i++){const bx=cx-48+i*16;rline(bx,GY-40,bx,GY-220,9976+i,1);}
+  fbox(cx-54,GY-46,108,10,9985,'#a8774f',4);x.fillStyle='#d9b98f';x.beginPath();x.moveTo(cx-60,GY-218);x.quadraticCurveTo(cx,GY-268,cx+60,GY-218);x.closePath();x.fill();stroke(6);x.stroke();
+  stroke(5,'#8a6a4a');rline(cx,GY-46,cx,GY-110,9986,1);rline(cx-20,GY-110,cx+20,GY-110,9987,1);drawParrot(cx,GY-112,{s:.8,col:PCOLS[7][0],wing:PCOLS[7][1],face:-1});}
+function zooPenguin(px,py,f,ph){const hop=Math.abs(Math.sin(t*.06+ph))*7;x.save();x.translate(px,py-hop);x.scale(f,1);
+  x.fillStyle=BEAK;[-7,7].forEach(d=>{x.beginPath();x.ellipse(d,hop,8,3.5,0,0,7);x.fill();stroke(2);x.stroke();});
+  x.fillStyle='#2f3340';x.beginPath();x.ellipse(0,-27,20,28,0,0,7);x.fill();stroke(3.5);x.stroke();
+  [-1,1].forEach(d=>{x.save();x.translate(d*19,-26);x.rotate(d*(.2+Math.sin(t*.1+ph)*.25));x.beginPath();x.ellipse(0,5,5,14,0,0,7);x.fill();x.stroke();x.restore();});
+  x.fillStyle=PAPER;x.beginPath();x.ellipse(0,-20,13,19,0,0,7);x.fill();fillCirc(-6,-42,3,3,PAPER);fillCirc(6,-42,3,5,PAPER);fillCirc(-6,-42,1.5,7);fillCirc(6,-42,1.5,9);
+  x.fillStyle=BEAK;x.beginPath();x.moveTo(-6,-36);x.lineTo(6,-36);x.lineTo(0,-28);x.closePath();x.fill();stroke(2);x.stroke();x.restore();}
+function zooOwl(px,py){const blink=t%210<9;x.fillStyle='#a8815c';x.beginPath();x.ellipse(px,py-36,29,37,0,0,7);x.fill();stroke(4);x.stroke();
+  x.fillStyle='#e7cfa4';x.beginPath();x.ellipse(px,py-26,17,23,0,0,7);x.fill();
+  [-1,1].forEach(d=>{x.fillStyle='#a8815c';x.beginPath();x.moveTo(px+d*23,py-60);x.lineTo(px+d*27,py-82);x.lineTo(px+d*8,py-68);x.closePath();x.fill();stroke(3.5);x.stroke();
+    fcirc(px+d*12,py-52,10,9991,PAPER,3);if(blink){stroke(3);rline(px+d*5,py-52,px+d*19,py-52,9993,0);}else fillCirc(px+d*12,py-52,4.5,9995);});
+  x.fillStyle=BEAK;x.beginPath();x.moveTo(px-5,py-45);x.lineTo(px+5,py-45);x.lineTo(px,py-34);x.closePath();x.fill();stroke(2.5);x.stroke();}
+function zooFlamingo(px,py,f,ph){const b=Math.sin(t*.03+ph)*5,pk='#ee9fb0';x.save();x.translate(px,py);x.scale(f,1);stroke(4,'#d9798e');rline(0,0,0,-92,9997,1);rline(0,-92,16,-78,9998,1);
+  x.fillStyle=pk;x.beginPath();x.ellipse(-6,-110,32,22,-.15,0,7);x.fill();stroke(3.5);x.stroke();
+  stroke(11,pk);x.beginPath();x.moveTo(20,-116);x.quadraticCurveTo(46,-150+b,20,-164+b);x.quadraticCurveTo(10,-176+b,32,-182+b);x.stroke();
+  stroke(3.5);x.beginPath();x.arc(36,-184+b,9,0,7);x.fillStyle=pk;x.fill();x.stroke();fillCirc(38,-186+b,2,9999);
+  x.fillStyle=INK;x.beginPath();x.moveTo(43,-188+b);x.lineTo(58,-176+b);x.lineTo(42,-178+b);x.closePath();x.fill();x.restore();}
+function drawZooInside(cam){const L=cam.x-VW/2-60,R2=cam.x+VW/2+60,Bt=cam.y+VH/2+60,Z=ZZ,TF=BFONT,nt=dark();
+  drawSky(cam);
+  x.fillStyle=nt?'#7f9a75':'#bcd8a6';x.fillRect(L,GY-140,R2-L,144);x.fillStyle=nt?'#6f8a68':'#a9c98f';x.fillRect(L,GY+4,R2-L,Bt-GY);
+  stroke(6,'#8a6a4a');for(let fx=Math.floor(L/90)*90;fx<R2;fx+=90)rline(fx,GY-130,fx,GY,10000+(fx/90|0)%40,1);rline(L,GY-110,R2,GY-110,10045,2);rline(L,GY-60,R2,GY-60,10046,2);
+  stroke(7);rline(L,GY+4,R2,GY+4,10047,2);
+  x.fillStyle='#b9a68a';x.fillRect(Z.x0-400,cam.y-VH,400,VH*2);x.fillRect(Z.x1,cam.y-VH,400,VH*2);stroke(9);rline(Z.x0,cam.y-VH,Z.x0,GY+4,10048,2);rline(Z.x1,cam.y-VH,Z.x1,GY+4,10049,2);
+  /* the way out */
+  const ex=Z.x0+70;x.fillStyle='#3d3230';x.fillRect(ex-40,GY-160,80,160);stroke(6);x.strokeRect(ex-40,GY-160,80,160);fbox(ex-44,GY-204,88,30,10050,SAGE,5);x.fillStyle=INK;x.textAlign='center';x.font='700 16px '+TF;x.fillText('way out',ex,GY-183);
+  /* the big striped cage, like her drawing */
+  const A=ZAV;x.fillStyle='rgba(255,255,255,.28)';x.fillRect(A.x0,A.top,A.x1-A.x0,GY-A.top);
+  stroke(5,'#8a6a4a');rline(32570,GY,32570,GY-290,10051,2);rline(32530,GY-290,32610,GY-290,10052,1);        // the tall stand
+  ZPERCH.slice(0,7).forEach(([px,py],i)=>{stroke(5,'#8a6a4a');rline(px-30,py+2,px+30,py+2,10053+i,1);rline(px,py+2,px+(i%2?40:-40),GY,10061+i,1);});
+  if(!ZOO.out)ZPERCH.forEach(([px,py],i)=>{const c=PCOLS[i];drawParrot(px,py,{s:i===7?1.05:.82,col:c[0],wing:c[1],face:i%3?1:-1});});
+  stroke(5);for(let bx=A.x0;bx<=A.x1;bx+=40){if(ZOO.out&&bx>=A.door-30&&bx<=A.door+50)continue;rline(bx,A.top,bx,GY,10070+(bx/40|0)%30,1);}
+  stroke(7);rline(A.x0-10,A.top,A.x1+10,A.top,10101,2);x.fillStyle='#d9b98f';x.beginPath();x.moveTo(A.x0-30,A.top);x.quadraticCurveTo((A.x0+A.x1)/2,A.top-92,A.x1+30,A.top);x.closePath();x.fill();stroke(7);x.stroke();
+  if(ZOO.out){stroke(5);x.strokeRect(A.door-110,A.top+20,80,GY-A.top-20);fillCirc(A.door-36,GY-150,5,10103,MUSTARD);}else fillCirc(A.door+38,GY-150,6,10103,MUSTARD);   // the latch
+  zooPlate(32560,GY-34,'parrots');
+  if(!ZOO.out&&!CAST.cage)drawCage({x:ZCAGEX,y:GY,n:0});                  // the big cage, parked by the way out
+  /* the penguins */
+  x.save();x.translate(ZSH[0],0);fbox(32990,GY-92,270,92,10105,'#d9eaf2',5);x.fillStyle='#8fc2dc';x.fillRect(32996,GY-44,258,40);stroke(3,PAPER);wave(33000,33250,GY-40,10107);
+  x.fillStyle=PAPER;x.beginPath();x.moveTo(33150,GY-44);x.lineTo(33190,GY-130);x.lineTo(33250,GY-44);x.closePath();x.fill();stroke(5);x.stroke();
+  [[33030,1,0],[33086,-1,1.4],[33140,1,2.8]].forEach(([px,f,ph])=>zooPenguin(px,GY-48,f,ph));zooPlate(33125,GY-150,'penguins');x.restore();
+  /* the owl */
+  x.save();x.translate(ZSH[1],0);stroke(14,'#8a6a4a');rline(33380,GY,33384,GY-260,10109,3);stroke(9,'#8a6a4a');rline(33384,GY-170,33450,GY-210,10111,2);rline(33384,GY-230,33320,GY-262,10113,2);
+  x.fillStyle='#8fb37c';[[33384,GY-310,90],[33310,GY-280,56],[33460,GY-270,60]].forEach(([a,b,r],i)=>{fcirc(a,b,r,10115+i,'#8fb37c',5);});
+  zooOwl(33436,GY-205);zooPlate(33470,GY-34,'owl');x.restore();
+  /* the flamingos, with a little pond of fish */
+  x.save();x.translate(ZSH[2],0);x.fillStyle='#8fc2dc';x.beginPath();x.ellipse(33610,GY-14,126,22,0,0,7);x.fill();stroke(5);x.stroke();
+  [[33530,1,0],[33692,-1,2]].forEach(([px,f,ph])=>zooFlamingo(px,GY-16,f,ph));
+  x.save();x.translate(33580+Math.sin(t*.02)*40,GY-16);x.scale(.5,.5);x.fillStyle='#e39a5b';x.beginPath();x.ellipse(0,0,16,9,0,0,7);x.fill();stroke(3.5);x.stroke();x.restore();crab(33720,GY+2,.8);zooPlate(33610,GY-62,'flamingos');x.restore();
+  stroke(4,'#7a8a5e');for(let gx=Math.floor(L/40)*40;gx<R2;gx+=40){x.beginPath();x.moveTo(gx,GY+30);x.lineTo(gx+20,GY+10);x.lineTo(gx+40,GY+30);x.stroke();}}
+function zooPlate(px,py,txt){x.font='700 15px '+BFONT;const w=x.measureText(txt).width+20;fbox(px-w/2,py-14,w,26,10121,PAPER,3.5);x.fillStyle=INK;x.textAlign='center';x.fillText(txt,px,py+5);}
+function zooHud(){if(!ZOO.catching)return;const cx=innerWidth/2,y=Math.max(66,innerHeight*.11),n=ZOO.caught;
+  x.font='700 19px '+BFONT;x.textAlign='center';const txt='🦜 '+n+' of 8 in the cage',w=x.measureText(txt).width+32;
+  x.fillStyle='#fdf0c4';x.fillRect(cx-w/2,y-24,w,36);stroke(3.5);x.strokeRect(cx-w/2,y-24,w,36);x.fillStyle=INK;x.fillText(txt,cx,y+1);}
+function squawk(){slide(1250,760,.09,'square',.016);setTimeout(()=>slide(1450,900,.08,'square',.014),110);}
+function castParrot(i,sx,sy,zone,o){const c=PCOLS[i];return cast('p'+i,Object.assign({type:'parrot',n:i,col:c[0],wing:c[1],x:sx,y:sy,zone,fl:sy,face:i%2?1:-1,layer:2,s:i===7?1:.82},o||{}));}
+function zooFamily(fx,wx,nx,zone){cast('finn',{d:DK.finn,x:fx,zone,pitch:430});cast('wobble',{d:DK.wobble,x:wx,zone,pitch:760});cast('nugget',{d:DK.nugget,x:nx,zone,pitch:950});awayNPCs(['wobble','nugget']);}
+function zooBoss(mx,zone,o){const n=NPC.find(q=>q.id==='manager');awayNPCs(['manager']);
+  return cast('manager',Object.assign({type:'person',look:n.look,shirt:n.shirt,hair:n.hair,fill:n.skin,seed:9951,x:mx,y:GY,zone,pitch:400,spd:3.2},o||{}));}
+function zooCage(cx,zone,n){cast('cage',{type:'cage',x:cx,y:GY,zone,n:n||0,layer:3,spd:3.4});return zooBoss(cx-112,zone,{pin:'cage',pinDx:112});}
+function zooLeave(ids,tx,spd){ids.forEach(id=>{const a=CAST[id];if(a){a.pin=null;a.tx=tx;a.spd=spd||5;a.bye=1;}});   // walk off properly: the scene only moves on once they're out of sight
+  const z=zid();return until(()=>zid()!==z||ids.every(id=>!CAST[id]||CAST[id].hide||Math.abs(CAST[id].x-P.x)>VW/2+200));}
+function zooDone(){CH.step=null;CH.beacon=null;cine(0);SCRIPT.want=null;ZOO.catching=0;for(const k in CAST)uncast(k);if(found.chest&&!CH.done)CH.pend=1;writeSave();}
+function zooCracker(a){if(a.going||STORY.wait)return;a.going=1;a.sq=1;tone(660,.08,'triangle',.04);puff(a.x+14*a.face,a.y-30,8,'crumb');crunch(.1,.03);say(a.x,a.y-74,PSAY[a.n]);squawk();
+  const c=CAST.cage;leap(a.id,c.x+(a.n%3-1)*30,GY-40,a.y<HM+10?150:90,44).then(()=>{uncast(a.id);if(CAST.cage)CAST.cage.n++;ZOO.caught++;puff(CAGEX,GY-90,6,'star');tune([523,659,784],70,'triangle');}).catch(()=>{});}
+function zooPlan(c){if(!ZOO.catching||zid()!=='home'||SCENE)return;
+  for(let i=0;i<7;i++){const a=CAST['p'+i];if(!a||a.going||a.arc)continue;const d=reach(a.x,a.fl);if(d<100)c.push({k:'duck',x:a.x,y:a.y-80,d:d-20,txt:'give the parrot a cracker',fn:()=>zooCracker(a)});}}
+function zooBeacons(cam){if(ZOO.catching&&zid()==='home')for(let i=0;i<7;i++){const a=CAST['p'+i];if(a&&!a.going&&Math.abs(a.x-cam.x)<VW/2+60)beacon(a.x,a.y-92);}
+  if(zid()==='home'&&dayNew()&&!CH.step&&Math.abs(30690-cam.x)<VW/2+60)beacon(30690,GY-120);}
+function zooDo(th){switch(th.id){
+    case 'calendar':if(!dayFree()){say(P.x,P.y-130,CH.step?'not now, the story is still going!':'one day at a time!');beep(300,.1,'sine');break;}
+      fillCal();openSheet('cal');break;
+    case 'zooboard':if(VER.zoo==='none'){if(!dayFree())return true;runScript(zooBoardScene);}else say(P.x,P.y-130,'coming soon... I wonder what it is?');break;
+    case 'enterZoo':mark('enterZoo');goTo(ZZ.x0+180,GY);P.face=1;say(P.x,P.y-120,'the zoo! I can hear birds!');tune([659,784,988],110,'triangle');return true;
+    case 'exitZoo':goTo(ZGATE,GY);P.face=1;tune([784,659,523],110,'sine');return true;
+    case 'zooparrot':{if(ZOO.out){say(P.x,P.y-130,'the parrots are out!');break;}const i=(Math.random()*8)|0,p=ZPERCH[i];say(p[0],p[1]-70,PSAY[i]);squawk();break;}
+    case 'zoopeng':say(P.x,P.y-130,['hello, penguins!','they walk like me in big shoes!','they all waved back!'][(Math.random()*3)|0]);tone(760,.08,'triangle',.03);break;
+    case 'zooowl':say(33936,GY-300,['hoo?','hoo hoo!','HOO are you?'][(Math.random()*3)|0]);slide(420,300,.3,'sine',.03);break;
+    case 'zooflam':say(P.x,P.y-130,['one leg! I can do that too... whoops!','pink all over!','they never fall over!'][(Math.random()*3)|0]);tone(660,.08,'triangle',.03);break;
+    case 'zootell':case 'zoodoor':break;
+    default:return false;}
+  mark(th.id);return true;}
+async function zooBoardScene(){cine(1);const m0=NPC.find(n=>n.id==='manager');zooBoss(m0.x,'town',{face:Math.sign(P.x-m0.x)||1});
+  await line('gaby','COMING SOON! a big surprise...');
+  await line('manager','hello there! careful of my string, please. I am measuring.');
+  await line('gaby','measuring what? what is the surprise?');
+  await line('manager',"if I told you, it wouldn't be a surprise! come back tomorrow!");
+  await line('gaby','tomorrow? then I had better go to bed!');
+  setVer('zoo','soon');mark('zooboard');cine(0);uncast('manager');awayRestore();writeSave();}
+
+/* ---- the story of the eight parrots. every step can restart from its beginning if the iPad is closed ---- */
+async function zMorning(){
+  if(VER.zoo!=='open')setVer('zoo','open');ZOO.out=0;ZOO.bob=0;night=false;hallow=false;if(zid())goTo(680,GY);
+  const ox=P.x+VW/2+80;zooFamily(ox+160,ox,ox+70,'town');cine(1);P.face=1;quack(760,3);
+  await Promise.all([walk('wobble',P.x+170,6),walk('nugget',P.x+240,6),walk('finn',P.x+330,6)]);
+  await line('wobble','Gaby! Gaby! come and see! there is a ZOO in town!');
+  await line('gaby',ZOO.done?'the zoo! let’s go and see the parrots!':'a zoo? yesterday it was only a board!');
+  await line('finn','ARR! the zoo manager built it in one night! a zoo with nothing but BIRDS!');
+  await line('nugget','BIRD! BIRD! BIRD!');
+  await line('gaby','let’s go!');
+  cine(0);await zooLeave(['nugget','wobble','finn'],P.x+VW,6);chGo('z_gate');}
+async function zGate(){const near=()=>zid()==='zoo'||(!inZone()&&!flying&&P.x>5160&&P.x<5960);
+  zooFamily(5380,5450,5300,'town');zooBoss(5500,'town',{face:-1});CH.beacon={x:ZGATE,y:GY-300};await until(near);
+  CH.beacon=null;cine(1);if(zid()==='zoo')goTo(5200,GY);await gabyTo(5230);P.face=1;
+  await line('manager','there you are! I told you it was a surprise. welcome to the zoo!');
+  await line('finn','ARR! four tickets, please. and no pirates get in free!');
+  await line('manager','everybody gets in free. come in, come in!');
+  await Promise.all(['nugget','wobble','finn','manager'].map((id,i)=>frames(i*22).then(()=>walk(id,ZGATE,4)).then(()=>{if(CAST[id])CAST[id].hide=1;})));
+  await act('enterZoo','go into the zoo!');mark('enterZoo');
+  goTo(ZZ.x0+180,GY);P.face=1;chGo('z_visit');}
+async function zVisit(){const X=ZZ.x0;
+  ZOO.out=0;if(zid()!=='zoo')goTo(X+180,GY);zooFamily(X+60,X+110,X+150,'zoo');cine(1);
+  await walk('nugget',32300,7);
+  await line('nugget','OOH! OOH! OOH!');
+  await gabyTo(32220);P.face=1;
+  await Promise.all([walk('wobble',32140),walk('finn',32070)]);
+  await line('gaby','what bird is that, Nugget?');
+  CAST.nugget.sq=1;await line('nugget','PAWOT!');mark('pawot');
+  await line('parrot','PAWOT!');
+  zooBoss(ZZ.x0+70,'zoo',{face:1});await walk('manager',32130,4);CAST.manager.face=1;
+  await line('manager','those are my parrots. all eight of them! they say whatever they hear.');
+  await line('gaby','hello, parrots!');
+  await line('parrot','hello, parrots!');
+  await line('finn','ARR!');
+  await line('parrot','ARR!');
+  await line('finn','now THAT is a clever bird. what else have you got?');
+  await Promise.all([gabyTo(33130),walk('nugget',33400,4.6),walk('wobble',33300,4.4),walk('finn',33060,4),walk('manager',32980,4)]);
+  await line('wobble','penguins! they look like they are all going to a wedding!');
+  await Promise.all([gabyTo(33960),walk('nugget',34180,4.6),walk('wobble',34080,4.4),walk('finn',33860,4),walk('manager',33760,4)]);
+  await line('gaby','an owl! and look, flamingos! they stand on one leg!');
+  await line('nugget','me one leg!');CAST.nugget.rot=.5;await frames(30);CAST.nugget.rot=0;CAST.nugget.sq=1;crunch(.1,.03);
+  await line('manager','oh dear! one little bird got out of its pen!');
+  await line('wobble','that is not a bird! that is NUGGET!');
+  await line('nugget','me NOT pawot! ...PAWOT? PAWOT! PAWOOOOOT!');
+  labRumble=50;CAST.nugget.sq=1;crunch(.3,.05);await frames(35);
+  tone(1100,.06,'square',.04);slide(600,240,.3,'triangle',.04);await frames(25);
+  await line('wobble','what was that noise? it sounded like... a little click.');
+  ZOO.out=1;mark('parrotsout');
+  for(let i=0;i<8;i++)castParrot(i,P.x-VW/2-60-i*50,GY-340-(i%3)*60,'zoo',{air:1});
+  const fly=[];for(let i=0;i<8;i++)fly.push(frames(i*9).then(()=>{squawk();return leap('p'+i,P.x+VW/2+160,GY-420-(i%3)*50,40,110);}));
+  await Promise.all(fly);for(let i=0;i<8;i++)uncast('p'+i);
+  await line('gaby','the parrots! they are on the loose!');
+  await line('nugget','bye bye, pawot!');
+  CAST.manager.face=-1;await act('zootell','tell the zoo manager!');
+  await line('gaby','zoo manager! the parrots got out!');
+  await line('wobble','all of them! the door popped open!');
+  await line('manager','all EIGHT?! oh, my feathers! which way did they go?');
+  await line('wobble','over the fence! towards your house, Gaby!');
+  await line('gaby','my house?! BOB!');
+  await line('manager','run! I will get the big cage and come right behind you!');
+  cine(0);CH.beacon={x:ZZ.x0+70,y:GY-260,zone:'zoo'};await zooLeave(['nugget','wobble','finn','manager'],ZZ.x0+70,6);chGo('z_home');}
+async function zHome(){ZOO.out=1;ZOO.bob=1;
+  for(let i=0;i<8;i++)castParrot(i,PRING[i][0],PRING[i][1],'home',{face:PRING[i][0]<30940?1:-1});
+  if(zid()==='zoo'){CH.beacon={x:ZZ.x0+70,y:GY-260,zone:'zoo'};await until(()=>zid()!=='zoo');}
+  if(zid()!=='home'){CH.beacon={x:505,y:GY-240};await until(()=>zid()==='home');}
+  CH.beacon=null;cine(1);await gabyTo(30720);P.face=1;
+  await line('gaby','oh no! they are all around Bob!');
+  await line('p0','ARR!');await line('p1','SUS!');await line('p2','beep beep!');await line('p3','shhh!');await line('p7','PAWOT!');
+  await line('gaby','they picked up every word in town on the way here!');
+  await line('gaby','poor Bob! he is SO nervous!');
+  zooFamily(ZH.x0+80,ZH.x0+80,ZH.x0+80,'home');zooCage(ZH.x0+80,'home',0);puff(ZH.x0+80,GY-80,8);crunch(.2,.04);
+  await Promise.all([walk('cage',CAGEX,5),walk('finn',30440,5),walk('wobble',30520,5),walk('nugget',30580,5)]);
+  await line('manager','here I am! one big cage, and one big bag of crackers. no parrot can say no to a cracker!');
+  squawk();crowd(4);for(let i=0;i<7;i++)leap('p'+i,PSPOT[i][0],PSPOT[i][1],150,44);await frames(50);
+  await line('wobble','they flew all over the house!');
+  chGo('z_catch');}
+async function zCatch(){ZOO.out=1;ZOO.bob=1;ZOO.caught=0;if(zid()!=='home')goTo(ZH.x0+140,GY);
+  zooFamily(30440,30520,30580,'home');zooCage(CAGEX,'home',0);
+  for(let i=0;i<8;i++){const c=PSPOT[i];castParrot(i,c[0],c[1],'home',{face:c[0]<30940?1:-1,fl:i===7?GY:c[1]});}
+  cine(1);await line('manager','Gaby, you are my cracker helper! give each parrot a cracker, and it will hop right in the cage.');
+  await line('gaby','they are downstairs, upstairs and under the roof!');
+  ZOO.catching=1;cine(0);await until(()=>ZOO.caught>=7);
+  ZOO.catching=0;mark('parrotcatch');await frames(30);cine(1);if(zid()!=='home'||Math.abs(P.y-GY)>4)goTo(30800,GY);
+  await gabyTo(30860);P.face=1;
+  await line('gaby','seven in the cage! just one to go. here, big parrot! a yummy cracker!');
+  await line('p7','PAWOT!');
+  await line('gaby','no? a cracker with cheese on it?');
+  await line('p7','PAWOT!');
+  await line('manager','that one is the boss. he will not come for anything.');
+  await walk('nugget',30890,3);CAST.nugget.face=1;
+  await line('nugget','PAWOT?');
+  await line('p7','...PAWOT!');
+  await line('nugget','PAWOT! PAWOT! PAWOT!');
+  CAST.p7.fl=GY;await leap('p7',30820,GY,70,30);
+  const go=[walk('nugget',CAGEX+10,3)];await frames(14);go.push(walk('p7',CAGEX+50,3));await Promise.all(go);
+  tone(1000,.06,'square',.04);CAST.cage.n=8;uncast('p7');
+  await line('manager','and... click! that makes EIGHT parrots. ...and one Nugget.');
+  await line('wobble','he hopped in too!');
+  await leap('nugget',CAGEX+120,GY,80,34);
+  await line('nugget','me NOT pawot!');
+  ZOO.bob=2;chGo('z_bob');}
+async function zBob(){ZOO.out=1;ZOO.bob=2;if(zid()!=='home')goTo(30760,GY);
+  zooFamily(30440,30520,CAGEX+120,'home');zooCage(CAGEX,'home',8);cine(1);
+  await Promise.all([walk('wobble',30895,4),walk('nugget',30960,4)]);await gabyTo(30830);P.face=1;
+  await line('gaby','look! Bob is swimming again!');
+  puff(30940,GY-120,10,'heart');slide(500,900,.2,'sine',.025);mark('bobhappy');
+  await line('wobble','he is doing loops! go, Bob, go!');
+  await line('nugget','hi Bob! ...blub blub!');
+  await line('gaby','it is okay now, Bob. all the parrots have gone.');
+  await line('manager','thank you, Gaby! now, back to the zoo with this lot. who wants to come?');
+  await line('nugget','ME! ME! ME!');
+  cine(0);CH.beacon={x:ZH.x0+80,y:GY-220,zone:'home'};
+  CAST.manager.pin=null;['finn','wobble','nugget','manager','cage'].forEach(id=>{const a=CAST[id];if(a){a.tx=ZH.x0+80;a.spd=3.6;a.bye=1;}});
+  await until(()=>zid()!=='home');CH.beacon=null;chGo('z_parade');}
+async function zParade(){ZOO.out=1;ZOO.bob=0;if(zid()||P.x>4800)goTo(560,GY);
+  const c0=Math.max(P.x+170,300);zooCage(c0,'town',8);
+  cast('nugget',{d:DK.nugget,pin:'cage',pinDx:190,pitch:950});cast('wobble',{d:DK.wobble,pin:'cage',pinDx:250,pitch:760});cast('finn',{d:DK.finn,pin:'cage',pinDx:320,pitch:430});awayNPCs(['wobble','nugget']);
+  const c=CAST.cage,END=5280;let sh=0;
+  await until(()=>{if(zid()==='zoo')return true;if(inZone()||flying)return false;if(Math.abs(P.x-c.x)>VW*1.5)c.x=Math.max(300,Math.min(END,P.x+200));
+    c.tx=P.x>c.x-Math.max(320,VW*.42)&&c.x<END?END:null;
+    CH.beacon={x:c.x,y:GY-250};
+    if(c.tx!=null&&t%120===0&&!SCENE){const i=(sh++)%8;say(c.x,GY-170,PSAY[i],{chat:1});squawk();}
+    return c.x>=END-2;});
+  CH.beacon=null;c.tx=null;mark('parrotparade');if(zid()==='zoo'){chGo('z_return');return;}cine(1);await frames(10);P.face=1;
+  await line('manager','here we are! everybody into the zoo.');
+  await walk('cage',ZGATE,3.6);
+  await Promise.all(['manager','nugget','wobble','finn'].map((id,i)=>{const a=CAST[id];a.pin=null;return frames(i*16).then(()=>walk(id,ZGATE,4.5)).then(()=>{if(CAST[id])CAST[id].hide=1;});}));
+  c.hide=1;await act('enterZoo','go back into the zoo!');goTo(32170,GY);P.face=1;chGo('z_return');}
+async function zReturn(){ZOO.out=1;ZOO.bob=0;if(zid()!=='zoo')goTo(32170,GY);
+  zooFamily(32040,32100,32250-60,'zoo');const c=cast('cage',{type:'cage',x:ZAV.door,y:GY,zone:'zoo',n:8,layer:3,spd:3.4});
+  zooBoss(ZAV.door+130,'zoo',{face:-1});cine(1);
+  await line('manager','Gaby, will you do the honours? open the cage!');
+  await act('zoodoor','open the cage!');
+  for(let i=0;i<8;i++){const p=ZPERCH[i];castParrot(i,c.x,GY-50,'zoo',{s:i===7?1.05:.82});c.n--;squawk();await leap('p'+i,p[0],p[1],70,24);CAST['p'+i].face=i%3?1:-1;}
+  ZOO.out=0;for(let i=0;i<8;i++)uncast('p'+i);tone(1000,.06,'square',.04);crowd(6);
+  await line('manager','there! all home, and a brand new Nugget-proof latch.');
+  await line('nugget','...pawot?');
+  await line('parrot','...pawot.');
+  await line('manager','thank you, Gaby. here: a feather from the boss, for your special shelf.');
+  mark('zoofeather');puff(P.x,P.y-90,8,'star');tune([523,659,784,1046],90,'triangle');
+  await line('gaby','my very own parrot feather! thank you!');
+  await line('finn','ARR! the best zoo on the seven seas! come on, crew. nap time.');
+  await line('gaby','bye bye, parrots!');
+  await line('parrot','bye bye, parrots!');
+  ZOO.done=1;cine(0);
+  ['finn','wobble','nugget'].forEach(id=>{const a=CAST[id];if(a){a.tx=ZZ.x0+70;a.spd=3.4;a.bye=1;}});
+  c.face=-1;const mg=CAST.manager;mg.pin='cage';mg.pinDx=130;await walk('cage',ZCAGEX,3.4);mg.pin=null;
+  await until(()=>!CAST.finn&&!CAST.wobble&&!CAST.nugget);uncast('cage');await walk('manager',32985,3.4);zooDone();}
+Object.assign(CHSTEPS,{z_morning:()=>zMorning(),z_gate:()=>zGate(),z_visit:()=>zVisit(),z_home:()=>zHome(),z_catch:()=>zCatch(),z_bob:()=>zBob(),z_parade:()=>zParade(),z_return:()=>zReturn()});
+
 /* ======================= saving ======================= */
 /* everything Gaby has done is kept in this browser (localStorage), every few seconds and when the page closes.
    a save code (in the book's About tab) copies it to another device, or keeps it safe. */
@@ -8141,12 +8584,13 @@ function gatherSave(){
   return{v:1,found:Object.keys(found).filter(k=>found[k]),met:Object.keys(met).filter(k=>met[k]),
     read:Object.keys(readDone).filter(k=>readDone[k]).map(Number),been:Object.keys(been).filter(k=>been[k]),
     f:{labOpen,doorOpen,catQuest,bunQuest,duckQuest,boltAsked,boltPlaneSaid,catPlaneSaid,bunPlaneSaid,patchGiven,night,disco,fire,lamp,hallow,machFixed},hw:{d:HW.done?1:0},
-    duck:{st:DUCK.st==='done'||DUCK.fed?'done':DUCK.st==='none'?(pendingDucks?'coming':'none'):'coming',quest:DUCK.quest},
+    duck:{st:DUCK.st==='done'||DUCK.fed||DUCK.replay?'done':DUCK.st==='none'?(pendingDucks?'coming':'none'):'coming',quest:DUCK.quest},
     n:{wishesDone,sproutN,drinkN},bc:{q:bearQuest?1:0,st:BC.stage,ar:BC.stage>0?1:0,ro:BC.rolled,fi:BC.fished,br:BC.brave,gr:BC.grotto,dn:BC.done,sh:BC.shown,sn:BC.shownN,
       hg:BC.hugged,ml:BC.mail,mt:BC.mailT,mn:BC.mailN,ln:P.lantern?1:0,cm:BC.cm,cn:BC.cmN,po:BC.post,dg:BC.ducksGone},
-    beach:{d:BEACH.done,n:BEACH.n,c:BEACH.castle,s:BEACH.seeded},ver:VER,ch:{s:CH.step,d:CH.done},
+    beach:{d:BEACH.done,n:BEACH.n,c:BEACH.castle,s:BEACH.seeded},ver:CH.replay?Object.assign({},VER,{cafe:'new'}):VER,ch:{s:CH.replay?null:CH.step,d:CH.done},
+    day:{n:DAY.n,s:DAY.seen},zoo:{d:ZOO.done},
     p:(R||TRIP||RIDE||BUS.st||BEACH.ride)?null:{x:Math.round(P.x),y:Math.round(P.y),face:P.face},hat:P.hat,
-    bag:BAG.map(clean),items:ITEMS.map(clean),fol:followers.map(f=>ITEMS.indexOf(f)).filter(i=>i>=0),npcs,outfit:OUTFIT};}
+    bag:BAG.map(clean),items:ITEMS.map(clean),fol:followers.map(f=>ITEMS.indexOf(f)).filter(i=>i>=0),npcs,outfit:OUTFIT,look:LOOK};}
 function applySave(s){
   if(!s||!s.v)return false;
   FIND.forEach(k=>found[k]=false);(s.found||[]).forEach(k=>{if(k in found)found[k]=true;});
@@ -8160,8 +8604,9 @@ function applySave(s){
   P.lantern=!!bc.ln;BC.cave=BC.grotto?'done':'quiet';if(BC.grotto&&BC.stage<5&&!BC.done)BC.stage=5;if(BC.stage===1)BC.stage=2;
   if(BC.brave&&!BC.grotto)BC.dk=newCaveDucks();if(BC.stage===0)BC.arrived=0;
   if(been.bears)document.getElementById('mapbear').style.display='';
-  Object.assign(VER,s.ver||{});placeOlive();if(s.ch){CH.done=s.ch.d||0;CH.resume=!CH.done&&s.ch.s?s.ch.s:null;}
-  if(CH.done&&!found.bolty){CH.done=0;CH.resume=null;Object.assign(VER,{cafe:'old',attic:'plain',wall:0});placeOlive();}   // finished in an early test build: play the new version
+  Object.assign(VER,s.ver||{});placeOlive();if(s.ch){CH.done=s.ch.d||0;CH.resume=(!CH.done||/^z_/.test(s.ch.s||''))&&s.ch.s?s.ch.s:null;}
+  if(s.day){DAY.n=s.day.n||1;DAY.seen=s.day.s||{};}ZOO.done=(s.zoo&&s.zoo.d)||0;
+  if(CH.done&&!found.bolty){CH.done=0;if(!/^z_/.test(CH.resume||''))CH.resume=null;Object.assign(VER,{cafe:'old',attic:'plain',wall:0});placeOlive();}   // finished in an early test build: play the new version
   if(found.chest&&!CH.done&&!CH.resume)CH.pend=1;
   const bb=s.beach||{};BEACH.done=bb.d||0;BEACH.n=bb.n||0;BEACH.castle=bb.c||0;BEACH.seeded=bb.s||0;BEACH.ship.here=BEACH.done?1:0;
   if(patchGiven&&SHADES.indexOf('patch')<0)SHADES.push('patch');
@@ -8176,6 +8621,7 @@ function applySave(s){
   else if(d.st==='coming'){DUCK.st='coming';DUCK.wait=100;duckQuest=true;}
   NPC.forEach(q=>{const r=(s.npcs||{})[q.id];if(!r)return;q.hearts=r[0];q.wantI=r[1];q.wish=r[2]?(q.wants.find(w=>w.k===r[2])||null):null;});
   if(s.outfit&&typeof s.outfit==='object'){Object.assign(OUTFIT,s.outfit);saveOutfit();}
+  if(s.look&&typeof s.look==='object'){Object.assign(LOOK,s.look);if(!AGES[LOOK.age])LOOK.age='kid';saveLook();}
   if(s.p&&isFinite(s.p.x)&&isFinite(s.p.y)){P.x=s.p.x;P.y=s.p.y;P.face=s.p.face||1;P.vy=0;}
   if(P.x>H1.x0-20&&P.x<H1.x1+20&&P.y<GY-20){P.y=GY;}
   trail.length=0;followers.forEach((q,i)=>{q.x=P.x-70*(i+1)*(P.face||1);q.y=P.y;});
@@ -8205,7 +8651,7 @@ document.getElementById('saveload').addEventListener('click',async e=>{e.stopPro
   noSave=true;try{localStorage.setItem(SAVEKEY,JSON.stringify(s));location.reload();}
   catch(err){noSave=false;applySave(s);msg.textContent='✔ loaded!';shut('book');}});
 document.getElementById('savewipe').addEventListener('click',e=>{e.stopPropagation();
-  if(!confirm("Start the whole game over? Everything Gaby found, every friend and every quest will be forgotten. (Her clothes and the sound setting stay.)"))return;
+  if(!confirm("Start the whole game over? Everything Gaby found, every friend and every quest will be forgotten. (The clothes, the 🙂 me settings and the sound setting stay.)"))return;
   noSave=true;try{localStorage.removeItem(SAVEKEY);}catch(err){}location.reload();});
 addEventListener('pagehide',writeSave);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')writeSave();});
