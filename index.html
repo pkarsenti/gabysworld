@@ -12,6 +12,8 @@
        resume mid-story). the old photo in the chest (Gaby's drawing of baby her and Mommy, as a sepia memory), the café's grand
        re-opening (Gaby's café drawing, a door on each side), Gaby's house as its own indoor place (her drawing: Bob the fish, the
        copy machine 1 D 2 and the wonky bolted-on wing), Bolty, and hats for friends
+  v39: the Store of Gaby (her drawing) on Market Street, a money game with dollar bills and quarters, a gumball machine,
+       Miss Bec's board as a real sums game with gold stars, and Friday at the new store on the calendar
   v38: the zoo (Gaby's drawing): a coming soon board, sleeping through to morning, the eight parrots, and a calendar by her bed that starts a special day again
   v37: "me" in the wardrobe: your name, girl or boy, baby / toddler / kid / teen, skin, hair, hairstyle and eyes.
        friends can visit Gaby's world as themselves: people use their name, while the world, the title and the signs stay Gaby's
@@ -117,6 +119,11 @@
     max-width:560px;width:100%;max-height:88%;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable both-edges;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;text-align:center;box-sizing:border-box;}
   .sheet h2{font-size:23px;margin:2px 0 12px;}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  #tillpic,#quizpic{width:100%;max-width:480px;height:auto;display:block;margin:0 auto;}
+  .tsay{font-weight:700;font-size:17px;margin:6px 0;}.tlbl{font-weight:700;font-size:14px;margin-top:6px;color:#5d574b;}
+  .trow{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;min-height:56px;background:#efe6cf;border-radius:12px;padding:6px;margin:4px 0;font-weight:700;color:#8a8476;}
+  .coin{width:52px;height:52px;cursor:pointer;}.coin.bill{width:82px;height:52px;}
+  .btn.chq{font-size:34px;min-width:84px;min-height:64px;justify-content:center;}.btn.right{background:#cfe6c4;}.btn.go{background:#ffe9a8;}.btn.dim{opacity:.55;}.btn.wrong{background:#f2c4cf;}
   .calgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
   .calday{border:4px solid #2b2b2b;border-radius:14px;background:#ece4cf;color:#a39b89;padding:6px;font-weight:700;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:96px;}
   .calday b{font-size:34px;}.calday canvas{width:100%;height:auto;border-radius:8px;display:block;}.calday span{margin-top:4px;}
@@ -258,6 +265,7 @@
     <div data-x="11065" data-y="900">The shop &amp; the caf&eacute;</div>
     <div data-x="2376" data-y="900">The library</div>
     <div data-x="5590" data-y="900" id="mapzoo" style="display:none">🦜 The zoo</div>
+    <div data-x="35130" data-y="900">🛒 The Store of Gaby</div>
     <div data-x="12160" data-y="900">Gaby&#39;s Burgers &amp; play area</div>
     <div data-x="15120" data-y="900">School</div>
     <div data-x="10035" data-y="900">The playground</div>
@@ -305,6 +313,22 @@
   <div class="calgrid" id="calgrid"></div>
   <p id="calnote"></p>
   <div class="close" data-close="1">close</div>
+</div></div>
+<div id="till" class="sheet"><div>
+  <h2 id="tillh"></h2>
+  <canvas id="tillpic" width="480" height="200"></canvas>
+  <p id="tillsay" class="tsay"></p>
+  <div class="tlbl" id="tilla"></div><div class="trow" id="tillrow1"></div>
+  <div class="tlbl" id="tillb"></div><div class="trow" id="tillrow2"></div>
+  <div class="row" id="tillbtns"></div>
+  <div class="close" data-close="1">leave the till</div>
+</div></div>
+<div id="quiz" class="sheet"><div>
+  <h2 id="quizq"></h2>
+  <canvas id="quizpic" width="480" height="200"></canvas>
+  <div class="row" id="quizbtns"></div>
+  <p id="quiznote"></p>
+  <div class="close" data-close="1">not now</div>
 </div></div>
 <div id="pals"></div>
 <div id="bag"></div>
@@ -513,9 +537,10 @@ const BCX={sign:22480,school:22750,stumps:[22990,23100,23210],hill0:23420,hillT0
   river0:24220,river1:24400,fish:24310,den:24680,blanket:24990,cave:25300,wall:26880,hive:27050};
 const ZCF={x0:28000,x1:29300,ceil:360};
 const ZH={x0:30000,x1:31400,ceil:300},HM=740,HA=580,HDX=29968;   // inside Gaby's house: ground floor, middle floor (the lab), and under the roof                // the new café, inside
+const ZM={x0:35000,x1:37920,ceil:420},GBX=35360,TILLX=35700,PENNYX=35770,CRX=i=>36010+i*104;   // Market Street and the Store of Gaby
 const ZAV_DOOR=32290;
 const ZZ={x0:32000,x1:34560,ceil:420};                 // the zoo, through its gate
-const ZONES=[{id:'zoo',x0:ZZ.x0,x1:ZZ.x1,ceil:ZZ.ceil},{id:'home',x0:ZH.x0,x1:ZH.x1,ceil:ZH.ceil},{id:'cafe',x0:ZCF.x0,x1:ZCF.x1,ceil:ZCF.ceil},{id:'library',x0:ZL.x0,x1:ZL.x1,ceil:ZL.ceil},{id:'burger',x0:ZB.x0,x1:ZB.x1,ceil:ZB.ceil},{id:'school',x0:SZ.x0,x1:SZ.x1,ceil:SZ.ceil},{id:'bears',x0:ZBC.x0,x1:ZBC.x1,ceil:ZBC.ceil},{id:'bearcave',x0:ZCV.x0,x1:ZCV.x1,ceil:ZCV.ceil},{id:'pool',x0:ZP.x0,x1:ZP.x1,ceil:ZP.ceil}];
+const ZONES=[{id:'market',x0:ZM.x0,x1:ZM.x1,ceil:ZM.ceil},{id:'zoo',x0:ZZ.x0,x1:ZZ.x1,ceil:ZZ.ceil},{id:'home',x0:ZH.x0,x1:ZH.x1,ceil:ZH.ceil},{id:'cafe',x0:ZCF.x0,x1:ZCF.x1,ceil:ZCF.ceil},{id:'library',x0:ZL.x0,x1:ZL.x1,ceil:ZL.ceil},{id:'burger',x0:ZB.x0,x1:ZB.x1,ceil:ZB.ceil},{id:'school',x0:SZ.x0,x1:SZ.x1,ceil:SZ.ceil},{id:'bears',x0:ZBC.x0,x1:ZBC.x1,ceil:ZBC.ceil},{id:'bearcave',x0:ZCV.x0,x1:ZCV.x1,ceil:ZCV.ceil},{id:'pool',x0:ZP.x0,x1:ZP.x1,ceil:ZP.ceil}];
 const zoneAt=px=>ZONES.find(z=>px>=z.x0-30&&px<=z.x1+30)||null;
 const curZone=()=>zoneAt(P.x),inZone=()=>!!curZone(),inBurger=()=>{const z=curZone();return !!z&&z.id==='burger';},
   inPool=()=>{const z=curZone();return !!z&&z.id==='pool';},inLib=()=>{const z=curZone();return !!z&&z.id==='library';};
@@ -541,7 +566,7 @@ const PLATS=[
   {x0:ZP.x0,x1:POOL.x0,y:GY,z:'pool'},{x0:POOL.x1,x1:ZP.x1,y:GY,z:'pool'},{x0:BOARD.x0,x1:BOARD.tip,y:BOARD.y,z:'pool'},
   {x0:ZL.x0,x1:ZL.x1,y:GY,z:'library'},
   {x0:ZBC.x0,x1:ZBC.x1,y:GY,z:'bears'},{x0:BCX.hillT0-10,x1:BCX.hillT1,y:GY-150,z:'bears'},{x0:ZCV.x0,x1:ZCV.x1,y:GY,z:'bearcave'},{x0:ZCF.x0,x1:ZCF.x1,y:GY,z:'cafe'},
-  {x0:ZZ.x0,x1:ZZ.x1,y:GY,z:'zoo'},{x0:ZH.x0,x1:ZH.x1,y:GY,z:'home'},{x0:ZH.x0+10,x1:ZH.x1-10,y:HM,z:'home'},{x0:ZH.x0+250,x1:ZH.x1-250,y:HA,z:'home'}
+  {x0:ZM.x0,x1:ZM.x1,y:GY,z:'market'},{x0:ZZ.x0,x1:ZZ.x1,y:GY,z:'zoo'},{x0:ZH.x0,x1:ZH.x1,y:GY,z:'home'},{x0:ZH.x0+10,x1:ZH.x1-10,y:HM,z:'home'},{x0:ZH.x0+250,x1:ZH.x1-250,y:HA,z:'home'}
 ];
 const LADS=[
   {x:31220,y0:HM,y1:GY,z:'home',own:1},{x:30360,y0:HA,y1:HM,z:'home',own:1},
@@ -593,6 +618,12 @@ const THINGS=[
   {id:'mybed',x:30568,y:GY,label:'snuggle into my bed',lbl:()=>hwReady()?'go to sleep... tomorrow is Saturday!':VER.zoo==='soon'?'go to sleep... what will be there tomorrow?':'go to sleep'},
   {id:'toybox',x:31310,y:GY,label:'open my toy box'},
   {id:'calendar',x:30690,y:GY,label:'look at my calendar'},
+  ...[0,1,2,3,4,5,6].map(i=>({id:'crate'+i,x:CRX(i),y:GY,label:'pick some fruit',lbl:()=>'put '+(i===2||i===1?'an ':'a ')+NAMES[FRUIT[i].k]+' in the basket',hidden:()=>VER.store!=='open'})),
+  {id:'till',x:TILLX,y:GY,label:'pay at the till',lbl:()=>MON.basket.length?'pay at the till':'talk to Penny at the till',hidden:()=>VER.store!=='open'},
+  {id:'blender',x:36850,y:GY,label:'make a smoothie',hidden:()=>VER.store!=='open'},
+  ...[0,1,2,3].map(i=>({id:'frz'+i,x:37385+i*70,y:GY,label:'take something frozen',lbl:()=>'put '+an(NAMES[FRZ[i]])+' in the basket',hidden:()=>VER.store!=='open'})),
+  {id:'gumball',x:GBX,y:GY,label:'get a gumball',lbl:()=>'get a gumball (1 quarter)',key:1,by:-262,hidden:()=>VER.store!=='open'},
+  {id:'storesign',x:36100,y:GY,label:'read the sign',key:1,by:-380,hidden:()=>VER.store==='open'},
   {id:'zooboard',x:5545,y:GY,label:'read the board',key:1,by:-250,hidden:()=>VER.zoo==='open'},
   {id:'enterZoo',x:5590,y:GY,label:'go into the zoo',key:1,by:-300,hidden:()=>VER.zoo!=='open'},
   {id:'exitZoo',x:ZZ.x0+70,y:GY,label:'go back outside'},
@@ -652,7 +683,7 @@ const THINGS=[
   {id:'swing',x:SWING.x-40,y:GY,label:'have a swing',key:1,by:-268},
   {id:'bell',x:15200,y:GY,label:'ring the school bell',key:1,by:-300,bx:70},
   {id:'board',x:15390,y:GY,label:'change the pictures'},
-  {id:'sums',x:15770,y:GY,label:'answer the sum'},
+  {id:'sums',x:15770,y:GY,label:'answer Miss Bec\'s sum',key:1,by:-420},
   {id:'desk',x:16252,y:GY,label:'sit at a desk'},
   {id:'seesaw',x:SEE.x-100,y:GY,label:'get on the seesaw'},
   {id:'race',x:RACE.arch,y:GY,label:'START THE RACE',key:1,by:-372},
@@ -683,7 +714,7 @@ const THINGS=[
   {id:'board',x:-1630,y:GY,label:'climb aboard the ship',key:1,by:-250,bx:-60,hidden:()=>BEACH.st!=='waitBoard'},
   {id:'sail',x:-1630,y:GY,label:'sail away with Finn',key:1,by:-250,bx:-60,hidden:()=>!(BEACH.done&&BEACH.st==='picnic'&&BEACH.ship.here)}
 ];
-const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots','egypt','napspot','egyptcats','cloverisland','cloverfamily','cloverhome','bunnywheel','bunnydisco','bunnyice','bunnies','ducks','finn','finnfed','duckvillage','duckcannon','giraffe','jetpack','treasure','duckcrew','showtell','bearcity','beartalk','bearshow','bearbrave','grotto','bearhug','bearhugs','bearhome','saturday','burgerday','spookybook','trickortreat','allcandy','wisp','itsy','halloween','beach','booster','dolphins','atlantic','whale','wavejump','bearsea','beesmoke','nannyend','labfix','cidrum','pastlab','duckfeast','sillyducks','memory','grandopen','ghostcidrum','cidrumcake','bolty','copied','copy3','olivephoto','hatfriend','robotduet','pawot','parrotsout','parrotcatch','bobhappy','parrotparade','zoofeather','sleptday'];
+const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots','egypt','napspot','egyptcats','cloverisland','cloverfamily','cloverhome','bunnywheel','bunnydisco','bunnyice','bunnies','ducks','finn','finnfed','duckvillage','duckcannon','giraffe','jetpack','treasure','duckcrew','showtell','bearcity','beartalk','bearshow','bearbrave','grotto','bearhug','bearhugs','bearhome','saturday','burgerday','spookybook','trickortreat','allcandy','wisp','itsy','halloween','beach','booster','dolphins','atlantic','whale','wavejump','bearsea','beesmoke','nannyend','labfix','cidrum','pastlab','duckfeast','sillyducks','memory','grandopen','ghostcidrum','cidrumcake','bolty','copied','copy3','olivephoto','hatfriend','robotduet','pawot','parrotsout','parrotcatch','bobhappy','parrotparade','zoofeather','sleptday','fruitheaven','gumball4','sumright','changeright','becstar','becstar3','friday','frozen','smoothie'];
 const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watered the plants',
   bridge:'crossed the bridge',wave:'waved hello',slide:'took the slide',night:'turned on the night',
   fly:'flew the plane',tea:'had a cup of tea',nap:'had a nap',lamp:'lit the dark room',
@@ -719,7 +750,7 @@ Object.assign(LABELS,{chest:'found an old photo in the chest',memory:'remembered
   enterCafe:'went into the new caf\u00e9',oldphoto:'saw the old caf\u00e9 photo',cafeOrder:'got a cake shaped like me',photowall:'looked at the photo wall',
   cafeSit:'sat in the new caf\u00e9',grandopen:'opened the new caf\u00e9',ghostcidrum:'turned Captain Cidrum into a ghost',cidrumcake:'saw Captain Cidrum eat his own beard',
   bolty:'met Bolty',copied:'copied something',copy3:'got a bonus copy',olivephoto:'gave Olive a copy of my photo',hatfriend:'gave a friend a hat',robotduet:'heard Bolt and Bolty sing'});
-const FIND=THINGS.map(t=>t.id).filter(k=>['exitZoo','zoodoor','zootell','exitCafe','exitCafe2','enterCafe2','exitHome','exitBridge','enterHomeUp','lablever'].indexOf(k)<0&&k!=='exit'&&k!=='exitSchool'&&k!=='exitPool'&&k!=='exitLib'&&k!=='busHome'&&k!=='caveout').concat(EXTRA);
+const FIND=THINGS.map(t=>t.id).filter(k=>['blender','frz0','frz1','frz2','frz3','crate0','crate1','crate2','crate3','crate4','crate5','crate6','exitZoo','zoodoor','zootell','exitCafe','exitCafe2','enterCafe2','exitHome','exitBridge','enterHomeUp','lablever'].indexOf(k)<0&&k!=='exit'&&k!=='exitSchool'&&k!=='exitPool'&&k!=='exitLib'&&k!=='busHome'&&k!=='caveout').concat(EXTRA);
 const found={};FIND.forEach(k=>found[k]=false);
 
 /* ================= carryable stuff ================= */
@@ -790,6 +821,7 @@ function spawn(kind,px,py){const it={kind,x:px,y:py};ITEMS.push(it);return place
 function itemArt(k,px,py,s,bob,it){
   const b=bob||0;
   if(!(it&&it.pm&&it.pm.st!=='toLadder'&&it.pm.st!=='edgeGo'&&it.pm.st!=='walk')&&!(it&&it.oy<-6))shadow(px,py,DEF[k].pet?20:14);
+  if(FRUITART[k]){drawFruit(k,px,py-b,1);return;}
   stroke(5);
   switch(k){
     case 'flower':flower(px,py-20,12,s);rline(px,py-10,px,py,s+9,1.5);break;
@@ -1137,7 +1169,7 @@ addEventListener('keydown',e=>{
   if(e.key==='m'||e.key==='M'){toggle('map');return;}
   if(e.key==='b'||e.key==='B'){toggle('book');return;}
   if((e.key==='n'||e.key==='N')&&started&&!R&&!RIDE){if(SCENE)return;if(TRIP){if(TRIP.dest==='clover'&&TRIP.ph==='walk')ciToggleNight();}else toggleSky();return;}
-  if(e.key==='Escape'){shut('map');shut('book');shut('pal');shut('itm');shut('ward');shut('lib');shut('read');shut('fly');shut('cal');return;}
+  if(e.key==='Escape'){shut('map');shut('book');shut('pal');shut('itm');shut('ward');shut('lib');shut('read');shut('fly');shut('cal');shut('till');shut('quiz');return;}
   const k=KM[e.key];if(!k)return;e.preventDefault();
   if(!key[k]){if(k==='act')actEdge=true;if(k==='up')upEdge=true;if(k==='down')downEdge=true;if(k==='grab')grabEdge=true;}
   key[k]=1;started=true;});
@@ -1469,6 +1501,7 @@ function climbOut(side){trail.length=0;P.swim=false;P.dive=null;P.x=side<0?POOL.
   puff(P.x,P.y-60,8,'drop');say(P.x,P.y-120,'drip drip');tune([523,659],90,'sine');}
 function doThing(th){
   if(SCRIPT.want&&SCRIPT.want.id===th.id){SCRIPT.want=null;SCRIPT.got=th.id;mark(th.id);return;}
+  if(storeDo(th))return;
   if(zooDo(th))return;
   if(cafeDo(th))return;
   if(beachDo(th))return;
@@ -1630,7 +1663,7 @@ function stepWishes(){
     if(dx<85&&dy<90){giveTo(n,it);break;}}}
 function giveTo(n,it){
   bagTake(it);meet(n.id);n.hearts++;n.waveT=120;const w=n.wish;
-  if(w.k==='photo'){setVer('wall',1);mark('olivephoto');setTimeout(()=>say(n.x,n.y-160,'it is going right in the middle of my wall!'),2600);}n.wish=null;n.excited=0;n.coolT=1500;wishesDone++;
+  if(w.k==='photo'){setVer('wall',1);mark('olivephoto');setTimeout(()=>say(n.x,n.y-160,'it is going right in the middle of my wall!'),2600);}n.wish=null;n.excited=0;n.coolT=1500;wishesDone++;MON.my.q=Math.min(12,MON.my.q+1);setTimeout(()=>say(P.x,P.y-130,'and a quarter for helping! for the gumball machine...'),5200);
   giving=n;puff(n.x,n.y-110,14,'heart');
   say(n.x,n.y-130,['thank you!!','yay, my '+NAMES[w.k]+'!','you are the best!'][wishesDone%3]);
   tune([523,659,784,1046,1318],80,'triangle');mark('wish');if(wishesDone>=5)mark('wish5');
@@ -1673,7 +1706,7 @@ function stepNPCs(){
     if(Math.random()<.004)n.pause=50+Math.random()*90;
     if(Math.random()<.003)n.dir*=-1;});}
 function update(){
-  t++;storyTick();waitsTick();castTick();chTick();zooTick();
+  t++;storyTick();waitsTick();castTick();chTick();zooTick();storeTick();
   if(SCRIPT.lock){key.left=key.right=key.up=key.down=0;actEdge=grabEdge=upEdge=downEdge=false;}
   if((flying&&!R&&!TRIP)||(TRIP&&!TRIP.spooky&&(TRIP.ph==='out'||TRIP.ph==='back'))){humOn();humTick();}else humOff();
   musVol=1;
@@ -1821,9 +1854,11 @@ function update(){
     P.turnA=(P.turnA||0)+(((key.left||key.right)&&P.ground?1:0)-(P.turnA||0))*.2;
     if((key.left||key.right)&&P.ground&&t%13===0)tone(78+((t*7)%26),.035,'triangle',.014);
     if(flying)P.x=Math.max(PLANE.x0+50,Math.min(PLANE.x1-80,P.x));
-    else if(inZone()){const z=curZone();P.x=Math.max(z.x0+40,Math.min(z.x1-40,P.x));}
+    else if(inZone()){const z=curZone();P.x=Math.max(z.x0+40,Math.min(z.x1-40,P.x));
+      if(z.id==='market'&&P.x<=z.x0+41&&key.left&&!SCRIPT.lock){goTo(W.w-80,GY);P.face=-1;}}
     else if(P.y>GY+60)P.x=Math.max(LAB.x0+40,Math.min(LAB.x1-40,P.x));
-    else P.x=Math.max(SHORE+24,Math.min(W.w-40,P.x));
+    else{P.x=Math.max(SHORE+24,Math.min(W.w-40,P.x));
+      if(P.x>=W.w-41&&key.right&&!SCRIPT.lock&&P.y>=GY-2){goTo(ZM.x0+130,GY);P.face=1;mark('enterMarket');}}   // the road carries on, to Market Street
     let climbed=false;
     for(const L of LADS){
       if(flying&&(L.z==='board'||L.z==='shaft'))continue;
@@ -2212,7 +2247,7 @@ function drawClassroom(cam){
   /* chalkboard with the sum */
   fbox(15720,430,340,122,5641,'#5f7a6a',7);x.fillStyle='#c49a74';x.fillRect(15720,552,340,10);
   x.fillStyle='#f3ecd8';x.font='700 42px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';x.textAlign='center';
-  x.fillText(sumShown?sumA+' + '+sumB+' = '+(sumA+sumB):sumA+' + '+sumB+' = ?',15890,506);
+  x.fillText(becBoard(),15890,516);becStars();
   /* the pictures she can change */
   const frame=(fx,fy,what,seed)=>{fbox(fx,fy,66,66,seed,PAPER,5.5);
     if(what==='heart'){x.fillStyle=TOMATO;heart(fx+33,fy+30,14);}
@@ -3350,7 +3385,7 @@ function draw(){
       if(innerWidth>innerHeight)touchPad=innerHeight*.16/scale;}    // on its side the buttons sit at the edges, so the ground can go low
     const lim=below+touchPad-VH/2;               // on touch screens the ground always sits just above the buttons
     camY=matchMedia('(pointer:coarse)').matches?Math.min(P.y-below+lim,lim):Math.min(P.y-VH*.24,lim);
-    if(inZone()){const z=curZone(),top=z.ceil-46+VH/2,sky=top-((z.id==='pool'||z.id==='bears'||z.id==='zoo')?260:0);   // the pool is outside: the sky goes up and up
+    if(inZone()){const z=curZone(),top=z.ceil-46+VH/2,sky=top-((z.id==='pool'||z.id==='bears'||z.id==='zoo'||z.id==='market')?260:0);   // the pool is outside: the sky goes up and up
       if(matchMedia('(pointer:coarse)').matches){
         const floor=(inPool()?POOL.bot+14:GY)+touchPad-VH/2;      // normally: the floor just above the buttons...
         camY=floor<=top?floor:Math.max(sky,Math.min(floor,P.y-60));}   // ...but follow her up to the loft, the diving board and high dives
@@ -3366,13 +3401,13 @@ function draw(){
   x.translate(innerWidth/2,innerHeight/2);x.scale(scale,scale);x.rotate(tilt);x.translate(-cam.x,-cam.y);
   if(labRumble>0)x.translate((Math.random()-.5)*Math.min(14,labRumble*.15),(Math.random()-.5)*Math.min(8,labRumble*.08));
 
-  if(inZone()){const zid=curZone().id;zid==='bears'?drawBearCity(cam):zid==='bearcave'?drawCaveRoom(cam):zid==='burger'?drawBurgerInside(cam):zid==='pool'?drawPool(cam):zid==='library'?drawLibraryInside(cam):zid==='cafe'?drawCafeInside(cam):zid==='home'?drawHomeInside(cam):zid==='zoo'?drawZooInside(cam):drawClassroom(cam);if(zid!=='pool'&&zid!=='bears'&&zid!=='bearcave'&&zid!=='home'&&zid!=='zoo')sunBehind();}
+  if(inZone()){const zid=curZone().id;zid==='bears'?drawBearCity(cam):zid==='bearcave'?drawCaveRoom(cam):zid==='burger'?drawBurgerInside(cam):zid==='pool'?drawPool(cam):zid==='library'?drawLibraryInside(cam):zid==='cafe'?drawCafeInside(cam):zid==='home'?drawHomeInside(cam):zid==='zoo'?drawZooInside(cam):zid==='market'?drawMarket(cam):drawClassroom(cam);if(zid!=='pool'&&zid!=='bears'&&zid!=='bearcave'&&zid!=='home'&&zid!=='zoo'&&zid!=='market')sunBehind();}
   else{
   drawSky(cam);
   if(!flying){
     drawGround(cam);drawBeach(cam);drawLab(cam);drawOldGarden();
     drawHouse1();drawHouse2();drawBridge();drawPlayhouse();
-    drawZooLot();drawBathHouse();drawTruck();drawTown();drawBurgerFacade();drawSchoolFacade();drawPlayground();drawRaceGate();drawPoolGate();drawLibraryFacade();drawBusStop();drawMailbox();drawLadders();drawLamppost();if(halloNow())drawHalloweenTown(cam);}
+    drawZooLot();drawBathHouse();drawTruck();drawTown();drawBurgerFacade();drawSchoolFacade();drawPlayground();drawRaceGate();drawPoolGate();drawLibraryFacade();drawBusStop();drawMailbox();drawStoreArrow();drawLadders();drawLamppost();if(halloNow())drawHalloweenTown(cam);}
   drawPlane();
   if(!flying)drawSigns(cam);}
   NPC.forEach((n,i)=>{
@@ -3400,7 +3435,7 @@ function draw(){
       if(n.id==='bea')icon('fries',n.x+52,n.y-66,.75,4655+i);return;}
     figure(n.x+(n.scared?Math.sin(t*1.9+i)*1.6:0),n.y-hop-(n.hopY||0),Object.assign({look:n.look,walk:n.walk,seed:4455+i*37,
       arms:n.scared?'up':n.waveT>0?'wave':(dancing||(n.hop&&recess)||n.teacher||n.kidplay?'up':'down')},col));});
-  drawHW(cam);drawCast(cam);if(zid()==='cafe')drawCafeCounter();
+  drawHW(cam);drawCast(cam);if(zid()==='cafe')drawCafeCounter();if(zid()==='market')drawMarketFront();
   if(FV&&!flying)drawDuck(FV.x,FV.y-(FV.hy||0),Object.assign({},DK.finn,{face:FV.face,air:FV.st!=='stand',squash:FV.sq||0}));
   if(started&&!flying&&P.y>GY+60&&((found.space&&!machFixed&&boltWith())||cidrumReady()))beacon(10230,LAB.floor-240);
   if(inBurger())drawBurgerFront();
@@ -3474,7 +3509,7 @@ function draw(){
 
   x.save();x.setTransform(DPR,0,0,DPR,0,0);
   if(sunPop>0)sunPop--;
-  zooHud();
+  zooHud();marketHud();
   if(fadeT>0){x.fillStyle='rgba(246,239,220,'+(fadeT/16)+')';x.fillRect(0,0,innerWidth,innerHeight);}
   if(BC.flash>0){x.fillStyle='rgba(255,250,230,'+Math.min(1,BC.flash/24)+')';x.fillRect(0,0,innerWidth,innerHeight);}
   if(partyT>0){x.textAlign='center';x.font='700 26px "Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",sans-serif';
@@ -8234,7 +8269,7 @@ function cafeDo(th){
    to add a day: one line in DAYS, one sticker in dayArt(), one case in sleepNow(). */
 const DAY={n:1,seen:{}};
 const DAYS=[{id:'ducks',name:'the pirate ducks',got:()=>DUCK.st==='done'},{id:'saturday',name:'Saturday with Finn',got:()=>!!HW.done},
-  {id:'cafe',name:'the grand re-opening',got:()=>!!CH.done},{id:'zoo',name:'the zoo',got:()=>VER.zoo==='soon'||!!ZOO.done}];
+  {id:'cafe',name:'the grand re-opening',got:()=>!!CH.done},{id:'zoo',name:'the zoo',got:()=>VER.zoo==='soon'||!!ZOO.done},{id:'friday',name:'Friday: the new store',got:()=>true}];
 const dayNew=()=>DAYS.some(d=>d.got()&&!DAY.seen[d.id]);
 function dayFree(){return chFree()&&!SCRIPT.busy&&!CH.step&&!CH.pend&&!CH.resume&&(HW.st==='none'||HW.st==='done')&&(DUCK.st==='none'||DUCK.st==='done')&&!pendingDucks&&!COPY.kind;}
 function dayArt(cv,id){const ctx=cv.getContext('2d'),sc=cv.width/160;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);x=ctx;
@@ -8245,6 +8280,9 @@ function dayArt(cv,id){const ctx=cv.getContext('2d'),sc=cv.width/160;ctx.setTran
     else if(id==='saturday'){drawDuck(52,106,Object.assign({},DK.finn,{s:1.15,face:1}));drawDuck(112,106,Object.assign({},DK.nugget,{s:.95,face:-1}));icon('burger',82,42,1.1,77);}
     else if(id==='cafe'){drawCake2(80,102,'cidrum');x.save();x.translate(80,60);x.scale(.9,.9);x.restore();
       stroke(3);for(let i=0;i<6;i++){const bx=18+i*25;x.fillStyle=DISCO[i%5];x.beginPath();x.moveTo(bx-9,14);x.lineTo(bx+9,14);x.lineTo(bx,32);x.closePath();x.fill();x.stroke();}}
+    else if(id==='friday'){x.fillStyle='#c49a74';x.fillRect(22,74,76,30);stroke(3.5);x.strokeRect(22,74,76,30);['apple','banana','orange'].forEach((k,i)=>drawFruit(k,40+i*20,76-(i%2)*5,.9));
+      x.fillStyle='rgba(207,227,234,.8)';x.beginPath();x.arc(124,52,24,0,7);x.fill();stroke(3.5);x.stroke();for(let i=0;i<7;i++){x.fillStyle=DISCO[i%5];x.beginPath();x.arc(112+(i%4)*8,48+(i>>2)*10,5,0,7);x.fill();}
+      fbox(106,76,36,28,9,TOMATO,3.5);drawQuarter(80,30,13);}
     else if(id==='zoo')drawParrot(80,108,{s:1.5,col:PCOLS[7][0],wing:PCOLS[7][1],face:1});
   }finally{x=X0;}}
 function fillCal(){const g=document.getElementById('calgrid');g.innerHTML='';
@@ -8264,12 +8302,13 @@ async function sleepNow(id){
   P.x=30558;P.y=GY-28;P.vy=0;P.nap=1e6;P.face=1;night=true;hallow=false;
   say(P.x,P.y-110,'good night, Bob... zzz');tune([523,440,392],160,'sine');
   await frames(170);
-  P.nap=0;DAY.n++;night=false;fadeT=16;sunPop=14;tune([392,523,659,784],110,'sine');
+  P.nap=0;DAY.n++;night=false;fadeT=16;sunPop=14;tune([392,523,659,784],110,'sine');pocketMoney();
   if(VER.zoo==='soon'){setVer('zoo','open');if(!id)id='zoo';}
   if(!id){P.x=30640;P.y=GY;P.face=1;say(P.x,P.y-120,['good morning!','what a lovely sleep!','good morning, Bob!'][(Math.random()*3)|0]);cine(0);writeSave();return;}
   goTo(680,GY);P.face=1;lineUp(600,GY);
   if(id==='ducks'){cine(0);duckReplay();return;}
   if(id==='cafe'){CH.replay=1;chGo('news');return;}
+  if(id==='friday'){chGo('f_school');return;}
   chGo('z_morning');}
 function duckReplay(){                            // the pirate ducks hop out of the book again. Wobble, Nugget and Nanny Plum hide until it's over
   ['wobble','nugget','nanny'].forEach(id=>{const n=NPC.find(q=>q.id===id);if(n){n.away=1;n.wish=null;}});
@@ -8574,6 +8613,316 @@ async function zReturn(){ZOO.out=1;ZOO.bob=0;if(zid()!=='zoo')goTo(32170,GY);
   await until(()=>!CAST.finn&&!CAST.wobble&&!CAST.nugget);uncast('cage');await walk('manager',32985,3.4);zooDone();}
 Object.assign(CHSTEPS,{z_morning:()=>zMorning(),z_gate:()=>zGate(),z_visit:()=>zVisit(),z_home:()=>zHome(),z_catch:()=>zCatch(),z_bob:()=>zBob(),z_parade:()=>zParade(),z_return:()=>zReturn()});
 
+/* ======================= the Store of Gaby: fruit, money, and a gumball machine ======================= */
+/* from Gaby's drawing: a long store with "Store of Gaby" in a box on the roof, a shopping cart, a shelf of things on two
+   levels and a tall Frozen section full of labelled boxes. it's open at the front, so you can see right in.
+   it sits on Market Street: keep walking right past the café and the road carries on.
+   the money game, for a 6 year old: prices are whole dollar bills and quarters, counted as things ("3 quarters", never 75¢).
+   all the sums stay in single digits: count it out, then add it up, and a dollar is 4 quarters, so change is 4 take away 3. */
+const FRUIT=['banana','apple','orange','grapes','berry','pineapple','melon'].map(k=>({k,d:0,q:1}));   // everything is 25 cents
+const FRUITART={banana:1,orange:1,grapes:1,berry:1,pineapple:1,melon:1,gumball:1,smoothie:1,popsicle:1,peas:1};
+const FRZ=['ice','pizza','popsicle','peas'],FRZX=i=>37385+i*70,BLX=36850;   // the freezer's four columns, and the smoothie blender
+Object.assign(DEF,{banana:{food:1},orange:{food:1},grapes:{food:1},berry:{food:1},pineapple:{food:1},melon:{food:1},gumball:{food:1},smoothie:{food:1},popsicle:{food:1},peas:{food:1}});
+Object.assign(NAMES,{banana:'banana',orange:'orange',grapes:'bunch of grapes',berry:'box of strawberries',pineapple:'pineapple',melon:'watermelon',gumball:'gumball',smoothie:'smoothie',popsicle:'ice pop',peas:'bag of frozen peas'});
+const MON={bl:0,my:{b:3,q:4},wob:{b:2,q:5},story:0,basket:[],lvl:1,wins:0,sold:0};
+const BEC={lvl:1,right:0,stars:0,q:null};
+const pk=()=>MON.story?MON.wob:MON.my,mval=m=>m.b*4+m.q;
+function bTot(){const r={d:0,q:0};MON.basket.forEach(k=>{const f=FRUIT.find(o=>o.k===k);r.d+=f.d;r.q+=f.q;});return r;}
+const storeOpen=()=>VER.store==='open';
+NPC.push({id:'penny',name:'Penny',x:PENNYX,y:GY,look:'curl',shirt:'#e0b25e',hair:'#7a4a2e',skin:SKINS[2],home:PENNYX,range:0,spd:0,dir:-1,away:1,
+  says:['welcome to the Store of Gaby!','the bananas are lovely today','a dollar is four quarters!'],story:'Penny runs the till at the Store of Gaby. She loves counting money, and she always counts it out loud, so you can count along.',
+  wants:[{k:'cup',why:'a cup of tea at the till'},{k:'flower',why:'a flower for my till'}],wantI:0,hearts:0,wish:null});
+Object.assign(LABELS,{till:'paid at the Store of Gaby',gumball:'got a gumball',storesign:'read the store sign',enterMarket:'walked to Market Street',
+  fruitheaven:'saw Wobble flop down in fruit heaven',gumball4:'got gumballs for everybody',changeright:'got change back at the till',sumright:'paid the exact amount',
+  becstar:'got a gold star from Miss Bec',becstar3:'got three gold stars from Miss Bec',smoothie:'made a smoothie',frozen:'bought something frozen',friday:'had Friday at the new store'});
+
+/* ---- drawing fruit and money ---- */
+function drawFruit(k,cx,by,s){s=s||1;x.save();x.translate(cx,by);x.scale(s,s);stroke(3.5);
+  if(k==='apple'){x.fillStyle='#d9786a';x.beginPath();x.arc(0,-14,14,0,7);x.fill();x.stroke();stroke(3,'#7a5236');rline(0,-27,2,-34,3,0);x.fillStyle='#8fbf72';x.beginPath();x.ellipse(7,-31,6,3,-.5,0,7);x.fill();stroke(2);x.stroke();}
+  else if(k==='banana'){x.fillStyle='#f3d36b';x.beginPath();x.moveTo(-18,-20);x.quadraticCurveTo(-6,2,18,-14);x.quadraticCurveTo(4,-8,-14,-24);x.closePath();x.fill();x.stroke();fillCirc(18,-14,2.5,5,'#7a5236');}
+  else if(k==='orange'){x.fillStyle='#ef9a3e';x.beginPath();x.arc(0,-14,14,0,7);x.fill();x.stroke();fillCirc(-4,-18,1.4,7,'rgba(43,43,43,.3)');fillCirc(5,-10,1.4,8,'rgba(43,43,43,.3)');
+    x.fillStyle='#8fbf72';x.beginPath();x.ellipse(4,-29,6,3,.4,0,7);x.fill();stroke(2);x.stroke();}
+  else if(k==='grapes'){stroke(3,'#7a5236');rline(0,-34,2,-40,9,0);stroke(2.6);[[-8,-28],[0,-29],[8,-28],[-4,-20],[4,-20],[-8,-13],[8,-13],[0,-11],[0,-4]].forEach(([a,b])=>{x.fillStyle='#9b6fc0';x.beginPath();x.arc(a,b,5.5,0,7);x.fill();x.stroke();});}
+  else if(k==='berry'){x.fillStyle='#e8d7b0';x.fillRect(-16,-12,32,12);stroke(3);x.strokeRect(-16,-12,32,12);
+    [[-9,-14],[0,-17],[9,-14]].forEach(([a,b])=>{x.fillStyle=TOMATO;x.beginPath();x.moveTo(a-6,b-4);x.quadraticCurveTo(a,b-10,a+6,b-4);x.quadraticCurveTo(a+3,b+6,a,b+7);x.quadraticCurveTo(a-3,b+6,a-6,b-4);x.fill();stroke(2.2);x.stroke();
+      x.fillStyle='#8fbf72';x.beginPath();x.ellipse(a,b-7,4,2,0,0,7);x.fill();});}
+  else if(k==='pineapple'){x.fillStyle='#8fbf72';[-1,0,1].forEach(d=>{x.beginPath();x.moveTo(d*5-3,-30);x.lineTo(d*9,-46-(d?0:5));x.lineTo(d*5+3,-30);x.closePath();x.fill();stroke(2.2);x.stroke();});
+    x.fillStyle='#e0b25e';x.beginPath();x.ellipse(0,-15,12,16,0,0,7);x.fill();stroke(3);x.stroke();
+    x.save();x.beginPath();x.ellipse(0,-15,12,16,0,0,7);x.clip();stroke(1.6,'rgba(43,43,43,.45)');for(let i=-3;i<4;i++){rline(i*7-10,-32,i*7+10,2,i+20,0);rline(i*7+10,-32,i*7-10,2,i+30,0);}x.restore();}
+  else if(k==='melon'){x.fillStyle='#6fae74';x.beginPath();x.ellipse(0,-15,22,15,0,0,7);x.fill();x.stroke();
+    x.save();x.beginPath();x.ellipse(0,-15,22,15,0,0,7);x.clip();stroke(3,'#3f7a48');[-12,-4,4,12].forEach((d,i)=>{x.beginPath();x.moveTo(d,-30);x.quadraticCurveTo(d+4,-15,d,0);x.stroke();});x.restore();}
+  else if(k==='smoothie'){x.fillStyle='#f2a6bd';x.beginPath();x.moveTo(-12,-34);x.lineTo(12,-34);x.lineTo(8,0);x.lineTo(-8,0);x.closePath();x.fill();x.stroke();
+    x.fillStyle='rgba(255,255,255,.55)';x.fillRect(-11,-34,22,6);stroke(3,TOMATO);rline(3,-34,9,-48,3,0);fillCirc(-3,-22,2,4,'rgba(255,255,255,.7)');}
+  else if(k==='popsicle'){stroke(4,'#c49a74');rline(0,0,0,-12,5,0);x.fillStyle='#e0546b';x.beginPath();x.moveTo(-9,-12);x.lineTo(-9,-32);x.arc(0,-32,9,Math.PI,0);x.lineTo(9,-12);x.closePath();x.fill();stroke(3);x.stroke();
+    x.fillStyle='#f0b429';x.fillRect(-8,-24,16,6);}
+  else if(k==='peas'){x.fillStyle='#8fbf72';x.beginPath();x.moveTo(-13,0);x.lineTo(-15,-30);x.lineTo(15,-30);x.lineTo(13,0);x.closePath();x.fill();x.stroke();
+    x.fillStyle=PAPER;x.fillRect(-15,-36,30,7);stroke(2.5);x.strokeRect(-15,-36,30,7);[[-5,-14],[3,-18],[-1,-8],[6,-9]].forEach(([a,b])=>fcirc(a,b,3.5,6,'#5e8a52',2));}
+  else if(k==='gumball'){x.fillStyle=['#e0546b','#4aa3df','#f0b429','#63c07b'][Math.abs((cx*7+by)|0)%4];x.beginPath();x.arc(0,-9,9,0,7);x.fill();stroke(3);x.stroke();fillCirc(-3,-12,2.2,3,'rgba(255,255,255,.7)');}
+  x.restore();}
+function drawQuarter(cx,cy,r){x.fillStyle='#c9ccd1';x.beginPath();x.arc(cx,cy,r,0,7);x.fill();stroke(Math.max(2,r*.13));x.stroke();
+  stroke(Math.max(1,r*.06),'rgba(43,43,43,.4)');x.beginPath();x.arc(cx,cy,r*.78,0,7);x.stroke();
+  x.fillStyle='#9aa0a8';x.beginPath();x.arc(cx-r*.05,cy-r*.12,r*.32,0,7);x.fill();x.beginPath();x.ellipse(cx-r*.02,cy+r*.24,r*.36,r*.18,0,Math.PI,0);x.fill();   // a little head, like a real quarter
+  x.fillStyle=INK;x.font='700 '+Math.max(7,r*.42|0)+'px '+BFONT;x.textAlign='center';x.fillText('25¢',cx,cy+r*.72);}
+function drawBill(cx,cy,w){const h=w*.5;x.fillStyle='#b9d9a8';x.fillRect(cx-w/2,cy-h/2,w,h);stroke(Math.max(2,w*.04));x.strokeRect(cx-w/2,cy-h/2,w,h);
+  stroke(Math.max(1,w*.02),'#5e8a52');x.strokeRect(cx-w/2+w*.06,cy-h/2+h*.12,w*.88,h*.76);
+  x.fillStyle='#e6f1dd';x.beginPath();x.ellipse(cx,cy,w*.17,h*.3,0,0,7);x.fill();stroke(Math.max(1,w*.02),'#5e8a52');x.stroke();
+  x.fillStyle='#2f5a34';x.textAlign='center';x.font='700 '+(h*.42|0)+'px '+BFONT;x.fillText('1',cx,cy+h*.15);x.font='700 '+(h*.26|0)+'px '+BFONT;x.fillText('$1',cx-w*.33,cy-h*.1);x.fillText('$1',cx+w*.33,cy+h*.3);}
+function moneyPics(cx,cy,d,q,sz){                    // bills then quarters, side by side, centred
+  const bw=sz*1.7,gap=sz*.25,qw=sz*.95,W=d*(bw+gap)+(d&&q?sz*.5:0)+q*(qw+gap)-gap;let px=cx-W/2;
+  for(let i=0;i<d;i++){drawBill(px+bw/2,cy,bw);px+=bw+gap;}if(d&&q)px+=sz*.5;
+  for(let i=0;i<q;i++){drawQuarter(px+qw/2,cy,qw/2);px+=qw+gap;}}
+const an=w=>(/^[aeiou]/.test(w)?'an ':'a ')+w;
+const cents=v=>{const d=v/4|0,c=(v%4)*25;return d&&c?'$'+d+' and '+c+' cents':d?'$'+d:c?c+' cents':'nothing';};
+const priceTxt=(d,q)=>(d?(d===1?'1 dollar':d+' dollars'):'')+(d&&q?' and ':'')+(q?(q===1?'1 quarter':q+' quarters'):'')||'nothing';
+function drawGood(k,cx,by,s){if(FRUITART[k]||k==='apple'){drawFruit(k,cx,by,s);return;}x.save();x.translate(cx,by);x.scale(s,s);itemArt(k,0,0,77,0,{kind:k,oy:-10});x.restore();}
+function onCanvas(cv,fn){const ctx=cv.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);x=ctx;try{fn(ctx);}finally{x=X0;}}
+
+/* ---- Market Street ---- */
+function drawMarket(cam){const L=cam.x-VW/2-60,R2=cam.x+VW/2+60,Bt=cam.y+VH/2+60,nt=dark(),TF=BFONT,op=storeOpen();
+  drawSky(cam);
+  x.fillStyle=nt?'#b9ae99':'#ddd2bd';x.fillRect(L,GY+4,R2-L,Bt-GY);x.fillStyle=nt?'#a9b996':'#cbdab4';x.fillRect(L,GY+4,R2-L,22);
+  stroke(5);rline(L,GY+4,R2,GY+4,5597,2.5);stroke(6);for(let dx=Math.floor(L/140)*140;dx<R2;dx+=140)rline(dx,GY+58,dx+62,GY+58,dx,2);
+  /* the way back */
+  stroke(6);rline(ZM.x0+90,GY,ZM.x0+90,GY-92,11001,2);x.font='700 20px '+TF;x.textAlign='center';fbox(ZM.x0+20,GY-134,140,40,11002,PAPER,5);x.fillStyle=INK;x.fillText('←  town',ZM.x0+90,GY-107);
+  [ZM.x0+260,ZM.x1-80].forEach((tx,i)=>lolliTree(tx,GY,110,48,11010+i,'#8fbf72'));
+  /* the gumball machine, by the door */
+  const g=GBX;stroke(6,'#8a6a4a');fbox(g-34,GY-80,68,80,11020,TOMATO,5);fbox(g-14,GY-62,28,14,11021,'#3d3230',3);fbox(g-8,GY-36,16,20,11022,'#c9ccd1',3);
+  x.save();x.translate(g+24,GY-56);x.rotate(MON.gt>0?MON.gt*.5:0);stroke(4);rline(0,0,14,0,11023,0);fcirc(14,0,6,11024,'#f0b429',3);x.restore();
+  x.fillStyle='rgba(207,227,234,.75)';x.beginPath();x.arc(g,GY-130,52,0,7);x.fill();
+  x.save();x.beginPath();x.arc(g,GY-130,48,0,7);x.clip();for(let i=0;i<26;i++){const a=rp(i*5)*6.28,r=rp(i*5+1)*44,bx=g+Math.cos(a)*r,by=Math.max(GY-170+i*2.2,GY-130+Math.sin(a)*r);
+    x.fillStyle=DISCO[i%5];x.beginPath();x.arc(bx,by,8,0,7);x.fill();stroke(2);x.stroke();}x.restore();
+  stroke(5);x.beginPath();x.arc(g,GY-130,52,0,7);x.stroke();fbox(g-20,GY-196,40,14,11025,TOMATO,4);
+  fbox(g-36,GY-112,72,24,11026,PAPER,3);drawQuarter(g-18,GY-100,9);x.fillStyle=INK;x.font='700 13px '+TF;x.textAlign='left';x.fillText('= 1',g-6,GY-95);
+  if(MON.gt>0){const u=1-MON.gt/40;drawFruit('gumball',g+u*40,GY-20+Math.abs(Math.sin(u*9))*-10*(1-u),1);}
+  /* the store, from her drawing */
+  const s0=35560,s1=37780,top0=GY-340,top1=GY-314;
+  x.fillStyle='#f6efe0';x.beginPath();x.moveTo(s0,GY);x.lineTo(s0,top0);x.lineTo(s1,top1);x.lineTo(s1,GY);x.closePath();x.fill();glow(s0,top1,s1-s0,GY-top1);
+  for(let fx=s0;fx<s1;fx+=48){x.fillStyle=((fx/48)|0)%2?'#e9e1cf':'#f3ecdc';x.fillRect(fx,GY-26,48,26);}
+  stroke(9);x.beginPath();x.moveTo(s0,GY);x.lineTo(s0,top0);x.lineTo(s1,top1);x.lineTo(s1,GY);x.stroke();
+  const sx=36420,sy=GY-394;x.save();x.translate(sx,sy);x.rotate(.035);fbox(-250,-70,500,128,11030,PAPER,6);stroke(5);rline(70,-70,70,58,11031,1);rline(130,-70,130,58,11032,1);
+  x.fillStyle=INK;x.textAlign='center';x.font='700 66px '+TF;x.fillText('Store',-90,22);x.font='700 38px '+TF;x.fillText('of',100,14);x.fillText('Gaby',190,14);x.restore();
+  stroke(6,'#8a6a4a');rline(sx-170,sy+52,sx-170,top0+(top1-top0)*((sx-170-s0)/(s1-s0)),11033,1);rline(sx+170,sy+64,sx+170,top0+(top1-top0)*((sx+170-s0)/(s1-s0)),11034,1);
+  /* the cart, like hers */
+  const cx=35880;stroke(4);x.beginPath();x.moveTo(cx-60,GY-100);x.lineTo(cx-40,GY-100);x.lineTo(cx-28,GY-36);x.lineTo(cx+46,GY-36);x.lineTo(cx+56,GY-84);x.lineTo(cx-34,GY-84);x.stroke();
+  stroke(2.5);for(let i=0;i<6;i++){const u=i/5;rline(cx-31+u*82,GY-84,cx-26+u*68,GY-36,11040+i,0);}rline(cx-32,GY-60,cx+51,GY-60,11047,0);
+  stroke(4);x.beginPath();x.arc(cx-20,GY-12,9,0,7);x.stroke();x.beginPath();x.arc(cx+38,GY-12,9,0,7);x.stroke();rline(cx-28,GY-36,cx-20,GY-20,11048,0);rline(cx+46,GY-36,cx+38,GY-20,11049,0);
+  /* the fruit crates, with their price tags */
+  FRUIT.forEach((f,i)=>{const fx=CRX(i);
+    if(op){const n=f.k==='melon'||f.k==='pineapple'?2:3;for(let j=0;j<n;j++)drawFruit(f.k,fx-(n-1)*16+j*32,GY-58-(j%2)*6,f.k==='melon'?.75:.95);
+      drawFruit(f.k,fx,GY-70,f.k==='melon'?.75:.95);}
+    fbox(fx-46,GY-58,92,58,11050+i,'#c49a74',4.5);stroke(2.5,'rgba(43,43,43,.35)');rline(fx-46,GY-30,fx+46,GY-30,11060+i,1);
+    if(op){stroke(3,'#8a6a4a');rline(fx,GY-110,fx,GY-130,11070+i,0);fbox(fx-44,GY-184,88,58,11080+i,PAPER,3.5);
+      drawQuarter(fx-18,GY-155,15);x.fillStyle=INK;x.textAlign='left';x.font='700 20px '+TF;x.fillText('25¢',fx+2,GY-148);}});
+  /* the shelf, two levels, like hers */
+  /* the smoothie bar: fruit goes in, whizz, out comes a smoothie */
+  const bx=BLX,bl=MON.bl>0,jx=bl?Math.sin(t*1.4)*3:0;fbox(bx-90,GY-96,180,96,11190,'#e6d7f0',5);fbox(bx-98,GY-108,196,14,11191,'#c49a74',4.5);
+  fbox(bx-80,GY-230,160,40,11192,PAPER,4);x.fillStyle=INK;x.textAlign='center';x.font='700 19px '+TF;x.fillText('smoothies',bx,GY-212);drawQuarter(bx-20,GY-198,9);x.font='700 13px '+TF;x.fillText('25¢',bx+8,GY-194);
+  fbox(bx-34+jx,GY-136,68,28,11193,'#55606b',4);fcirc(bx+jx,GY-122,7,11194,bl?'#f3d36b':TOMATO,3);
+  x.save();x.translate(jx,0);x.fillStyle='rgba(207,227,234,.7)';x.beginPath();x.moveTo(bx-30,GY-136);x.lineTo(bx-36,GY-186);x.lineTo(bx+36,GY-186);x.lineTo(bx+30,GY-136);x.closePath();x.fill();
+  x.save();x.clip();const lv=bl?GY-176+Math.sin(t*.9)*4:GY-150;x.fillStyle='#f2a6bd';x.fillRect(bx-40,lv,80,60);
+  if(bl)for(let i=0;i<5;i++){fillCirc(bx+Math.sin(t*.5+i*1.3)*24,GY-150-((t*3+i*12)%30),3.5,11195+i,['#d9786a','#f3d36b','#9b6fc0','#ef9a3e','#ffffff'][i]);}x.restore();
+  stroke(4);x.beginPath();x.moveTo(bx-30,GY-136);x.lineTo(bx-36,GY-186);x.lineTo(bx+36,GY-186);x.lineTo(bx+30,GY-136);x.stroke();fbox(bx-38,GY-194,76,10,11200,'#55606b',3);x.restore();
+  [[bx-64,'#f2a6bd'],[bx+64,'#f3d36b']].forEach(([cx,c])=>{x.fillStyle=c;x.beginPath();x.moveTo(cx-9,GY-134);x.lineTo(cx+9,GY-134);x.lineTo(cx+6,GY-108);x.lineTo(cx-6,GY-108);x.closePath();x.fill();stroke(2.5);x.stroke();});
+  const h0=37010;fbox(h0,GY-240,240,240,11100,'#e9d6b0',5);stroke(5);rline(h0,GY-160,h0+240,GY-160,11101,1);rline(h0,GY-80,h0+240,GY-80,11102,1);
+  for(let i=0;i<4;i++){fbox(h0+14+i*56,GY-236,44,60,11110+i,PAPER,3);x.fillStyle=['#3d3230','#7a4a2e','#3d3230','#55606b'][i];x.beginPath();x.ellipse(h0+36+i*56,GY-206,12,8,0,0,7);x.fill();}
+  for(let i=0;i<4;i++){x.fillStyle='#ecd9a6';x.beginPath();x.moveTo(h0+14+i*56,GY-92);x.quadraticCurveTo(h0+36+i*56,GY-128,h0+58+i*56,GY-92);x.closePath();x.fill();stroke(3);x.stroke();}
+  for(let i=0;i<5;i++)fbox(h0+12+i*45,GY-68,36,56,11120+i,DISCO[i],3);
+  /* the Frozen section, tall and full of labelled boxes */
+  const z0=37340;fbox(z0,GY-252,300,252,11130,'#d9eaf2',6);fbox(z0+40,GY-306,220,50,11131,PAPER,5);x.fillStyle=INK;x.font='700 36px '+TF;x.textAlign='center';x.fillText('Frozen',z0+150,GY-268);
+  for(let r=0;r<3;r++)for(let c2=0;c2<4;c2++){const bx=FRZX(c2)-29,by=GY-240+r*80;fbox(bx,by,58,70,11140+r*4+c2,['#fdf0c4','#f2c4cf','#cfe3ea','#e6d7f0'][c2],3.5);
+    if(op)drawGood(FRZ[c2],bx+29,by+60,FRZ[c2]==='pizza'?.8:.95);}
+  stroke(3,'rgba(255,255,255,.7)');rline(z0+10,GY-244,z0+10,GY-20,11170,0);
+  if(!op){x.save();x.translate(36300,GY-250);x.rotate(-.06);fbox(-300,-46,600,92,11171,'#fdf0c4',6);x.fillStyle=TOMATO;x.font='700 50px '+TF;x.textAlign='center';x.fillText('OPENS FRIDAY!',0,18);x.restore();}}
+function drawMarketFront(){const c0=TILLX-30,c1=TILLX+130;            // the till, in front of Penny
+  fbox(c0,GY-92,c1-c0,92,11180,'#8fb3a0',5);fbox(c0-10,GY-104,c1-c0+20,14,11181,'#c49a74',4.5);
+  fbox(c1-74,GY-150,56,46,11182,'#55606b',4);fbox(c1-68,GY-144,44,18,11183,'#cfe3ea',3);x.fillStyle=INK;x.font='700 12px '+BFONT;x.textAlign='center';x.fillText(storeOpen()?'$ ¢':'',c1-46,GY-130);
+  if(storeOpen()&&MON.basket.length&&zid()==='market'){const n=MON.basket.length;MON.basket.slice(0,8).forEach((k,i)=>drawGood(k,c0+18+(i%4)*22,GY-104-(i>>2)*16,.6));}}
+function drawStoreArrow(){if(inZone()||flying)return;const sx=11942;     // at the end of main street, on top of the old café stand: the road carries on
+  stroke(6);rline(sx,VER.cafe==='old'?GY:GY-176,sx,GY-236,11190,2);fbox(sx-40,GY-350,80,116,11191,'#fdf0c4',5);x.fillStyle=INK;x.textAlign='center';x.font='700 17px '+BFONT;
+  x.fillText('Store',sx,GY-326);x.fillText('of',sx,GY-306);x.fillText('Gaby',sx,GY-286);x.font='700 24px '+BFONT;x.fillText('→',sx,GY-262);
+  if(!storeOpen()){x.fillStyle=TOMATO;x.font='700 11px '+BFONT;x.fillText('opens Friday',sx,GY-242);}}
+
+/* ---- the till: a little sheet with the fruit, the price, her pocket and the counter ---- */
+const TILL={on:0,ph:'pay',cnt:{b:0,q:0},ask:null,said:'',done:0};
+function coinBtn(kind,onTap,big){const cv=document.createElement('canvas');cv.width=kind==='b'?(big?172:150):(big?110:96);cv.height=big?110:96;
+  onCanvas(cv,()=>{const s=cv.height/96;x.setTransform(s,0,0,s,0,0);if(kind==='b')drawBill(cv.width/s/2,48,140);else drawQuarter(48,48,40);});
+  cv.className='coin'+(kind==='b'?' bill':'');if(onTap)cv.addEventListener('click',e=>{e.stopPropagation();onTap();});return cv;}
+function tillPocket(){return pk();}
+function openTill(){if(!storeOpen())return;TILL.on=1;TILL.cnt={b:0,q:0};TILL.done=0;TILL.chg=0;
+  TILL.ph=MON.basket.length?'pay':'empty';
+  TILL.said=MON.basket.length?'you owe '+cents(MON.basket.length)+'!':'pick some fruit first! everything is 25 cents.';
+  renderTill();openSheet('till');tone(700,.06,'triangle',.03);}
+function tillBack(){const m=pk();m.b+=TILL.cnt.b;m.q+=TILL.cnt.q;TILL.cnt={b:0,q:0};}
+function closeTill(){if(!TILL.on)return;if(!TILL.done)tillBack();TILL.on=0;}
+function choices(ans,lo){const s=new Set([ans]);let k=1;while(s.size<3){const a=ans+(k%2?k:-k);if(a>=(lo||0))s.add(a);k++;if(k>12)break;}return[...s].sort((a,b)=>a-b);}
+function askRow(row,ans,cb,lo){row.innerHTML='';const opts=choices(ans,lo);
+  opts.forEach(v=>{const b=document.createElement('div');b.className='btn chq';b.textContent=v;
+    b.addEventListener('click',e=>{e.stopPropagation();if(row.dataset.lock)return;row.dataset.lock=1;const ok=v===ans;
+      b.classList.add(ok?'right':'wrong');if(!ok)[...row.children].forEach(o=>{if(+o.textContent===ans)o.classList.add('right');});
+      ok?tune([523,659,784],80,'triangle'):tone(300,.12,'sine',.03);setTimeout(()=>{delete row.dataset.lock;cb(ok);},ok?700:1500);});row.appendChild(b);});}
+function sumPic(terms,unit,op,ans){                 // apples or coins in little groups: 3 + 2 = ?   or   9 take away 7 (Miss Bec's board)
+  const W=480,H=200,n=op==='-'?terms[0]:terms.reduce((a,b)=>a+b,0),sz=Math.max(16,Math.min(34,380/(n+terms.length*1.6)));
+  let px=0;const items=[];
+  if(op==='-'){for(let i=0;i<terms[0];i++)items.push({x:px+=sz*1.1,cross:i>=terms[0]-terms[1]});}
+  else terms.forEach((v,j)=>{if(j){px+=sz*.6;items.push({plus:1,x:px+=sz*.5});px+=sz*.5;}for(let i=0;i<v;i++)items.push({x:px+=sz*1.1});});
+  const off=(W-90-px)/2;
+  items.forEach(it=>{const cx=off+it.x,cy=H*.5;if(it.plus){x.fillStyle=INK;x.font='700 '+(sz*1.4|0)+'px '+BFONT;x.textAlign='center';x.fillText('+',cx,cy+sz*.5);return;}
+    if(unit==='q')drawQuarter(cx,cy,sz*.5);else if(unit==='b')drawBill(cx,cy,sz*1.0);else drawFruit('apple',cx,cy+sz*.5,sz/30);
+    if(it.cross){stroke(5,TOMATO);rline(cx-sz*.5,cy-sz*.5,cx+sz*.5,cy+sz*.5,cx|0,0);rline(cx+sz*.5,cy-sz*.5,cx-sz*.5,cy+sz*.5,(cx|0)+1,0);}});
+  x.fillStyle=INK;x.font='700 '+(sz*1.4|0)+'px '+BFONT;x.textAlign='center';x.fillText(ans==null?'= ?':'= '+ans,W-50,H*.5+sz*.5);
+  x.font='700 22px '+BFONT;x.fillText(op==='-'?terms[0]+' take away '+terms[1]:terms.join(' + '),W/2,H-14);}
+function renderTill(){const m=pk(),cv=document.getElementById('tillpic'),r1=document.getElementById('tillrow1'),r2=document.getElementById('tillrow2'),bt=document.getElementById('tillbtns');
+  document.getElementById('tillh').textContent=MON.story?'Wobble’s fruit':'my shopping';
+  document.getElementById('tillsay').textContent='';
+  bt.innerHTML='';r1.innerHTML='';r2.innerHTML='';
+  onCanvas(cv,()=>{const n=MON.basket.length,sc=n>6?.9:1.1;MON.basket.forEach((k,i)=>drawGood(k,240-(n-1)*24*sc+i*48*sc,52,sc));
+    fbox(70,70,340,120,7,'#55606b',5);fbox(84,84,312,92,8,TILL.ph==='done'?'#e3f1d6':'#cfe3ea',4);x.fillStyle=INK;x.textAlign='center';
+    const t1=TILL.said,sz=t1.length>26?22:28;x.font='700 '+sz+'px '+BFONT;
+    const w=t1.split(' '),L=[];let ln='';w.forEach(wd=>{const tr=ln?ln+' '+wd:wd;if(x.measureText(tr).width>292&&ln){L.push(ln);ln=wd;}else ln=tr;});L.push(ln);
+    L.forEach((l,i)=>x.fillText(l,240,130-(L.length-1)*sz*.55+i*sz*1.1+sz*.35));});
+  const show=(id,on)=>document.getElementById(id).style.display=on?'':'none';
+  show('tilla',1);show('tillrow1',1);show('tillb',TILL.ph!=='empty');show('tillrow2',TILL.ph!=='empty');
+  document.getElementById('tilla').textContent=(MON.story?'Wobble’s':'my')+' pocket'+(TILL.ph==='pay'?': tap the money to pay':'');
+  for(let i=0;i<m.b;i++)r1.appendChild(coinBtn('b',TILL.ph==='pay'?()=>{m.b--;TILL.cnt.b++;tillPay();}:null));
+  for(let i=0;i<m.q;i++)r1.appendChild(coinBtn('q',TILL.ph==='pay'?()=>{m.q--;TILL.cnt.q++;tillPay();}:null));
+  if(!m.b&&!m.q)r1.textContent='(empty)';
+  document.getElementById('tillb').textContent=TILL.ph==='done'&&TILL.chg?'your change':'on the counter';
+  if(TILL.ph==='done'&&TILL.chg){const C=TILL.chg;for(let i=0;i<(C/4|0);i++)r2.appendChild(coinBtn('b'));for(let i=0;i<C%4;i++)r2.appendChild(coinBtn('q'));}
+  else{for(let i=0;i<TILL.cnt.b;i++)r2.appendChild(coinBtn('b'));for(let i=0;i<TILL.cnt.q;i++)r2.appendChild(coinBtn('q'));}
+  if(TILL.ph==='done'){const b=document.createElement('div');b.className='btn wide go';b.textContent='👍 thank you!';b.addEventListener('click',e=>{e.stopPropagation();shut('till');closeTill();});bt.appendChild(b);}}
+function tillPay(){const need=MON.basket.length,paid=TILL.cnt.b*4+TILL.cnt.q;
+  if(paid<need){TILL.said='more, please! '+cents(need-paid)+' to go.';tone(500+paid*40,.06,'triangle',.03);renderTill();return;}
+  if(paid===need){mark('sumright');tillFinish('thank you! that’s exactly right!',0);return;}
+  mark('changeright');tillFinish('oops, that’s too much! here’s '+cents(paid-need)+' change.',paid-need);}
+function tillFinish(msg,C){const m=pk();m.b+=C/4|0;m.q+=C%4;TILL.cnt={b:0,q:0};TILL.done=1;TILL.chg=C;
+  const got=MON.basket.slice();MON.sold++;mark('till');
+  if(!MON.story){got.forEach(k=>bagGive({kind:k},P.x+30,P.y));MON.wins++;}else MON.got=got;
+  TILL.ph='done';TILL.said=msg;crowd(3);tune([523,659,784,1046],80,'triangle');MON.basket.length=0;renderTill();writeSave();}
+function addFruit(k,quiet){const i=FRUIT.findIndex(o=>o.k===k);return addGood(k,CRX(i),quiet);}
+function addGood(k,px,quiet){if(!storeOpen())return false;
+  if(MON.basket.length>=8){if(!quiet)say(P.x,P.y-130,'my basket is full! time to pay.');return false;}
+  if(MON.basket.length+1>mval(pk())){if(!quiet)say(P.x,P.y-130,MON.story?'Wobble doesn’t have enough money for that!':'I don’t have enough money for that one!');beep(250,.12,'sine',.03);return false;}
+  MON.basket.push(k);puff(px,GY-90,5);tone(760,.06,'triangle',.03);if(!quiet)say(P.x,P.y-130,an(NAMES[k])+' in my basket!');return true;}
+function gumballGo(who){const m=pk();if(!m.q){say(P.x,P.y-130,m.b?'it only takes quarters! Penny can swap a dollar for 4 quarters.':'my pocket is empty!');beep(260,.12,'sine',.03);return false;}
+  m.q--;MON.gt=40;tone(900,.06,'triangle',.03);setTimeout(()=>{slide(300,700,.3,'sine',.03);},250);
+  if(!who){setTimeout(()=>{bagGive({kind:'gumball'},P.x,P.y);say(P.x,P.y-130,'a gumball! my favourite!');tune([659,784,1046],80,'triangle');},700);mark('gumball');}return true;}
+function pocketMoney(){if(mval(MON.my)<12){MON.my={b:3,q:Math.max(4,MON.my.q)};setTimeout(()=>say(P.x,P.y-130,'pocket money! 3 dollars and some quarters.'),1800);}}
+function marketHud(){if(zid()!=='market'||!storeOpen()||TILL.on||SCENE&&!MON.story)return;const m=pk(),cx=innerWidth/2,y=Math.max(104,innerHeight*.14);
+  const lbl=MON.story?'Wobble:':'my pocket:';x.font='700 19px '+BFONT;const tw=x.measureText(lbl).width,w=tw+40+(m.b?84:0)+(m.q?74:0)+(!m.b&&!m.q?60:0)+(MON.basket.length?36+MON.basket.length*30:0);
+  let px=cx-w/2;x.fillStyle='#fdf0c4';x.fillRect(px,y-26,w,52);stroke(3.5);x.strokeRect(px,y-26,w,52);x.fillStyle=INK;x.textAlign='left';x.fillText(lbl,px+14,y+6);px+=tw+26;
+  if(m.b){drawBill(px+22,y,44);x.font='700 19px '+BFONT;x.fillStyle=INK;x.textAlign='left';x.fillText('×'+m.b,px+48,y+7);px+=84;}
+  if(m.q){drawQuarter(px+16,y,16);x.font='700 19px '+BFONT;x.fillStyle=INK;x.textAlign='left';x.fillText('×'+m.q,px+36,y+7);px+=74;}
+  if(!m.b&&!m.q){x.fillText('empty',px,y+6);px+=60;}
+  if(MON.basket.length){x.fillText('🧺',px,y+7);px+=30;MON.basket.forEach(k=>{drawGood(k,px+12,y+16,.75);px+=30;});}}
+function storeTick(){const p=NPC.find(n=>n.id==='penny');if(p&&CH.away.indexOf('penny')<0)p.away=storeOpen()?0:1;
+  if(MON.gt>0)MON.gt--;
+  if(MON.bl>0){if(MON.bl%8===0&&zid()==='market')tone(180+Math.random()*60,.08,'sawtooth',.012);if(--MON.bl===0){MON.basket.push('smoothie');puff(BLX,GY-200,10,'heart');tune([660,880,990],80,'triangle');
+    if(zid()==='market')say(P.x,P.y-130,'a smoothie! it\u2019s in my basket.');mark('smoothie');}}
+  if(TILL.on&&document.getElementById('till').style.display!=='flex')closeTill();}
+function storeDo(th){
+  if(/^crate\d$/.test(th.id)){addFruit(FRUIT[+th.id.slice(5)].k);return true;}
+  if(/^frz\d$/.test(th.id)){if(addGood(FRZ[+th.id.slice(3)],FRZX(+th.id.slice(3))))mark('frozen');return true;}
+  switch(th.id){
+    case 'till':openTill();break;
+    case 'gumball':gumballGo();return true;
+    case 'blender':if(MON.bl>0)return true;if(MON.basket.length>=8){say(P.x,P.y-130,'my basket is full! time to pay.');return true;}
+      if(MON.basket.length+1>mval(pk())){say(P.x,P.y-130,'I don\u2019t have enough money for a smoothie!');beep(250,.12,'sine',.03);return true;}
+      MON.bl=110;say(P.x,P.y-130,'in goes the fruit... WHIZZ!');crunch(.15,.03);return true;
+    case 'storesign':say(P.x,P.y-130,'it opens on FRIDAY! I can pick Friday on my calendar.');tone(600,.1,'triangle',.03);break;
+    case 'sums':becAsk();return true;
+    default:return false;}
+  mark(th.id);return true;}
+
+/* ---- Miss Bec's board: picture sums, three answers, gold stars ---- */
+function becNew(){const r=n=>1+((Math.random()*n)|0);let q;
+  if(BEC.lvl>=4&&MON.sold&&Math.random()<.5){const a=r(4),b=r(Math.min(4,9-a));q={terms:[a,b],op:'+',unit:'q',ans:a+b};}
+  else if(BEC.lvl>=3&&Math.random()<.6){const a=2+r(7),b=r(a-1);q={terms:[a,b],op:'-',unit:'a',ans:a-b};}
+  else{const top=BEC.lvl===1?5:9,a=r(top-1),b=r(top-a);q={terms:[a,b],op:'+',unit:'a',ans:a+b};}
+  BEC.q=q;}
+function becAsk(){if(!BEC.q)becNew();const q=BEC.q,sh=document.getElementById('quiz');
+  document.getElementById('quizq').textContent=q.unit==='q'?'Miss Bec: how many quarters?':q.op==='-'?'Miss Bec: take away!':'Miss Bec: add them up!';
+  document.getElementById('quiznote').textContent='';
+  onCanvas(document.getElementById('quizpic'),()=>sumPic(q.terms,q.unit,q.op));
+  askRow(document.getElementById('quizbtns'),q.ans,ok=>{const b=NPC.find(n=>n.id==='bec');
+    if(ok){BEC.right++;mark('sums');if(BEC.right%3===0){BEC.stars++;mark('becstar');if(BEC.stars>=3)mark('becstar3');if(BEC.lvl<4)BEC.lvl++;
+        if(b){b.waveT=120;say(b.x,b.y-160,'a GOLD STAR for Gaby!');}sting();puff(15890,470,14,'star');}
+      else if(b)say(b.x,b.y-160,['well done!','yes! clever girl!','that’s right!'][BEC.right%3]);}
+    else if(b)say(b.x,b.y-160,'nearly! it was '+q.ans+'. let’s try another one!');
+    becNew();shut('quiz');writeSave();},0);
+  sh.style.display='flex';started=true;}
+function becBoard(){if(!BEC.q)becNew();const q=BEC.q;return q.op==='-'?q.terms[0]+' − '+q.terms[1]+' = ?':q.terms.join(' + ')+(q.unit==='q'?' quarters':'')+' = ?';}
+function becStars(){for(let i=0;i<Math.min(8,BEC.stars);i++){x.fillStyle=MUSTARD;starShape(15742+i*28,450,10);x.fill();stroke(2.5);x.stroke();}}
+
+/* ---- the Friday story ---- */
+async function fSchool(){MON.story=0;night=false;hallow=false;recess=false;
+  if(zid()!=='school')goTo(15700,GY);P.face=-1;cine(1);
+  await line('bec','...and THAT is the end of the week, class! happy FRIDAY, everybody!');crowd(6);
+  await line('gaby','hooray! it’s the weekend!');
+  await line('bec','Gaby, will you ring the bell for home time?');
+  await act('bell','ring the bell for home time!');tune([880,660,880,660],120,'triangle');crowd(8);
+  await line('bec','have a lovely weekend! see you on Monday!');
+  cine(0);CH.beacon={x:SZ.x0+70,y:GY-260,zone:'school'};await until(()=>zid()!=='school');CH.beacon=null;chGo('f_gate');}
+async function fGate(){MON.story=0;if(zid())goTo(SFAC.door,GY);
+  zooFamily(SFAC.door+330,SFAC.door+190,SFAC.door+250,'town');['finn','wobble','nugget'].forEach(id=>CAST[id].face=-1);cine(1);await frames(20);P.face=1;
+  await line('nugget','GABY! GAAABY!');
+  await line('finn','ARR! school’s out, matey! happy Friday!');
+  await line('wobble','Gaby, look! I bought a new book at the book shop... and they gave me CHANGE!');
+  await line('wobble','two dollars and three quarters! I am RICH!');
+  await line('gaby','that’s a lot of money!');
+  await line('finn','and guess what opened today, at the end of the street... a brand new store!');
+  await line('nugget','STORE! STORE!');
+  await line('gaby','let’s go! it’s past the café, all the way to the end!');
+  cine(0);await zooLeave(['nugget','wobble','finn'],P.x+VW,6);
+  CH.beacon={x:11950,y:GY-330};await until(()=>zid()==='market');CH.beacon=null;chGo('f_store');}
+async function fStore(){setVer('store','open');MON.story=1;MON.wob={b:2,q:3};MON.basket.length=0;
+  if(zid()!=='market')goTo(ZM.x0+130,GY);P.face=1;
+  zooFamily(35520,35440,35480,'market');['finn','wobble','nugget'].forEach(id=>CAST[id].face=-1);cine(1);await frames(10);
+  await line('penny','welcome, welcome! to the brand new... STORE OF GABY!');
+  await line('gaby','the Store of... GABY? it has MY name on it!');
+  await line('finn','ARR! a store named after my favourite matey!');
+  await line('wobble','is that... FRUIT? a whole wall of FRUIT?!');
+  await Promise.all([walk('wobble',36230,5.5),walk('nugget',35980,4),walk('finn',35900,3.6),gabyTo(36080)]);P.face=1;
+  CAST.wobble.rot=-1.45;CAST.wobble.sq=1;crunch(.3,.05);puff(36230,GY-30,8);mark('fruitheaven');
+  await line('wobble','*plop*');
+  await line('nugget','Wobble fell DOWN!');
+  await line('wobble','I’m not hurt... I’m in FRUIT HEAVEN!');
+  CAST.wobble.rot=0;CAST.wobble.sq=1;
+  await line('wobble','I want to buy as much fruit as I can! but... I don’t know how to count money.');
+  await line('gaby','I’ll help! you pick, and I’ll count it out at the till.');
+  for(const [k,cx] of [['apple',CRX(1)],['banana',CRX(0)],['orange',CRX(2)],['grapes',CRX(3)],['berry',CRX(4)]]){await walk('wobble',cx,4.5);addFruit(k,1);await line('wobble',k==='grapes'?'and GRAPES!':an(NAMES[k])+'!');}
+  await line('wobble','that’s all I can carry! ...for now.');
+  await line('penny','everything is 25 cents! bring it to the till when you are ready, dears.');
+  await line('gaby','I’ll pay with your wallet, Wobble. leave it to me!');
+  await Promise.all([walk('wobble',TILLX-90,4.5),walk('nugget',TILLX-150,4),walk('finn',TILLX-220,3.6)]);
+  const s0=MON.sold;
+  while(MON.sold===s0){await act('till','pay at the till');openTill();await until(()=>!TILL.on||MON.sold>s0);}
+  await until(()=>!TILL.on);
+  await line('wobble','we did it! MY fruit!');
+  await line('wobble','one apple for you, Gaby. thank you for counting!');bagGive({kind:'apple'},P.x,P.y);tune([660,880],90,'triangle');
+  chGo('f_gum');}
+async function fGum(){MON.story=1;if(!storeOpen())setVer('store','open');if(zid()!=='market')goTo(35520,GY);
+  zooFamily(TILLX-220,TILLX-90,TILLX-150,'market');cine(1);
+  await line('nugget','GUMBALL! GUMBALL! GUMBALL!');
+  await Promise.all([walk('nugget',GBX+70,4.6),walk('wobble',GBX+140,4),walk('finn',GBX+210,3.6),gabyTo(GBX-80)]);P.face=1;CAST.nugget.face=CAST.wobble.face=CAST.finn.face=-1;
+  await line('gaby','the gumball machine! that’s my FAVOURITE part!');
+  await line('finn','one quarter makes one gumball. how many quarters do we need, for all four of us?');
+  let ok=null;const sh=document.getElementById('quiz');document.getElementById('quizq').textContent='one each, for 4 of us';document.getElementById('quiznote').textContent='';
+  onCanvas(document.getElementById('quizpic'),()=>{[['gaby'],['wobble'],['nugget'],['finn']].forEach(([w],i)=>{const cx=90+i*100;if(w==='gaby')figure(cx,150,gabyO({s:.62,seed:777}));else drawDuck(cx,130,Object.assign({},DK[w],{s:w==='finn'?1.1:w==='nugget'?.8:1}));drawQuarter(cx,170,14);});});
+  askRow(document.getElementById('quizbtns'),4,r=>{ok=r;shut('quiz');},1);sh.style.display='flex';
+  await until(()=>ok!==null||sh.style.display!=='flex');
+  await line('wobble',ok?'FOUR quarters! Gaby is so good at sums!':'four! one, two, three, four. one each!');
+  const m=MON.wob;
+  if(m.q<4){if(m.b>0){await line('wobble','but I only have '+(m.q===1?'1 quarter':m.q+' quarters')+' left...');
+      await line('penny','I can help! one dollar is FOUR quarters. one, two, three, four!');m.b--;m.q+=4;tune([660,700,740,780],70,'triangle');}
+    else{await line('finn','ARR! I have some quarters in my pirate pocket!');m.q=4;}}
+  for(const [who,txt] of [['nugget','one for Nugget!'],['wobble','one for Wobble!'],['finn','one for Uncle Finn!'],['gaby','and one for ME!']]){
+    await act('gumball',txt);gumballGo(who==='gaby'?null:who);await frames(40);if(who!=='gaby'){const a=CAST[who];if(a){a.sq=1;puff(a.x,a.y-60,5,'heart');}await line(who,who==='finn'?'ARR! a cannonball! ...a tasty one!':who==='nugget'?'NOM!':'mmm, blue!');}}
+  mark('gumball4');
+  await line('finn','ARR! best Friday EVER! come on, crew. time to go home and eat all that fruit.');
+  await line('wobble','bye, Gaby! bye, Penny! see you next Friday!');
+  cine(0);MON.story=0;mark('friday');await zooLeave(['nugget','wobble','finn'],ZM.x0-200,4.6);zooDone();}
+Object.assign(CHSTEPS,{f_school:()=>fSchool(),f_gate:()=>fGate(),f_store:()=>fStore(),f_gum:()=>fGum()});
+
 /* ======================= saving ======================= */
 /* everything Gaby has done is kept in this browser (localStorage), every few seconds and when the page closes.
    a save code (in the book's About tab) copies it to another device, or keeps it safe. */
@@ -8588,7 +8937,7 @@ function gatherSave(){
     n:{wishesDone,sproutN,drinkN},bc:{q:bearQuest?1:0,st:BC.stage,ar:BC.stage>0?1:0,ro:BC.rolled,fi:BC.fished,br:BC.brave,gr:BC.grotto,dn:BC.done,sh:BC.shown,sn:BC.shownN,
       hg:BC.hugged,ml:BC.mail,mt:BC.mailT,mn:BC.mailN,ln:P.lantern?1:0,cm:BC.cm,cn:BC.cmN,po:BC.post,dg:BC.ducksGone},
     beach:{d:BEACH.done,n:BEACH.n,c:BEACH.castle,s:BEACH.seeded},ver:CH.replay?Object.assign({},VER,{cafe:'new'}):VER,ch:{s:CH.replay?null:CH.step,d:CH.done},
-    day:{n:DAY.n,s:DAY.seen},zoo:{d:ZOO.done},
+    day:{n:DAY.n,s:DAY.seen},zoo:{d:ZOO.done},shop:{m:TILL.on&&!TILL.done&&!MON.story?{b:MON.my.b+TILL.cnt.b,q:MON.my.q+TILL.cnt.q}:MON.my,l:MON.lvl,w:MON.wins,s:MON.sold},bec:{l:BEC.lvl,r:BEC.right,s:BEC.stars},
     p:(R||TRIP||RIDE||BUS.st||BEACH.ride)?null:{x:Math.round(P.x),y:Math.round(P.y),face:P.face},hat:P.hat,
     bag:BAG.map(clean),items:ITEMS.map(clean),fol:followers.map(f=>ITEMS.indexOf(f)).filter(i=>i>=0),npcs,outfit:OUTFIT,look:LOOK};}
 function applySave(s){
@@ -8604,9 +8953,11 @@ function applySave(s){
   P.lantern=!!bc.ln;BC.cave=BC.grotto?'done':'quiet';if(BC.grotto&&BC.stage<5&&!BC.done)BC.stage=5;if(BC.stage===1)BC.stage=2;
   if(BC.brave&&!BC.grotto)BC.dk=newCaveDucks();if(BC.stage===0)BC.arrived=0;
   if(been.bears)document.getElementById('mapbear').style.display='';
-  Object.assign(VER,s.ver||{});placeOlive();if(s.ch){CH.done=s.ch.d||0;CH.resume=(!CH.done||/^z_/.test(s.ch.s||''))&&s.ch.s?s.ch.s:null;}
+  Object.assign(VER,s.ver||{});placeOlive();if(s.ch){CH.done=s.ch.d||0;CH.resume=(!CH.done||/^[zf]_/.test(s.ch.s||''))&&s.ch.s?s.ch.s:null;}
   if(s.day){DAY.n=s.day.n||1;DAY.seen=s.day.s||{};}ZOO.done=(s.zoo&&s.zoo.d)||0;
-  if(CH.done&&!found.bolty){CH.done=0;if(!/^z_/.test(CH.resume||''))CH.resume=null;Object.assign(VER,{cafe:'old',attic:'plain',wall:0});placeOlive();}   // finished in an early test build: play the new version
+  if(s.shop){if(s.shop.m)MON.my={b:s.shop.m.b|0,q:s.shop.m.q|0};MON.lvl=s.shop.l||1;MON.wins=s.shop.w||0;MON.sold=s.shop.s||0;}
+  if(s.bec){BEC.lvl=s.bec.l||1;BEC.right=s.bec.r||0;BEC.stars=s.bec.s||0;}
+  if(CH.done&&!found.bolty){CH.done=0;if(!/^[zf]_/.test(CH.resume||''))CH.resume=null;Object.assign(VER,{cafe:'old',attic:'plain',wall:0});placeOlive();}   // finished in an early test build: play the new version
   if(found.chest&&!CH.done&&!CH.resume)CH.pend=1;
   const bb=s.beach||{};BEACH.done=bb.d||0;BEACH.n=bb.n||0;BEACH.castle=bb.c||0;BEACH.seeded=bb.s||0;BEACH.ship.here=BEACH.done?1:0;
   if(patchGiven&&SHADES.indexOf('patch')<0)SHADES.push('patch');
