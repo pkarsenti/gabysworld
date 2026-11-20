@@ -35,7 +35,7 @@
              i+=12+n
        if there's no chunk, a photo app re-saved the picture: ask Papa for the original file (AirDrop, or Files).
     2. look at the card picture once, then add the friend to FRBAKED (in "friends Gaby draws herself") with a script,
-       not by pasting: {id,name,place:{label,x},favs,ops,made} plus says:[3-4 lines in their voice] and story:'...'
+       not by pasting: {id,name,age,place:{label,x},favs,ops,made} plus says:[3-4 lines in their voice] and story:'...'
        (from the drawing and what Papa says about them; Papa may move them somewhere else too). keep the same id: the
        draft on her iPad then turns into the permanent one by itself. don't print the ops into the chat, they're long.
     3. run ?test (the checks draw every baked friend), then bump the version as usual.
@@ -82,6 +82,7 @@
        copy machine 1 D 2 and the wonky bolted-on wing), Bolty, and hats for friends
   v39: the Store of Gaby (her drawing) on Market Street, a money game with dollar bills and quarters, a gumball machine,
        Miss Bec's board as a real sums game with gold stars, and Friday at the new store on the calendar
+  v48: drawn friends have a size, like Gaby: baby, toddler, kid (the usual) or teen
   v47: the drawing page can't be closed by a tap outside it, "not now" asks first, and an unfinished new friend is kept
   v46: the book's "Friends I met" page has its own section for the friends Gaby drew, with ✏️ change, 📤 and ✖
   v45: a new drawn friend says where they're going, then walks home (or off the screen, if home is far away), no more
@@ -253,6 +254,8 @@
   .frp{border:3px solid #2b2b2b;border-radius:12px;padding:6px 10px;background:#fffdf4;font-weight:700;font-size:14px;cursor:pointer;}
   .frf{width:64px;border:3px solid #2b2b2b;border-radius:12px;background:#fffdf4;text-align:center;font-size:11px;font-weight:700;cursor:pointer;padding:2px;}
   .frf canvas{width:56px;height:56px;display:block;margin:0 auto;}
+  .frz{width:78px;border:3px solid #2b2b2b;border-radius:12px;background:#fffdf4;text-align:center;font-size:13px;font-weight:700;cursor:pointer;padding:2px;}
+  .frz.on{background:#ffe9a8;box-shadow:0 0 0 3px #c96a2e;}.frz canvas{width:70px;height:70px;display:block;margin:0 auto;}
   #frmake{margin-top:14px;}#frmake.off{opacity:.4;pointer-events:none;}
   .frlist{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
   .frm{position:relative;width:72px;text-align:center;font-weight:700;font-size:12px;border:3px solid #2b2b2b;border-radius:12px;background:#fffdf4;}
@@ -422,6 +425,7 @@
   <div id="frtools" class="frtools"></div>
   <canvas id="frcanvas" width="600" height="760"></canvas>
   <div class="frlbl">their name</div><input id="frname" maxlength="14" placeholder="name" autocomplete="off" spellcheck="false">
+  <div class="frlbl">how big?</div><div id="frsizes" class="frrow"></div>
   <div class="frlbl">where do they live?</div><div id="frplaces" class="frrow"></div>
   <div class="frlbl">their favourite things (pick 2)</div><div id="frfavs" class="frrow"></div>
   <p id="frfull" style="display:none;font-weight:700;color:#c9452f">8 friends is the most for now! send some to Papa with 📤 to make them real, then you can draw more.</p>
@@ -2785,7 +2789,7 @@ function ring(cx,cy){if(SCENE)return;x.save();x.globalAlpha=.5+Math.sin(t*.12)*.
 function drawThought(n,hop){
   if(SCENE)return;
   const has=BAG.some(o=>o.kind===n.wish.k),j=has?Math.abs(Math.sin(t*.2))*-8:Math.sin(t*.05+n.x)*2;
-  const hy=n.duck?n.y-(n.big?160:118):n.diver?POOL.surf-118:(n.inPit||n.swimmer)?n.y-96:n.seat?n.y-128:n.y-148-(hop||0)-(n.hopY||0);
+  const hy=n.drawn?n.y-frTall(n.drawn)-6-(hop||0):n.duck?n.y-(n.big?160:118):n.diver?POOL.surf-118:(n.inPit||n.swimmer)?n.y-96:n.seat?n.y-128:n.y-148-(hop||0)-(n.hopY||0);
   const bx=n.x+30,by=hy+j;
   x.save();x.globalAlpha=.95;x.fillStyle=has?'#fdf0c4':PAPER;stroke(3.5);
   rcircPath(n.x+12,hy+38,4,1);x.fill();x.stroke();rcircPath(n.x+20,hy+26,6,2);x.fill();x.stroke();
@@ -9793,7 +9797,8 @@ FEATURE('mall',{
    the easel is in her house (middle floor); there's also a button on the book's "Friends I met" page. */
 const FRBOX={head:[200,10,200,200],armL:[40,230,110,220],body:[190,230,220,240],armR:[450,230,110,220],legL:[200,490,95,250],legR:[305,490,95,250]};
 const FRLAB={head:'head',body:'body',armL:'arm',armR:'arm',legL:'leg',legR:'leg'};
-const FRK=.24,FRMAX=8,FRQ=3;                          // in town: 24% of the template. points are kept every 3 template pixels
+const FRK=.158,FRMAX=8,FRQ=3;                         // FRK: a teen-sized friend, as tall as Gaby as a teen (and the grown-ups in town); smaller sizes use Gaby's own (AGES)
+const FRAGES=['baby','toddler','kid','teen'],frK=f=>FRK*(AGES[(f&&f.age)||'kid']||AGES.kid).s,frTall=f=>657*frK(f);                          // in town: 24% of the template. points are kept every 3 template pixels
 const FRCOLS=['#2b2b2b','#d9654b','#ef9a3e','#f3d36b','#6fae74','#5b8fc9','#9b6fc0','#e3a0b8','#8a5f3e','#f8e3cf','#ffffff'];
 const FRFAVS=['cake','ice','apple','pizza','burger','honey','fish','ball','balloon','flower','duck','starit','crown','party','book','shell'];
 const FRA='#$%&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~';   // one character per point coordinate
@@ -9842,7 +9847,7 @@ function drawFriendFig(f,px,py,k,o){o=o||{};const A=frArt(f),face=o.face||1,walk
   frPart(A,'head',px,bodyTop-FRBOX.head[3]*k+12*k,Math.sin(walk*.5)*.04*mv,k);
   x.restore();}
 function drawFriendNPC(n,i){const moving=(n.range&&!(n.pause>0))||!!n.frGo;
-  drawFriendFig(n.drawn,n.x,n.y,FRK,{face:n.dir||1,walk:n.walk||0,moving,wave:n.waveT>0,seed:i,hop:n.pop>0?Math.sin(n.pop*.2)*14:0});}
+  drawFriendFig(n.drawn,n.x,n.y,frK(n.drawn),{face:n.dir||1,walk:n.walk||0,moving,wave:n.waveT>0,seed:i,hop:n.pop>0?Math.sin(n.pop*.2)*14:0});}
 function frNPC(f){const id='fr_'+f.id,ex=NPC.find(n=>n.id===id),pl=f.place||{x:700,y:GY,label:'The two houses'};
   const like=(f.favs||[]).map(k=>NAMES[k]).filter(Boolean);
   const n=ex||{id,x:pl.x,y:GY,look:'bob',dir:1,hearts:0,wantI:0,wish:null};
@@ -9856,18 +9861,18 @@ function frSync(){const all=frAll();NPC.filter(n=>n.drawn&&!all.some(f=>'fr_'+f.
 /* ---- the studio ---- */
 function frPlaces(){mapTick(1);return [...document.querySelectorAll('#mapgrid [data-x]')].filter(el=>el.style.display!=='none'&&+el.dataset.y===GY)
   .map(el=>({label:el.textContent.trim(),x:+el.dataset.x,y:GY}));}
-function openStudio(f){ST.edit=f&&!f.baked?f.id:null;ST.ops=ST.edit?f.ops.map(o=>Object.assign({},o)):[];ST.place=ST.edit?f.place:null;ST.favs=ST.edit?(f.favs||[]).slice():[];
+function openStudio(f){ST.edit=f&&!f.baked?f.id:null;ST.age=ST.edit?(f.age||'kid'):'kid';ST.ops=ST.edit?f.ops.map(o=>Object.assign({},o)):[];ST.place=ST.edit?f.place:null;ST.favs=ST.edit?(f.favs||[]).slice():[];
   ST.tool='pen';ST.down=null;document.getElementById('frname').value=ST.edit?f.name:'';STINK=null;frReplay(stInk().getContext('2d'),ST.ops);
   document.querySelector('#studio h2').textContent=ST.edit?'✏️ change '+f.name:'✏️ draw a new friend';document.getElementById('frmake').textContent=ST.edit?'✔ save my friend':'✔ make my friend!';
-  const W=!ST.edit&&FR.wip;if(W){ST.ops=W.ops.map(o=>Object.assign({},o));ST.place=W.place;ST.favs=(W.favs||[]).slice();document.getElementById('frname').value=W.name||'';frReplay(stInk().getContext('2d'),ST.ops);}
+  const W=!ST.edit&&FR.wip;if(W){ST.ops=W.ops.map(o=>Object.assign({},o));ST.age=W.age||'kid';ST.place=W.place;ST.favs=(W.favs||[]).slice();document.getElementById('frname').value=W.name||'';frReplay(stInk().getContext('2d'),ST.ops);}
   ST.base=W?'':stState();                         // an unfinished drawing that came back counts as unsaved
   document.getElementById('frback').style.display=W?'':'none';
-  stDraw();stTools();stOpts();stList();document.getElementById('studio').style.display='flex';started=true;tone(700,.08,'triangle',.04);}
-const stState=()=>JSON.stringify([ST.ops,(document.getElementById('frname').value||'').trim(),ST.place&&ST.place.label,ST.favs]);
+  stDraw();stTools();stOpts();stSizes();stList();document.getElementById('studio').style.display='flex';started=true;tone(700,.08,'triangle',.04);}
+const stState=()=>JSON.stringify([ST.age,ST.ops,(document.getElementById('frname').value||'').trim(),ST.place&&ST.place.label,ST.favs]);
 const stDirty=()=>ST.ops.some(o=>o.t!=='e')&&stState()!==ST.base;
 function stLeave(){                                  // "not now": ask first if there's an unsaved friend; a new one is kept for next time
   if(stDirty()){if(!confirm(ST.edit?'Stop changing your friend? The changes won’t be saved.':'Stop drawing? Your friend isn’t finished yet. (The drawing will still be here next time.)'))return;
-    if(!ST.edit){FR.wip={ops:ST.ops.slice(),name:(document.getElementById('frname').value||'').trim(),place:ST.place&&{label:ST.place.label,x:ST.place.x},favs:ST.favs.slice()};writeSave();}}
+    if(!ST.edit){FR.wip={age:ST.age,ops:ST.ops.slice(),name:(document.getElementById('frname').value||'').trim(),place:ST.place&&{label:ST.place.label,x:ST.place.x},favs:ST.favs.slice()};writeSave();}}
   shut('studio');}
 document.addEventListener('click',e=>{const st=document.getElementById('studio');if(st.style.display!=='flex')return;   // before the usual "tap outside closes it"
   if(e.target===st){e.stopPropagation();e.preventDefault();return;}                                               // tapping outside the page does nothing here
@@ -9882,7 +9887,7 @@ function stDraw(){const cv=document.getElementById('frcanvas'),c=cv.getContext('
 function stBox(px,py){for(const k in FRBOX){const [bx,by,bw,bh]=FRBOX[k];if(px>=bx&&px<=bx+bw&&py>=by&&py<=by+bh)return k;}return null;}
 function stXY(e){const cv=document.getElementById('frcanvas'),r=cv.getBoundingClientRect();return[(e.clientX-r.left)*600/r.width,(e.clientY-r.top)*760/r.height];}
 function stDown(e){e.preventDefault();e.stopPropagation();const [px,py]=stXY(e),k=stBox(px,py);if(!k)return;const [bx,by]=FRBOX[k];
-  if(ST.tool==='fill'){ST.ops.push({k,t:'f',c:ST.col,d:frEnc(px-bx)+frEnc(py-by)});stRebuild();stOk();return;}
+  if(ST.tool==='fill'){ST.ops.push({k,t:'f',c:ST.col,d:frEnc(px-bx)+frEnc(py-by)});stRebuild();stOk();stSizes();return;}
   const op={k,t:ST.tool==='erase'?'e':'p',c:ST.col,s:ST.size,d:frEnc(px-bx)+frEnc(py-by)};ST.ops.push(op);ST.down={op,lx:px,ly:py};
   frOp(stInk().getContext('2d'),op);stDraw();}
 function stMove(e){const D=ST.down;if(!D)return;e.preventDefault();const [px,py]=stXY(e);if(Math.hypot(px-D.lx,py-D.ly)<FRQ)return;
@@ -9890,7 +9895,7 @@ function stMove(e){const D=ST.down;if(!D)return;e.preventDefault();const [px,py]
   c.save();const [x0,y0,w0,h0]=FRBOX[D.op.k];c.beginPath();c.rect(x0,y0,w0,h0);c.clip();c.globalCompositeOperation=D.op.t==='e'?'destination-out':'source-over';
   c.strokeStyle=FRCOLS[D.op.c];c.lineWidth=D.op.t==='e'?28:D.op.s;c.lineCap='round';c.beginPath();c.moveTo(D.lx,D.ly);c.lineTo(px,py);c.stroke();c.restore();
   D.lx=px;D.ly=py;stDraw();}
-function stUp(){if(ST.down){ST.down=null;stRebuild();stOk();}}           // redraw from the strokes, so what she sees is exactly what gets kept
+function stUp(){if(ST.down){ST.down=null;stRebuild();stOk();stSizes();}}           // redraw from the strokes, so what she sees is exactly what gets kept
 function stTools(){const row=document.getElementById('frtools');row.innerHTML='';
   const btn=(html,on,fn,title)=>{const b=document.createElement('div');b.className='frt'+(on?' on':'');b.innerHTML=html;if(title)b.title=title;
     b.addEventListener('click',e=>{e.stopPropagation();fn();stTools();tone(760,.04,'triangle',.02);});row.appendChild(b);};
@@ -9908,6 +9913,13 @@ function stOpts(){const pr=document.getElementById('frplaces');pr.innerHTML='';
     onCanvas(cv,()=>{x.setTransform(1.3,0,0,1.3,0,0);x.translate(37,58);itemArt(k,0,0,77,0,{kind:k,oy:-10});});b.appendChild(cv);const sp=document.createElement('span');sp.textContent=NAMES[k];b.appendChild(sp);
     b.addEventListener('click',e=>{e.stopPropagation();const i=ST.favs.indexOf(k);if(i>=0)ST.favs.splice(i,1);else{ST.favs.push(k);if(ST.favs.length>2)ST.favs.shift();}stOpts();tone(760,.05,'triangle',.03);});fv.appendChild(b);});
   stOk();}
+let STSZ=0;
+function stSizes(){const row=document.getElementById('frsizes');row.innerHTML='';const tmp={id:'__studio'+(++STSZ),ops:ST.ops};delete FR.art['__studio'+(STSZ-1)];
+  FRAGES.forEach(a=>{const b=document.createElement('div');b.className='frz'+(ST.age===a?' on':'');const cv=document.createElement('canvas');cv.width=150;cv.height=150;
+    onCanvas(cv,()=>{figure(48,140,gabyO({s:AGES.kid.s,hk:AGES.kid.hk,arms:'down',shadow:false,hat:null,face:1}));          // Gaby (a kid), and her friend at this size
+      if(ST.ops.length)drawFriendFig(tmp,106,140,FRK*AGES[a].s,{shadow:false});else{x.fillStyle='rgba(43,43,43,.15)';x.fillRect(96,140-104*AGES[a].s,20,104*AGES[a].s);}});
+    b.appendChild(cv);const sp=document.createElement('span');sp.textContent=a;b.appendChild(sp);
+    b.addEventListener('click',e=>{e.stopPropagation();ST.age=a;stSizes();tone(700,.05,'triangle',.03);});row.appendChild(b);});}
 function stOk(){const full=!ST.edit&&FR.list.length>=FRMAX,ok=ST.ops.some(o=>o.t!=='e')&&!full;document.getElementById('frmake').classList.toggle('off',!ok);
   const m=document.getElementById('frfull');m.style.display=full?'':'none';return ok;}
 function stList(){const el=document.getElementById('frlist');el.innerHTML='';el.style.display=FR.list.length?'':'none';
@@ -9920,10 +9932,10 @@ function stList(){const el=document.getElementById('frlist');el.innerHTML='';el.
 function frMake(){if(!stOk())return;
   const name=(document.getElementById('frname').value||'').replace(/\s+/g,' ').trim().slice(0,14)||'my friend';
   if(ST.edit){const f=FR.list.find(q=>q.id===ST.edit);if(f){const moved=!f.place||f.place.x!==(ST.place||f.place).x;   // changing a friend: same friend, new drawing / name / home
-      Object.assign(f,{name,ops:ST.ops.slice(),favs:ST.favs.slice(),place:ST.place?{label:ST.place.label,x:ST.place.x}:f.place});delete FR.art[f.id];
+      Object.assign(f,{name,age:ST.age,ops:ST.ops.slice(),favs:ST.favs.slice(),place:ST.place?{label:ST.place.label,x:ST.place.x}:f.place});delete FR.art[f.id];
       const n=frNPC(f);if(moved){n.x=n.home;n.y=GY;n.frGo=0;n.range=110;}writeSave();}
     shut('studio');openSheet('book');frBookTab();tune([660,880,1046],80,'triangle');return;}
-  const f={id:(Date.now()%1e9).toString(36)+(FR.n++),name,place:ST.place?{label:ST.place.label,x:ST.place.x}:{label:'The two houses',x:700},favs:ST.favs.slice(),ops:ST.ops.slice(),made:new Date().toISOString().slice(0,10)};
+  const f={id:(Date.now()%1e9).toString(36)+(FR.n++),name,age:ST.age,place:ST.place?{label:ST.place.label,x:ST.place.x}:{label:'The two houses',x:700},favs:ST.favs.slice(),ops:ST.ops.slice(),made:new Date().toISOString().slice(0,10)};
   FR.list.push(f);FR.wip=null;const n=frNPC(f);meet(n.id);mark('drawfriend');shut('studio');writeSave();
   const home={x:n.x,y:n.y};{const sd=(P.face||1);const z=curZone();let nx=P.x+sd*150;if(z&&(nx<z.x0+60||nx>z.x1-60))nx=P.x-sd*150;n.x=nx;}   // they pop out of the paper, right next to her
   n.y=P.y;n.dir=Math.sign(P.x-n.x)||1;n.waveT=200;n.pop=40;n.range=0;puff(n.x,n.y-80,16,'star');sting();   // stand still and wave while saying hello
@@ -9964,7 +9976,7 @@ function frCardCanvas(f){const cv=document.createElement('canvas');cv.width=600;
   c.fillText('drawn by Gaby'+(f.made?' · '+f.made:''),300,856);c.fillStyle='#2b2b2b';c.fillText('lives at: '+frWhere(f.place.label),300,900);
   c.fillText('loves: '+((f.favs||[]).map(k=>NAMES[k]).join(' and ')||'everything'),300,934);c.font='700 16px '+BFONT;c.fillStyle='#a39b89';c.fillText("Gaby's World · friend card",300,966);return cv;}
 async function frCardFile(f){const cv=frCardCanvas(f),blob=await new Promise(r=>cv.toBlob(r,'image/png'));
-  const png=pngAddText(new Uint8Array(await blob.arrayBuffer()),'gabysworld-friend',b64u(JSON.stringify({v:1,id:f.id,name:f.name,place:f.place,favs:f.favs,made:f.made,ops:f.ops})));
+  const png=pngAddText(new Uint8Array(await blob.arrayBuffer()),'gabysworld-friend',b64u(JSON.stringify({v:1,id:f.id,name:f.name,age:f.age||'kid',place:f.place,favs:f.favs,made:f.made,ops:f.ops})));
   return new File([png],(f.name.replace(/[^A-Za-z0-9]+/g,'')||'friend')+'-gabys-world-friend.png',{type:'image/png'});}
 async function frExport(f){try{const file=await frCardFile(f);
     if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:f.name+', drawn by Gaby'});return;}
@@ -9989,7 +10001,7 @@ function tstDrawFriend(name,place,favs){const cv=document.getElementById('frcanv
   tool('pen',0,9);circ(300,112,80);tool('fill',9);pt(300,150,'pointerdown');pt(300,150,'pointerup');tool('pen',0,9);circ(270,95,7);circ(330,95,7);line([[265,150],[300,170],[335,150]]);
   line([[230,260],[370,260],[395,455],[205,455],[230,260]]);tool('fill',6);pt(300,350,'pointerdown');pt(300,350,'pointerup');tool('pen',0,9);
   line([[95,245],[85,420]]);line([[505,245],[515,420]]);line([[247,500],[244,720]]);line([[352,500],[356,720]]);
-  document.getElementById('frname').value=name;
+  document.getElementById('frname').value=name;tstClick([...document.querySelectorAll('#frsizes .frz')].find(q=>q.textContent==='toddler'));
   if(place)tstClick([...document.querySelectorAll('#frplaces .frp')].find(q=>q.textContent.indexOf(place)>=0));
   (favs||[]).forEach(k=>tstClick([...document.querySelectorAll('#frfavs .frf')].find(q=>q.textContent===NAMES[k])));stOk();}
 FEATURE('friends',{
@@ -10010,7 +10022,7 @@ FEATURE('friends',{
         TST.card=d.name==='Zippy'&&d.ops.length===f.ops.length&&d.ops.every((o,i)=>o.d===f.ops[i].d)&&file.size<200000?'ok':'card data does not match';}).catch(e=>TST.card='card error: '+e.message);}},
       {until:()=>TST.card!=null,max:300}],
     done:()=>{const n=NPC.find(q=>q.drawn);if(TST.card&&TST.card!=='ok')throw new Error(TST.card);
-      return !!n&&n.home===10035&&n.wants.length===2&&['head','body','armL','armR','legL','legR'].every(k=>frArt(n.drawn).has[k])&&TST.card==='ok'&&JSON.stringify(n.drawn.ops).length<12000;},
+      return !!n&&n.home===10035&&n.wants.length===2&&n.drawn.age==='toddler'&&Math.abs(frTall(n.drawn)-657*FRK*AGES.toddler.s)<1&&frTall(n.drawn)<90&&['head','body','armL','armR','legL','legR'].every(k=>frArt(n.drawn).has[k])&&TST.card==='ok'&&JSON.stringify(n.drawn.ops).length<12000;},
     expect:['easel','drawfriend']},
    {id:'editfriend',name:'change a drawn friend, then send one away (from the book)',needs:'a friend Gaby drew',
     trigger:[{map:'🏠 Inside my house'},{do:'easel'},{fn(){tstDrawFriend('Pip','two houses',['fish']);tstClick(document.getElementById('frmake'));}},
