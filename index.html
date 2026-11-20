@@ -62,6 +62,11 @@
 
   gotchas (learned the hard way)
     · one global scope: a second function with the same name silently replaces the first (the checks catch it).
+    · Gaby leaves stories halfway ALL the time. anything new must be stoppable by storyStop() (the picker, the ship and the
+      map use it), and must not block dayFree()/chFree() once stopped. the tests "chain" (stories in a row, then one left
+      halfway) and "wander" (minutes of random play: map, things, picker, ship) exist because of this: run them.
+    · the robot yields to the browser between frames (tstYield); without that, async scenes run out of order and you
+      chase bugs that can't happen in real play.
     · characters (NPC entries) share one set of fields across every system: before adding a flag like n.leaving,
       grep for it (the school already uses n.leaving to send kids out of the door). prefix new ones (n.frGo).
     · THINGS ids must be unique: doThing() is a chain of handlers and the first one to match wins (the checks catch it).
@@ -82,6 +87,8 @@
        copy machine 1 D 2 and the wonky bolted-on wing), Bolty, and hats for friends
   v39: the Store of Gaby (her drawing) on Market Street, a money game with dollar bills and quarters, a gumball machine,
        Miss Bec's board as a real sums game with gold stars, and Friday at the new store on the calendar
+  v49: stories can be left halfway: the story picker, Finn's ship and the map always work (whatever story was going on
+       stops), and the map never leaves Gaby frozen. new test: "chain" plays the stories in a row, then wanders off mid-story
   v48: drawn friends have a size, like Gaby: baby, toddler, kid (the usual) or teen
   v47: the drawing page can't be closed by a tap outside it, "not now" asks first, and an unfinished new friend is kept
   v46: the book's "Friends I met" page has its own section for the friends Gaby drew, with ✏️ change, 📤 and ✖
@@ -882,7 +889,7 @@ const THINGS=[
   {id:'wispb',x:-1095,y:GY,label:'say boo to the ghost',lbl:()=>met.wisp?'say boo to Wisp':'say boo to the ghost'},
   {id:'picnicb',x:-1235,y:GY,label:'share a sandwich',hidden:()=>BEACH.st!=='picnic'},
   {id:'shipboard',x:-1630,y:GY,label:'climb aboard the ship',key:1,by:-250,bx:-60,hidden:()=>BEACH.st!=='waitBoard'},
-  {id:'sail',x:-1630,y:GY,label:'sail away with Finn',key:1,by:-250,bx:-60,hidden:()=>!((BEACH.done||SAILS.some(d=>d.ok()))&&BEACH.st==='picnic'&&BEACH.ship.here&&!CH.step)}
+  {id:'sail',x:-1630,y:GY,label:'sail away with Finn',key:1,by:-250,bx:-60,hidden:()=>!((BEACH.done||SAILS.some(d=>d.ok()))&&BEACH.st==='picnic'&&BEACH.ship.here)}
 ];
 const EXTRA=['cat','bunny','robot','teddy','parade','eat','feed','wear','car','honk','hello','toy','drivethru','sprout','wish','wish5','swim','underwater','sun','dressup','readbook','checkout','returnbook','allbooks','labfound','space','robots','egypt','napspot','egyptcats','cloverisland','cloverfamily','cloverhome','bunnywheel','bunnydisco','bunnyice','bunnies','ducks','finn','finnfed','duckvillage','duckcannon','giraffe','jetpack','treasure','duckcrew','showtell','bearcity','beartalk','bearshow','bearbrave','grotto','bearhug','bearhugs','bearhome','saturday','burgerday','spookybook','trickortreat','allcandy','wisp','itsy','halloween','beach','booster','dolphins','atlantic','whale','wavejump','bearsea','beesmoke','nannyend','labfix','cidrum','pastlab','duckfeast','sillyducks','memory','grandopen','ghostcidrum','cidrumcake','bolty','copied','copy3','olivephoto','hatfriend','robotduet','pawot','parrotsout','parrotcatch','bobhappy','parrotparade','zoofeather','sleptday','fruitheaven','gumball4','sumright','changeright','becstar','becstar3','friday','frozen','smoothie'];
 const LABELS={fire:'lit the fire',picture:'found the sun picture',plants:'watered the plants',
@@ -1075,14 +1082,16 @@ const TSTTRIPS=[                                    // (the old photo's memory i
 /* ---- the run: one item per fresh page, results carried across reloads in window.name ---- */
 function tstState(){try{const s=JSON.parse(window.name||'{}');return s.gwtest===location.search?s:null;}catch(e){return null;}}
 function tstSave(s){window.name=JSON.stringify(s);}
-function tstBegin(){SCRIPT.gen=1;                       // so every scene the robot starts can be stopped cleanly
+function tstBegin(){
   const want=(location.search.match(/[?&]test=([^&]*)/)||[])[1];
   let s=tstState();
-  if(!s){const all=['checks','places','trips'].concat(TST.stories.map(S=>S.id),PICKS.map(p=>'pick:'+p.id));
+  if(!s){const all=['checks','places','trips','chain','wander'].concat(TST.stories.map(S=>S.id),PICKS.map(p=>'pick:'+p.id));
     if(want==='list'){tstShow('test ids: '+all.join(' '));return;}
     s={gwtest:location.search,queue:want?decodeURIComponent(want).split(','):all,res:[],t0:Date.now()};tstSave(s);}
   if(!s.queue.length){tstReport(s);return;}
   const id=s.queue[0];TST.item=id;TST.state=s;
+  if(id==='wander'){TST.mode='wander';TST.wander={n:0,frozen:0,last:'',walkT:0,storyT:0};tstWorld(s=>{s.f.labOpen=true;s.f.catQuest=true;s.f.bunQuest=true;});return;}
+  if(id==='chain'){TST.mode='chain';TST.chain={i:0,ph:'story',res:[],n:0};tstStartStory(TST.stories.find(q=>q.id===CHAIN[0]));return;}
   if(id==='checks'){const o=tstStatic();tstFinish({id,st:o.length?'FAIL':'PASS',note:o.join(' · ')});return;}
   if(id==='places'){TST.mode='places';TST.list=tstPlaces();TST.i=-1;TST.n=0;return;}
   if(id==='trips'){TST.mode='trips';TST.list=TSTTRIPS;TST.i=-1;TST.n=0;return;}
@@ -1090,6 +1099,60 @@ function tstBegin(){SCRIPT.gen=1;                       // so every scene the ro
     TST.mode='pick';TST.pick=p;TST.n=0;TST.ok=0;return;}
   const S=TST.stories.find(q=>q.id===id);if(!S){tstFinish({id,st:'FAIL',note:'no such test'});return;}
   TST.mode='story';tstStartStory(S);}
+const CHAIN=['ducks','beach','saturday','cafe','zoo','friday','sunday','drawfriend','sailto'];
+function tstBusy(){const w=[];                         // everything that makes the game think a story is still going (dayFree / chFree)
+  if(CH.step)w.push('CH.step='+CH.step);if(CH.pend)w.push('CH.pend');if(CH.resume)w.push('CH.resume='+CH.resume);if(TRIP)w.push('TRIP='+TRIP.dest);if(R)w.push('race');if(RIDE)w.push('ride');
+  if(BUS.st)w.push('bus='+BUS.st);if(duckActive()||pendingDucks)w.push('ducks='+DUCK.st);if(HW.busy||(HW.st!=='none'&&HW.st!=='done'))w.push('saturday='+HW.st);
+  if(BEACH.ride||BEACH.st!=='picnic')w.push('beach='+BEACH.st);if(BC.busy)w.push('bear city busy');if(STORY.wait)w.push('a line waiting: '+STORY.wait.txt);
+  if(TQ.length)w.push(TQ.length+' queued lines');if(SCRIPT.busy)w.push('a scene has Gaby');if(CAR.driving)w.push('driving');if(COPY.kind)w.push('copying');
+  if(DUCK.st!=='none'&&DUCK.st!=='done')w.push('DUCK.st='+DUCK.st);return w;}
+function tstChainFrame(){const C=TST.chain;
+  if(C.ph==='story'){tstStoryFrame();if(TST.cur.ph==='end'){const r=tstStoryResult();TST.errs.length=0;C.res.push(r);C.ph='settle';C.n=0;}return;}
+  if(C.ph==='settle'){C.n++;if(STORY.wait)STORY.tap=1;else tstPilot(null);
+    const busy=tstBusy();if(!busy.length&&C.n>60){C.ph='check';return;}
+    if(C.n>1500){C.res[C.res.length-1].st='FAIL';C.res[C.res.length-1].note+=(C.res[C.res.length-1].note?' · ':'')+'afterwards the game still thinks a story is going on: '+busy.join(', ');C.ph='check';}return;}
+  if(C.ph==='check'){const r=C.res[C.res.length-1];                         // can she still use the ship and the story picker?
+    const probs=[];if((BEACH.done||SAILS.some(d=>d.ok()))){const th=tstThing('sail');goTo(-1500,GY);if(th.hidden())probs.push('the ship\'s "sail away" is hidden');}
+    if(!dayFree())probs.push('the story picker would refuse: '+tstBusy().join(', '));
+    if(probs.length){r.st='FAIL';r.note=(r.note?r.note+' · ':'')+'after it: '+probs.join(' · ');}
+    goTo(700,GY);C.i++;const id=CHAIN[C.i];if(!id){C.ph='abandon';C.n=0;return;}
+    TST.cur=null;tstStartStory(Object.assign({},TST.stories.find(q=>q.id===id),{setup:null}));C.ph='story';return;}
+  if(C.ph==='abandon'){C.n++;                         // like Gaby: start a story, wander off in the middle, then try the ship and another story
+    if(C.n===1){openSheet('book');document.querySelector('#book [data-tab=about]').click();tstClick([...document.querySelectorAll('#pickgrid .calday')].find(q=>/Friday/.test(q.textContent)));}
+    else if(C.n<400){if(STORY.wait)STORY.tap=1;}
+    else if(C.n===400){openSheet('map');tstClick([...document.querySelectorAll('#mapgrid [data-x]')].find(q=>/beach/.test(q.textContent)));}
+    else if(C.n===460){const th=tstThing('sail');P.x=th.x;const vis=!th.hidden();if(vis)doThing(th);C.shipOk=vis;}
+    else if(C.n===470){if(sheetOpen('sailto'))tstClick([...document.querySelectorAll('#sailgrid div')].find(q=>/mall/.test(q.textContent)));}
+    else if(C.n>470&&C.n<3000){if(STORY.wait)STORY.tap=1;else tstPilot(null);if(TRIP&&TRIP.route)C.shipOk=2;}
+    else if(C.n===3000||(C.n>470&&C.shipOk===2)){C.res.push({id:'chain:abandon-ship',st:C.shipOk===2?'PASS':'FAIL',note:C.shipOk===2?'':'mid-story, the ship '+(C.shipOk?'opened but did not sail':'was not there to tap')+' ['+tstBusy().join(', ')+']'});
+      if(TRIP){TRIP=null;stopMusic();}goTo(700,GY);C.ph='picker';C.n=0;}return;}
+  if(C.ph==='picker'){C.n++;                          // last: pick a story from the book, through the real buttons
+    if(C.n===1){openSheet('book');document.querySelector('#book [data-tab=about]').click();const c=[...document.querySelectorAll('#pickgrid .calday')].find(q=>/zoo/.test(q.textContent));
+      if(!c){C.res.push({id:'chain:picker',st:'FAIL',note:'no zoo sticker'});C.ph='done';return;}tstClick(c);}
+    if(C.n>400){const ok=/^z_/.test(CH.step||'');C.res.push({id:'chain:picker',st:ok?'PASS':'FAIL',note:ok?'':'tapping a sticker did nothing: '+(document.getElementById('pickmsg').textContent||'')+' ['+tstBusy().join(', ')+']'});C.ph='done';}return;}}
+/* ---- "wander": a few minutes of playing like a 6 year old: jump around the map, tap things, start stories, leave them
+   halfway, sail the ship. it fails on any error, or if Gaby is ever frozen (a scene holding her with nothing to tap) ---- */
+function tstWanderFrame(){const W=TST.wander;W.n++;if(STORY.wait&&W.n%9===0)STORY.tap=1;
+  const r=k=>((Math.sin(W.n*12.9898+k*78.233)*43758.5453)%1+1)%1;            // the same "random" every run, so a failure can be replayed
+  if(W.n%240===0){const k=r(1),acts=['map','map','thing','thing','thing','walk','pick','ship','book','story'];const a=acts[(k*acts.length)|0];W.last=a;
+    try{document.querySelectorAll('.sheet').forEach(sh=>{if(sh.style.display==='flex'&&sh.id!=='studio')sh.style.display='none';});if(sheetOpen('studio'))shut('studio');
+      if(a==='map'){openSheet('map');const els=[...document.querySelectorAll('#mapgrid [data-x]')].filter(e=>e.style.display!=='none');tstClick(els[(r(2)*els.length)|0]);}
+      if(a==='thing'&&!SCRIPT.lock){const near=THINGS.filter(q=>!(q.hidden&&q.hidden())&&Math.abs(q.x-P.x)<900&&(zoneAt(q.x)||{id:'t'}).id===(zoneAt(P.x)||{id:'t'}).id&&['savewipe','mybed','calendar'].indexOf(q.id)<0);
+        const th=near[(r(3)*near.length)|0];if(th){W.last+=':'+th.id;tstUse(th);}}
+      if(a==='walk'){W.dir=r(4)<.5?-1:1;W.walkT=120;}
+      if(a==='pick'){const p=PICKS[(r(5)*PICKS.length)|0];W.last+=':'+p.id;pickGo(p);}
+      if(a==='ship'){goTo(-1520,GY);BEACH.done=1;const th=tstThing('sail');if(!th.hidden()){doThing(th);const o=[...document.querySelectorAll('#sailgrid div')];if(o.length)tstClick(o[(r(6)*o.length)|0]);}}
+      if(a==='book'){openSheet('book');document.querySelector('#book [data-tab=met]').click();shut('book');}
+      if(a==='story'){W.storyT=600;}
+    }catch(e){TST.errs.push('wander '+a+': '+e.message);}}
+  if(W.walkT>0){W.walkT--;if(W.dir>0)key.right=1;else key.left=1;}
+  if(W.storyT>0){W.storyT--;tstPilot(null);}                      // sometimes she does what the story asks for a bit
+  if(TRIP&&TRIP.dest==='sea'){key.right=1;if(W.n%30===0)actEdge=true;}
+  else if(TRIP&&W.n%600===0)storyStop();                         // a trip that goes on and on: she heads home (the proper way: the scene stops too)
+  if(BEACH.st==='aboard'&&W.n%20===0)actEdge=true;
+  const frozen=SCRIPT.lock&&!STORY.wait&&!TRIP;W.frozen=frozen?W.frozen+1:0;
+  if(W.frozen>1800){TST.errs.push('Gaby was frozen for 30 seconds after "'+W.last+'" ['+tstBusy().join(', ')+']');}
+  if(W.n>=24000||TST.errs.length){tstFinish({id:'wander',st:TST.errs.length?'FAIL':'PASS',secs:W.n/60|0,note:TST.errs.length?'after "'+W.last+'": '+TST.errs.slice(0,2).join(' | '):''});return true;}}
 function tstFinish(r){const s=TST.state;s.res.push(r);s.queue.shift();tstSave(s);TST.mode='wait';setTimeout(()=>location.reload(),30);}
 function tstReport(s){const L=s.res.map(r=>(r.st==='PASS'?'✅':r.st==='STARTS'?'🟡':'❌')+' '+r.st.padEnd(6)+' '+r.id.padEnd(12)+(r.secs!=null?(' '+r.secs+'s').padEnd(7):'       ')+(r.note?' '+r.note:''));
   const n=k=>s.res.filter(r=>r.st===k).length;
@@ -1101,9 +1164,10 @@ function tstShow(txt){const d=document.createElement('pre');d.id='testreport';d.
 function tstOne(drawIt){update();SCENE=storyBusy()||!!SCRIPT.busy;HINT.act=HINT.grab='';
   if(drawIt){R?raceDraw():RIDE?rideDraw():TRIP?tripDraw():draw();applyHints();}if(t%10===0){updatePals();updateBag();}
   if(!isFinite(P.x)||!isFinite(P.y))TST.errs.push('Gaby is at a nonsense spot ('+P.x+','+P.y+')');}
-function tstLoop(){const t0=performance.now();
+const tstYield=()=>new Promise(r=>{const ch=new MessageChannel();ch.port1.onmessage=()=>r();ch.port2.postMessage(0);});
+async function tstLoop(){const t0=performance.now();           // between frames the browser runs what scenes were waiting for, like in real play
   try{
-    while(performance.now()-t0<14){TST.frames++;
+    while(performance.now()-t0<14){await tstYield();TST.frames++;
       key.left=key.right=key.up=key.down=0;                 // the robot lets go of the keys every frame, like a finger would
       if(TST.mode==='story'){tstStoryFrame();tstOne(TST.frames%6===0);if(TST.cur.ph==='end'){tstFinish(tstStoryResult());break;}}
       else if(TST.mode==='places'){if(TST.n--<=0){TST.i++;const p=TST.list[TST.i];if(!p){tstFinish({id:'places',st:TST.errs.length?'FAIL':'PASS',note:(TST.errAt?'at '+TST.errAt+': ':'')+TST.errs.slice(0,3).join(' | ')});break;}
@@ -1113,6 +1177,9 @@ function tstLoop(){const t0=performance.now();
           if(!p){tstFinish({id:'trips',st:TST.errs.length?'FAIL':'PASS',note:(TST.errAt?'in '+TST.errAt+': ':'')+TST.errs.slice(0,3).join(' | ')});break;}
           TST.at=p[0];goTo(p[0]==='race'?RACE.arch:p[0]==='sea'?-1300:4255,p[0]==='space'?PLANE.floor:GY);try{p[1]();}catch(e){TST.errs.push(p[0]+': '+e.message);}TST.n=420;}
         if(STORY.wait)STORY.tap=1;key.right=TST.n%200<120?1:0;if(TST.n%37===0)actEdge=true;tstOne(TST.n%3===0);if(TST.errs.length&&!TST.errAt)TST.errAt=TST.at;}
+      else if(TST.mode==='wander'){if(tstWanderFrame())break;tstOne(TST.frames%5===0);}
+      else if(TST.mode==='chain'){tstChainFrame();tstOne(TST.frames%6===0);
+        if(TST.chain.ph==='done'){const s=TST.state;s.res.push(...TST.chain.res.map(r=>Object.assign({},r,{id:'chain:'+r.id.replace(/^chain:/,'')})));s.queue.shift();tstSave(s);TST.mode='wait';setTimeout(()=>location.reload(),30);break;}}
       else if(TST.mode==='pick'){if(TST.n===0){tstUse('wardrobe');openSheet('book');tstClick([...document.querySelectorAll('#pickgrid .calday')].find(q=>q.textContent.trim()===TST.pick.name));}   // the real button
         TST.n++;tstPilot(null);tstOne(TST.n%4===0);
         if(STORY.wait||(TRIP&&TST.n>80)||CH.step||HW.st!=='none'||duckActive()||DUCK.st==='coming'||BUS.st||FV||sheetOpen('fly')||(TST.pick.id==='lab'&&labOpen&&TST.n>80)||(TST.pick.id==='egypt'&&catQuest&&TST.n>80)||(TST.pick.id==='clover'&&bunQuest&&TST.n>80)||(TST.pick.id==='beach'&&BEACH.st!=='picnic'))TST.ok++;
@@ -1725,7 +1792,7 @@ document.querySelectorAll('.sheet').forEach(sh=>sh.addEventListener('click',e=>{
   const r=e.target.closest('[data-race]');
   if(r){sh.style.display='none';startRace();return;}
   const b=e.target.closest('[data-x]');
-  if(b)goTo(+b.dataset.x,+b.dataset.y);
+  if(b){if(SCRIPT.busy||HW.busy||BC.busy||STORY.wait)storyStop();goTo(+b.dataset.x,+b.dataset.y);}
   if(b||e.target===sh||e.target.dataset.close)sh.style.display='none';}));
 function goTo(gx,gy){beachCancel();R=null;P.roll=null;P.fishT=0;P.onBus=false;BUS.st=null;P.hugT=0;engineOff();stopMusic();flying=false;CAR.driving=false;P.seesaw=false;P.climb=null;P.slide=null;
   P.sit=P.nap=P.balls=P.bath=P.tv=P.dance=P.ride=P.swing=0;P.tube=null;P.swim=false;P.dive=null;P.lounge=0;fadeT=16;P.x=gx;P.y=gy;P.vy=0;started=true;
@@ -7198,7 +7265,7 @@ function beachDo(th){const B=BEACH;
     case 'picnicb':puff(P.x,P.y-70,8,'crumb');tune([600,760],90,'sine');mark('eat');
       bsayB(['finn','nugget','wobble'][(Math.random()*3)|0],['ARR! sandy sandwiches are the BEST!','nom nom nom!','there is a crab in the basket!'][(Math.random()*3)|0]);break;
     case 'shipboard':beachBoard();break;
-    case 'sail':{const ds=SAILS.filter(d=>d.ok());if(ds.length&&(BEACH.done||ds.length>1)){fillSailTo(ds);openSheet('sailto');return true;}if(ds.length){B.dest=ds[0].k;beachReplay();return true;}beachReplay();break;}
+    case 'sail':{if(!dayFree())storyStop();const ds=SAILS.filter(d=>d.ok());if(ds.length&&(BEACH.done||ds.length>1)){fillSailTo(ds);openSheet('sailto');return true;}if(ds.length){B.dest=ds[0].k;beachReplay();return true;}beachReplay();break;}
     default:return false;}
   mark(th.id);return true;}
 function beachPlan(c){const B=BEACH;if(B.st!=='picnic'||SCENE||!B.e)return;
@@ -7893,7 +7960,7 @@ function pastDraw(){
    VER: which version of a building is standing right now (the town can change, and stays changed).
    CH: which step of the chapter we're on. a save in the middle of a story restarts that step from its beginning,
    so the iPad can be closed at any moment without losing (or breaking) the story. */
-const WAITS=[],SCRIPT={gen:0,busy:0,lock:0,want:null,got:null};
+const WAITS=[],SCRIPT={gen:1,busy:0,lock:0,want:null,got:null};
 function until(test){const g=SCRIPT.gen;return new Promise((res,rej)=>WAITS.push({test,res,rej,g}));}
 function frames(n){const end=t+n;return until(()=>t>=end);}
 function waitsTick(){for(let i=WAITS.length-1;i>=0;i--){const w=WAITS[i];
@@ -7987,6 +8054,20 @@ function setVer(k,v){VER[k]=v;bagSig='';}
 function placeOlive(){const o=NPC.find(n=>n.id==='olive');if(!o)return;if(VER.cafe==='new'){o.x=28955;o.y=GY;}else{o.x=11760;o.y=GY;}}
 function awayNPCs(ids){ids.forEach(id=>{const n=NPC.find(q=>q.id===id);if(n&&!n.away){n.away=1;CH.away.push(id);}});}
 function awayRestore(){CH.away.forEach(id=>{const n=NPC.find(q=>q.id===id);if(n)n.away=0;});CH.away=[];}
+/* ---- stopping a story halfway: Gaby jumps around, and a half-finished story must never block anything ----
+   used by the story picker, by Finn's ship, and by the map when a scene was holding her. it puts the world back to
+   "nothing going on" without taking away anything she's done (a story she hadn't finished just isn't finished). */
+function storyStop(){
+  SCRIPT.gen++;SCRIPT.want=null;cine(0);CH.step=null;CH.beacon=null;CH.pend=0;CH.resume=null;
+  for(const k in CAST)uncast(k);awayRestore();STORY.wait=null;TQ.length=0;bubbles.length=0;
+  if(TRIP){TRIP=null;stopMusic();fadeT=16;}R=null;RIDE=null;BUS.st=null;P.onBus=false;FV=null;
+  if(HW.busy||(HW.st!=='none'&&HW.st!=='done')){HW.st=HW.done?'done':'none';HW.busy=0;HW.e={};HW.spots=null;
+    ['wobble','nugget','nanny'].forEach(id=>{const n=NPC.find(q=>q.id===id);if(n)n.away=0;});}
+  if(DUCK.replay&&DUCK.st!=='done')duckDone();                      // a replay of the ducks (the first time is real progress: it carries on)
+  BC.busy=0;ZOO.catching=0;ZOO.bob=0;MON.story=0;
+  if(typeof MALL!=='undefined'){MALL.aboard=0;MALL.waitFlag=0;MALL.lt=-1;MALL.force=null;applyAlts();}
+  if(BEACH.ride||BEACH.st!=='picnic'){BEACH.dest=null;beachCancel();}
+  freeGaby();writeSave();}
 function chFree(){return started&&!CH.step&&!TRIP&&!R&&!RIDE&&!BUS.st&&!duckActive()&&!HW.busy&&!BEACH.ride&&BEACH.st==='picnic'&&!BC.busy&&!STORY.wait&&!TQ.length&&!CAR.driving&&!P.onBus;}
 const CHSTEPS={news:()=>chNews(),queue:()=>chQueue(),cafe:()=>chCafe(),surprise:()=>chSurprise(),lab:()=>chLab()};
 function chGo(step){SCRIPT.gen++;SCRIPT.want=null;cine(0);CH.step=step;CH.beacon=null;
@@ -8645,7 +8726,7 @@ function olivePhotoWish(){const o=NPC.find(n=>n.id==='olive');if(o&&CH.done&&!VE
 MEMS.push({k:'momphoto',name:'a photo of me and Mommy',got:()=>!!found.chest},{k:'robots',name:'a tiny Bolt and Bolty',got:()=>!!found.bolty});
 function cafeDo(th){
   switch(th.id){
-    case 'chest':{if(TRIP)return true;const first=!found.chest;
+    case 'chest':{if(TRIP||SCRIPT.busy)return true;const first=!found.chest;
       if(first){puff(30330,HA-40,10,'smoke');crunch(.2,.04);slide(200,500,.5,'triangle',.03);}
       mark('chest');runScript(()=>memoryScene(first));return true;}
     case 'labmachine':if(COPY.kind)say(P.x,P.y-130,'shh... it is busy copying!');
@@ -10146,8 +10227,8 @@ function fillPicks(){const g=document.getElementById('pickgrid');if(!g||g.datase
     const sp=document.createElement('span');sp.textContent=p.name;b.appendChild(sp);
     b.addEventListener('click',e=>{e.stopPropagation();pickGo(p);});g.appendChild(b);});}
 function pickGo(p){
-  if(!dayFree()||TRIP||flying){const m=document.getElementById('pickmsg');if(m)m.textContent='a story is still going on. finish it (or reload the page) first!';beep(260,.12,'sine',.03);return;}
   document.querySelectorAll('.sheet').forEach(s=>s.style.display='none');started=true;tone(700,.08,'triangle',.04);
+  if(!dayFree()||TRIP||flying)storyStop();flying=false;            // whatever was going on stops: she picked a new story
   setTimeout(()=>{try{p.start();}catch(e){console.error(e);}},60);}
 
 /* ======================= saving ======================= */
