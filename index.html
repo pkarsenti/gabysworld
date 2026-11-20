@@ -82,6 +82,7 @@
        copy machine 1 D 2 and the wonky bolted-on wing), Bolty, and hats for friends
   v39: the Store of Gaby (her drawing) on Market Street, a money game with dollar bills and quarters, a gumball machine,
        Miss Bec's board as a real sums game with gold stars, and Friday at the new store on the calendar
+  v47: the drawing page can't be closed by a tap outside it, "not now" asks first, and an unfinished new friend is kept
   v46: the book's "Friends I met" page has its own section for the friends Gaby drew, with ✏️ change, 📤 and ✖
   v45: a new drawn friend says where they're going, then walks home (or off the screen, if home is far away), no more
        vanishing in a puff (and no more being sent out of the school door by a mixed-up name)
@@ -416,6 +417,7 @@
 </div></div>
 <div id="studio" class="sheet"><div>
   <h2>✏️ draw a new friend</h2>
+  <p id="frback" style="display:none;font-weight:700;color:#5b8fc9;margin:0 0 6px">your drawing is still here! finish it, or 🗑️ to start again.</p>
   <div id="frlist" class="frlist"></div>
   <div id="frtools" class="frtools"></div>
   <canvas id="frcanvas" width="600" height="760"></canvas>
@@ -9857,7 +9859,19 @@ function frPlaces(){mapTick(1);return [...document.querySelectorAll('#mapgrid [d
 function openStudio(f){ST.edit=f&&!f.baked?f.id:null;ST.ops=ST.edit?f.ops.map(o=>Object.assign({},o)):[];ST.place=ST.edit?f.place:null;ST.favs=ST.edit?(f.favs||[]).slice():[];
   ST.tool='pen';ST.down=null;document.getElementById('frname').value=ST.edit?f.name:'';STINK=null;frReplay(stInk().getContext('2d'),ST.ops);
   document.querySelector('#studio h2').textContent=ST.edit?'✏️ change '+f.name:'✏️ draw a new friend';document.getElementById('frmake').textContent=ST.edit?'✔ save my friend':'✔ make my friend!';
+  const W=!ST.edit&&FR.wip;if(W){ST.ops=W.ops.map(o=>Object.assign({},o));ST.place=W.place;ST.favs=(W.favs||[]).slice();document.getElementById('frname').value=W.name||'';frReplay(stInk().getContext('2d'),ST.ops);}
+  ST.base=W?'':stState();                         // an unfinished drawing that came back counts as unsaved
+  document.getElementById('frback').style.display=W?'':'none';
   stDraw();stTools();stOpts();stList();document.getElementById('studio').style.display='flex';started=true;tone(700,.08,'triangle',.04);}
+const stState=()=>JSON.stringify([ST.ops,(document.getElementById('frname').value||'').trim(),ST.place&&ST.place.label,ST.favs]);
+const stDirty=()=>ST.ops.some(o=>o.t!=='e')&&stState()!==ST.base;
+function stLeave(){                                  // "not now": ask first if there's an unsaved friend; a new one is kept for next time
+  if(stDirty()){if(!confirm(ST.edit?'Stop changing your friend? The changes won’t be saved.':'Stop drawing? Your friend isn’t finished yet. (The drawing will still be here next time.)'))return;
+    if(!ST.edit){FR.wip={ops:ST.ops.slice(),name:(document.getElementById('frname').value||'').trim(),place:ST.place&&{label:ST.place.label,x:ST.place.x},favs:ST.favs.slice()};writeSave();}}
+  shut('studio');}
+document.addEventListener('click',e=>{const st=document.getElementById('studio');if(st.style.display!=='flex')return;   // before the usual "tap outside closes it"
+  if(e.target===st){e.stopPropagation();e.preventDefault();return;}                                               // tapping outside the page does nothing here
+  if(e.target.closest&&e.target.closest('#studio [data-close]')){e.stopPropagation();e.preventDefault();stLeave();}},true);
 let STINK=null;
 function stInk(){if(!STINK){STINK=document.createElement('canvas');STINK.width=600;STINK.height=760;}return STINK;}
 function stRebuild(){frReplay(stInk().getContext('2d'),ST.ops);stDraw();}
@@ -9884,7 +9898,7 @@ function stTools(){const row=document.getElementById('frtools');row.innerHTML=''
   btn('✏️',ST.tool==='pen'&&ST.size<12,()=>{ST.tool='pen';ST.size=9;},'thin pen');btn('🖍️',ST.tool==='pen'&&ST.size>=12,()=>{ST.tool='pen';ST.size=24;},'fat crayon');
   btn('🪣',ST.tool==='fill',()=>{ST.tool='fill';},'fill in');btn('🧽',ST.tool==='erase',()=>{ST.tool='erase';},'rubber');
   btn('↩️',0,()=>{ST.ops.pop();stRebuild();stOk();},'undo');
-  btn('🗑️',0,()=>{ST.ops=[];stRebuild();stOk();},'start again');}
+  btn('🗑️',0,()=>{ST.ops=[];if(!ST.edit)FR.wip=null;document.getElementById('frback').style.display='none';stRebuild();stOk();},'start again');}
 function stOpts(){const pr=document.getElementById('frplaces');pr.innerHTML='';
   const PL=frPlaces();if(ST.place&&!PL.some(p=>p.label===ST.place.label))PL.unshift(Object.assign({y:GY},ST.place));
   PL.forEach((p,i)=>{if(!ST.place&&i===0)ST.place=p;const b=document.createElement('div');b.className='frp'+(ST.place&&ST.place.label===p.label?' on':'');b.textContent=p.label;
@@ -9910,7 +9924,7 @@ function frMake(){if(!stOk())return;
       const n=frNPC(f);if(moved){n.x=n.home;n.y=GY;n.frGo=0;n.range=110;}writeSave();}
     shut('studio');openSheet('book');frBookTab();tune([660,880,1046],80,'triangle');return;}
   const f={id:(Date.now()%1e9).toString(36)+(FR.n++),name,place:ST.place?{label:ST.place.label,x:ST.place.x}:{label:'The two houses',x:700},favs:ST.favs.slice(),ops:ST.ops.slice(),made:new Date().toISOString().slice(0,10)};
-  FR.list.push(f);const n=frNPC(f);meet(n.id);mark('drawfriend');shut('studio');writeSave();
+  FR.list.push(f);FR.wip=null;const n=frNPC(f);meet(n.id);mark('drawfriend');shut('studio');writeSave();
   const home={x:n.x,y:n.y};{const sd=(P.face||1);const z=curZone();let nx=P.x+sd*150;if(z&&(nx<z.x0+60||nx>z.x1-60))nx=P.x-sd*150;n.x=nx;}   // they pop out of the paper, right next to her
   n.y=P.y;n.dir=Math.sign(P.x-n.x)||1;n.waveT=200;n.pop=40;n.range=0;puff(n.x,n.y-80,16,'star');sting();   // stand still and wave while saying hello
   const near=(zoneAt(home.x)||{id:'town'}).id===(zoneAt(n.x)||{id:'town'}).id&&Math.abs(n.y-home.y)<5&&Math.abs(home.x-n.x)<1600;
@@ -9987,8 +10001,8 @@ FEATURE('friends',{
     if(n.goHome&&Math.abs(n.x-n.home)<n.range){n.goHome=0;n.spd=1.1;}
     if(n.frGo){n.x+=n.frGo*3;n.walk=(n.walk||0)+.25;const z0=zoneAt(P.x);         // (not "leaving": the school kids already use that)
       if(Math.abs(n.x-P.x)>VW/2+120||(z0&&(n.x<z0.x0+10||n.x>z0.x1-10))){n.frGo=0;n.x=n.home;n.y=GY;n.dir=1;n.range=110;}}});},
-  save:()=>({list:FR.list}),
-  load:s=>{FR.list=((s&&s.list)||[]).filter(f=>Array.isArray(f.ops)&&!FRBAKED.some(b=>b.id===f.id));frSync();},   // a draft that's been made permanent stops being a draft
+  save:()=>({list:FR.list,wip:FR.wip||null}),
+  load:s=>{FR.wip=(s&&s.wip&&Array.isArray(s.wip.ops))?s.wip:null;FR.list=((s&&s.list)||[]).filter(f=>Array.isArray(f.ops)&&!FRBAKED.some(b=>b.id===f.id));frSync();},   // a draft that's been made permanent stops being a draft
   stories:[{id:'drawfriend',name:'draw a friend who comes alive, and make a friend card',needs:'nothing: the easel in Gaby’s house (middle floor)',
     trigger:[{map:'🏠 Inside my house'},{do:'easel'},{fn(){tstDrawFriend('Zippy','playground',['cake','balloon']);tstClick(document.getElementById('frmake'));}},
       {until:()=>NPC.some(n=>n.drawn&&!n.frGo&&n.range&&Math.abs(n.x-n.home)<=n.range),max:900},
@@ -10008,7 +10022,16 @@ FEATURE('friends',{
         tstClick([...document.querySelectorAll('#frplaces .frp')].find(q=>/playground/.test(q.textContent)));tstClick(document.getElementById('frmake'));
         const n=NPC.find(q=>q.drawn);if(!n||n.name!=='Pippa'||FR.list.length!==1||FR.list[0].ops.length!==TST.ops0+1||n.home!==10035)throw new Error('the change did not stick');
         const keep=window.confirm;window.confirm=()=>true;openSheet('book');frBookTab();tstClick([...document.querySelectorAll('#friendgrid .fr.mine .frbtns span')].find(q=>q.textContent==='✖'));window.confirm=keep;}}],
-    done:()=>FR.list.length===0&&!NPC.some(n=>n.drawn)&&!document.querySelector('#friendgrid .fr.mine'),expect:['drawfriend']}]});
+    done:()=>FR.list.length===0&&!NPC.some(n=>n.drawn)&&!document.querySelector('#friendgrid .fr.mine'),expect:['drawfriend']},
+   {id:'wipfriend',name:'an unfinished drawing is never lost by tapping out',needs:'nothing',
+    trigger:[{map:'🏠 Inside my house'},{do:'easel'},{fn(){tstDrawFriend('Moss','two houses',['apple']);const st=document.getElementById('studio'),n0=ST.ops.length,keep=window.confirm,open=()=>st.style.display==='flex';
+        tstClick(st);if(!open())throw new Error('tapping outside closed the drawing');
+        let asked=0;window.confirm=()=>{asked++;return false;};tstClick(st.querySelector('[data-close]'));if(!open()||!asked)throw new Error('"not now" did not ask first');
+        window.confirm=()=>true;tstClick(st.querySelector('[data-close]'));window.confirm=keep;if(open())throw new Error('"not now" did not close');
+        const s1=JSON.parse(JSON.stringify(gatherSave()));applySave(s1);                        // as if the game was closed and opened again
+        openStudio();if(ST.ops.length!==n0||document.getElementById('frname').value!=='Moss')throw new Error('the unfinished drawing did not come back');
+        tstClick(document.getElementById('frmake'));if(FR.wip)throw new Error('the kept drawing was not cleared');}}],
+    done:()=>FR.list.length===1&&FR.list[0].name==='Moss',expect:['drawfriend']}]});
 
 /* ======================= the stories, for the test robot (new in v41) =======================
    every way into a story, in one list: how the world must be first, the real trigger, and what it should award.
